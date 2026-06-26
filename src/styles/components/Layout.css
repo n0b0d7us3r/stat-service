@@ -1,0 +1,301 @@
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: transparent;
+}
+
+/* Сайдбар */
+aside {
+  width: 300px;
+  background-color: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 100;
+  overflow: visible; /* Важно для видимости кнопки переключения при width: 0 */
+}
+
+aside.collapsed {
+  width: 80px;
+}
+
+/* Шапка сайдбара */
+.sidebar-header {
+  padding: 1.5rem 1rem; /* Уменьшаем горизонтальные отступы с 24px до 16px */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px; /* Уменьшаем зазор между логотипом и блоком кнопок */
+  border-bottom: 1px solid var(--border);
+  height: 73px; /* Фиксированная высота для выравнивания с кнопкой */
+  overflow: visible;
+}
+
+.sidebar-logo-container {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.logo-brand {
+  font-size: 1.45rem; /* Уменьшаем размер, чтобы длинные названия (как europay.online) не обрезались */
+  font-weight: 900;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  margin-bottom: 0.2rem;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  letter-spacing: -0.02em; /* Более плотный кернинг для стиля логотипа */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: lowercase; /* Стилизация под современный веб-бренд */
+}
+
+.logo-sub {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.sidebar-toggle-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: var(--primary-gradient);
+  color: var(--foreground);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 0; /* Строгий квадрат */
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-toggle-btn svg {
+  transition: transform 0.3s ease;
+}
+
+aside.collapsed .sidebar-toggle-btn svg {
+  transform: rotate(180deg);
+}
+
+@media (hover: hover) {
+  .sidebar-toggle-btn:hover {
+    background-color: var(--primary-dark);
+  }
+}
+
+/* Навигация */
+nav {
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-x: hidden;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  text-decoration: none;
+  color: var(--muted);
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  font-weight: 500;
+  font-weight: 700; /* Увеличиваем жирность */
+  text-transform: uppercase; /* Делаем заглавными */
+  letter-spacing: 0.025em; /* Добавляем межбуквенный интервал */
+}
+
+@media (hover: hover) {
+  .nav-item:hover,
+  .logout-btn:hover {
+    background: var(--primary-soft);
+    color: var(--foreground);
+  }
+}
+
+.nav-item.active {
+  background: var(--primary-gradient);
+  color: var(--foreground);
+  border-left: 6px solid var(--primary-dark) !important;
+}
+
+.sidebar-user-section {
+  padding: 0 24px 1.25rem 24px;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-user-email {
+  font-size: 0.9rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-user-balance {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.logout-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 24px; /* Явно дублируем padding для сброса стилей кнопки */
+  width: 100%;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  cursor: pointer;
+  margin-top: 0px;
+  border-left: 3px solid #0000;
+  transition: all 0.2s;
+}
+
+/* Контентная область */
+main {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  min-width: 0; /* Предотвращает распирание флекс-контейнера */
+}
+
+/* Общие утилиты для сеток статистики */
+.finance-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.always-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Скрытие текста при свернутом сайдбаре */
+aside.collapsed .logo-brand,
+aside.collapsed .logo-sub,
+aside.collapsed .sidebar-user-section,
+aside.collapsed nav a span,
+aside.collapsed nav button span,
+aside.collapsed .theme-toggle-btn {
+  display: none;
+}
+
+aside.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+aside.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px 0;
+  border-left-width: 4px;
+}
+
+/* Оверлей для закрытия меню кликом по пустой области */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+}
+
+@media (max-width: 768px) {
+  .layout-wrapper {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 0;
+    position: static;
+  }
+
+  .sidebar-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 101;
+    background-color: var(--card);
+    border-right: none;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+
+  .sidebar-toggle-btn {
+    order: -1;
+    box-shadow: none;
+  }
+
+  nav {
+    position: fixed;
+    top: 73px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: var(--card);
+    z-index: 100;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--border);
+    padding: 1rem 0;
+  }
+
+  .finance-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .always-hidden {
+    display: none !important;
+  }
+
+  aside.collapsed nav {
+    transform: translateX(-100%);
+  }
+
+  aside:not(.collapsed) ~ .mobile-overlay {
+    display: block;
+  }
+
+  main {
+    padding: calc(73px + 1rem) 1rem 1rem 1rem;
+  }
+
+  aside.collapsed .logo-brand,
+  aside.collapsed .logo-sub,
+  aside.collapsed .theme-toggle-btn {
+    display: flex;
+  }
+
+  aside.collapsed .sidebar-header {
+    padding: 0 1rem;
+    justify-content: flex-start;
+    height: 73px;
+  }
+}

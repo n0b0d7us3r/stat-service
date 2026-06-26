@@ -1,0 +1,46 @@
+.confetti-popper {
+  position: fixed;
+  inset: 0;
+  z-index: 1190;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  opacity: 0;
+  border-radius: 1px;
+  animation-name: confetti-popper-burst;
+  animation-timing-function: cubic-bezier(0.12, 0.78, 0.18, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+.confetti-piece-circle {
+  border-radius: 50%;
+}
+
+@keyframes confetti-popper-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.35);
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(var(--confetti-tx), var(--confetti-ty), 0)
+      rotate(var(--confetti-rotate))
+      scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    animation: none;
+    opacity: 0;
+  }
+}

@@ -1,0 +1,111 @@
+.project-day-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.project-day-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.project-day-notes-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.project-day-notes-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.project-day-notes-edit-btn.active {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+}
+
+.project-day-notes-empty,
+.project-day-notes-placeholder {
+  color: var(--muted);
+}
+
+.project-day-notes-date {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--primary-dark);
+  text-transform: capitalize;
+}
+
+.project-day-notes-content {
+  flex: 1;
+  min-height: 180px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.project-day-notes-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 180px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  padding: 1rem;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.project-day-notes-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.project-day-notes-cancel-btn,
+.project-day-notes-save-btn {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.875rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.project-day-notes-cancel-btn {
+  background: transparent;
+  color: var(--foreground);
+}
+
+.project-day-notes-save-btn {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.project-day-notes-save-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .project-day-notes-edit-btn span {
+    display: none;
+  }
+}

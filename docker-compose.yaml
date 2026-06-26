@@ -1,0 +1,31 @@
+services:
+  #######################################
+  #             STAT-SERVICE            #
+  #######################################
+
+  stat-service:
+    build:
+      context: ./
+      dockerfile: image/dockerfile
+      args:
+       - VITE_APP_NAME=${VITE_APP_NAME}
+       - VITE_SEED_ADMIN_EMAIL=${VITE_SEED_ADMIN_EMAIL}
+       - VITE_SEED_ADMIN_PASSWORD=${VITE_SEED_ADMIN_PASSWORD}
+       - VITE_ALLOW_PUBLIC_REGISTER=${VITE_ALLOW_PUBLIC_REGISTER}
+    image: stat-service
+    container_name: stat
+    ports:
+      - "127.0.0.1:3000:80"
+    env_file:
+      - .env
+    networks:
+      - app_network
+
+  #######################################
+  #              NETWORKS               #
+  #######################################
+
+networks:
+  app_network:
+    name: app_network
+    external: true

@@ -1,0 +1,18 @@
+.circular-chart {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.circular-chart-svg {
+  display: block;
+}
+
+.circular-chart-track {
+  stroke: var(--border);
+}
+
+.circular-chart-progress {
+  stroke: var(--primary-dark);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.35s ease;
+}

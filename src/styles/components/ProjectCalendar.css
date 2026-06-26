@@ -1,0 +1,158 @@
+.project-calendar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.project-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.project-calendar-title {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.calendar-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .calendar-nav-btn:hover {
+    border-color: var(--primary-dark);
+    color: var(--primary-dark);
+  }
+}
+
+.project-calendar-weekdays,
+.project-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.project-calendar-weekdays {
+  margin-bottom: 0.35rem;
+}
+
+.project-calendar-weekday {
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0;
+}
+
+.calendar-day-number {
+  display: block;
+  line-height: 1;
+}
+
+.calendar-day-note-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary-dark);
+}
+
+.calendar-day-selectable,
+.calendar-day-interactive {
+  cursor: pointer;
+}
+
+.calendar-day-readonly {
+  cursor: default;
+  opacity: 0.95;
+}
+
+.calendar-day-empty {
+  border-color: transparent;
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-day-today {
+  border-color: var(--primary-dark);
+}
+
+.calendar-day-selected {
+  box-shadow: inset 0 0 0 2px var(--card-foreground);
+}
+
+.calendar-day-marked {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.calendar-day-has-note:not(.calendar-day-marked) {
+  border-color: color-mix(in srgb, var(--primary-dark) 45%, var(--border));
+}
+
+.project-calendar-editing .calendar-day-interactive:hover {
+  border-color: var(--primary-dark);
+}
+
+@media (hover: hover) {
+  .project-calendar-readonly .calendar-day-selectable:hover {
+    border-color: var(--primary-dark);
+  }
+}
+
+.project-calendar-hint {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .project-calendar {
+    padding: 0.875rem;
+  }
+
+  .project-calendar-weekdays,
+  .project-calendar-grid {
+    gap: 0.3rem;
+  }
+
+  .calendar-day {
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 961px) {
+  .project-calendar {
+    max-width: 380px;
+  }
+}

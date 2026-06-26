@@ -1,0 +1,99 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, FolderKanban, Plus } from 'lucide-react';
+import { Layout } from '../components/Layout';
+import { PageTitle } from '../components/PageTitle';
+import { CreateProjectModal } from '../components/CreateProjectModal';
+import { useAuth } from '../context/AuthContext';
+import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
+import { getProjectsByUser } from '../db/projects';
+import type { Project } from '../db/types';
+import '../styles/ProjectsPage.css';
+
+const PROJECT_TYPE_LABELS = {
+  calendar: 'Календарь',
+  day: 'День',
+} as const;
+
+export function ProjectsPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { celebrateAchievements } = useAchievementCelebration();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const reloadProjects = useCallback(() => {
+    if (!user) return;
+    setProjects(getProjectsByUser(user.id));
+  }, [user]);
+
+  useEffect(() => {
+    document.title = 'Проекты | Game Stat';
+    reloadProjects();
+  }, [reloadProjects]);
+
+  const handleCreated = (project: Project) => {
+    setIsModalOpen(false);
+    reloadProjects();
+    celebrateAchievements();
+    navigate(`/projects/${project.id}`);
+  };
+
+  return (
+    <Layout>
+      <div className="projects-page">
+        <div className="projects-page-intro">
+          <PageTitle title="Проекты" subtitle="Создавайте проекты и отмечайте дни в календаре" />
+          <button type="button" className="projects-create-open-btn" onClick={() => setIsModalOpen(true)}>
+            <Plus size={18} />
+            <span>Новый проект</span>
+          </button>
+        </div>
+
+        <section className="projects-list-section">
+          <h2 className="projects-section-title">
+            Проектов: {projects.length}
+          </h2>
+
+          {projects.length === 0 ? (
+            <div className="projects-empty app-border-card">
+              <FolderKanban size={32} />
+              <p>Пока нет проектов. Создайте первый, чтобы начать отмечать дни.</p>
+            </div>
+          ) : (
+            <div className="projects-list">
+              {projects.map((project) => (
+                <article key={project.id} className="project-card app-border-card app-border-card-accent">
+                  <button
+                    type="button"
+                    className="project-card-main"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    <div className="project-card-content">
+                      <h3>{project.name}</h3>
+                      {project.description && <p>{project.description}</p>}
+                      <div className="project-card-meta-row">
+                        <span className="project-card-type">{PROJECT_TYPE_LABELS[project.project_type]}</span>
+                        <span className="project-card-meta">Отмечено дней: {project.marked_count}</span>
+                      </div>
+                    </div>
+                    <ChevronRight size={20} />
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {user && (
+        <CreateProjectModal
+          isOpen={isModalOpen}
+          userId={user.id}
+          onClose={() => setIsModalOpen(false)}
+          onCreated={handleCreated}
+        />
+      )}
+    </Layout>
+  );
+}

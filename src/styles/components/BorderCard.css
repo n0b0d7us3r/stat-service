@@ -1,0 +1,15 @@
+@layer components {
+  /* Базовый класс карточки с рамкой */
+  .app-border-card {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    padding: 24px;
+    border-radius: 0;
+    transition: background-color 0.2s ease;
+  }
+
+  /* Модификатор с фирменной полосой слева (как у токена) */
+  .app-border-card-accent {
+    border-left: 6px solid var(--primary) !important;
+  }
+}

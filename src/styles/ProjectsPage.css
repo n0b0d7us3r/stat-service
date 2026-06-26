@@ -1,0 +1,146 @@
+.projects-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.projects-page-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.projects-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.projects-create-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .projects-create-open-btn:hover {
+    background: var(--primary-dark);
+  }
+}
+
+.projects-section-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 769px) {
+  .projects-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.project-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.project-card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+}
+
+.project-card-content h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+}
+
+.project-card-content p {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+.project-card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.project-card-type {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary-dark);
+}
+
+.project-card-meta {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+@media (hover: hover) {
+  .project-card-main:hover {
+    background: var(--card-hover);
+  }
+}
+
+.projects-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem;
+}
+
+.projects-empty svg {
+  color: var(--primary-dark);
+}
+
+@media (max-width: 640px) {
+  .projects-create-open-btn {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .projects-create-open-btn {
+    align-self: flex-start;
+  }
+}

@@ -1,0 +1,259 @@
+/* DashboardPage */
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-stat-card {
+  background-color: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  padding: 0.875rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 72px;
+  min-width: 0;
+  transition: background-color 0.2s ease;
+}
+
+.dashboard-stat-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.25;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.dashboard-stat-value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.1;
+}
+
+.dashboard-stat-caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.dashboard-stat-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dashboard-stat-card-progress .dashboard-stat-value {
+  flex-shrink: 0;
+}
+
+@media (min-width: 901px) {
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 220px));
+    justify-content: start;
+    gap: 1rem;
+  }
+
+  .dashboard-stat-card {
+    min-height: 84px;
+    padding: 1rem 1.25rem;
+  }
+
+  .dashboard-stat-label {
+    font-size: 0.9375rem;
+  }
+
+  .dashboard-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-stat-caption {
+    font-size: 0.8125rem;
+  }
+}
+
+.dashboard-projects-table-wrapper {
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.dashboard-projects-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-projects-table th,
+.dashboard-projects-table td {
+  padding: 0.875rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboard-projects-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.dashboard-project-row {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .dashboard-project-row:hover {
+    background: var(--card-hover);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-placeholder {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-placeholder-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.dashboard-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+
+.dashboard-achievements-section,
+.dashboard-recent-achievements-section {
+  margin-top: 0;
+}
+
+.dashboard-achievements-empty {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-achievements-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.dashboard-achievements-link {
+  color: var(--primary-dark);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .dashboard-achievements-link:hover {
+    text-decoration: underline;
+  }
+}
+
+.dashboard-achievements-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.625rem;
+}
+
+.dashboard-achievement-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+}
+
+.dashboard-achievement-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  flex-shrink: 0;
+}
+
+.dashboard-achievement-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.dashboard-achievement-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.dashboard-achievement-description {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.dashboard-achievement-date {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--primary-dark);
+}
+
+@media (min-width: 769px) {
+  .dashboard-achievements-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dashboard-section-gap {
+  margin-top: 1.5rem;
+}
+
+.align-left {
+  text-align: left;
+}

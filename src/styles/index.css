@@ -1,0 +1,119 @@
+@import './components/BorderCard.css';
+@import './components/PageTitle.css';
+@import './components/ThemeToggle.css';
+
+/* Theme Variables */
+  :root {
+    /* Dark Theme (Default) */
+    --background: #18181d;
+    --foreground: #ffffff;
+    
+    --card: #1d1d24;
+    --card-hover: #26262e;
+    --card-foreground: #ffffff;
+    
+    /* --primary: #9C0035; */
+    /* --primary-dark: #640022; */
+    /* --primary-glow: rgba(156, 0, 53, 0.3); */
+    
+    --primary: #b45309; /* Amber 700 */
+    --primary-dark: #f59e0b; /* Amber 500 */
+    --primary-glow: rgba(180, 83, 9, 0.3);
+    --primary-gradient: linear-gradient(90deg, #78350f 0%, #d97706 100%); /* Горизонтальный: от Amber 900 к 600 */
+    --primary-soft: rgba(180, 83, 9, 0.1);
+    
+    --border: #33333a;
+    --muted: #a1a1aa;
+    --bg-accent-amber: #221d18; /* Более мягкий темный оттенок, ближе к основному фону */
+
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .theme-light {
+    --background: #f8fafc;
+    --foreground: #18181d;
+    
+    --card: #ffffff;
+    --card-hover: #f1f5f9;
+    --card-foreground: #18181d;
+    
+    /* --primary: #9C0035; */
+    /* --primary-dark: #640022; */
+    /* --primary-glow: rgba(156, 0, 53, 0.1); */
+
+    --primary: #b45309;
+    --primary-dark: #f59e0b;
+    --primary-glow: rgba(180, 83, 9, 0.1);
+    --primary-gradient: linear-gradient(90deg, #f59e0b 0%, #b45309 100%); /* От Amber 500 к Amber 700 */
+    --primary-soft: rgba(180, 83, 9, 0.05);
+
+    --border: #e2e8f0;
+    --muted: #64748b;
+    --bg-accent-amber: #fbfaf7; /* Почти белый оттенок для минимизации контраста в светлой теме */
+
+    /* Принудительно белый текст для элементов с темным градиентом в светлой теме */
+    --on-gradient-text: #ffffff;
+  }
+
+  .theme-light .nav-item.active,
+  .theme-light .login-submit-btn {
+    color: var(--on-gradient-text) !important;
+  }
+
+  /* Уточнение цвета границы для активных элементов навигации в светлой теме */
+  .theme-light .nav-item.active {
+    border-left-color: var(--primary) !important;
+  }
+
+  /* Цвет иконки бургера в светлой теме должен быть белым */
+  .theme-light .sidebar-toggle-btn {
+    color: var(--on-gradient-text) !important;
+  }
+
+body {
+  background-color: var(--background);
+  background-image: linear-gradient(135deg, var(--background) 0%, var(--bg-accent-amber) 100%);
+  background-attachment: fixed; /* Чтобы градиент не двигался при скролле */
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease;
+  min-height: 100vh;
+}
+
+#root {
+  background: transparent;
+  min-height: 100vh;
+}
+
+/* Предотвращение автоматического приближения (zoom) в iOS Safari при фокусе на input */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+.db-loading-screen,
+.auth-loading-screen,
+.db-error-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.db-error-screen h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.db-error-screen p {
+  color: var(--muted);
+  margin: 0;
+}

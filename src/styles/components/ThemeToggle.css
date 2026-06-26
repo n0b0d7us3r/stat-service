@@ -1,0 +1,26 @@
+.theme-toggle-btn {
+  background: var(--primary-soft);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 0; /* Сохраняем строгий стиль проекта */
+}
+
+.theme-toggle-btn:hover {
+  background: var(--card-hover);
+  border-color: var(--primary);
+}
+
+.theme-icon {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle-btn:active .theme-icon {
+  transform: scale(0.9);
+}

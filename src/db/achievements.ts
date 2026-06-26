@@ -1,0 +1,342 @@
+import { flushDatabase, getDatabase, persistDatabase } from './database';
+import { getProjectStats } from './markedDays';
+import { getProjectsByUser } from './projects';
+import { queryAll, queryExists, runStatement } from './query';
+import type { Achievement, AchievementCriteriaType, ProjectType, UserAchievementView } from './types';
+import { addDays, formatLocalDate, parseLocalDate } from '../utils/date';
+
+const DEFAULT_ACHIEVEMENTS: Array<{
+  code: string;
+  name: string;
+  description: string;
+  criteria_type: AchievementCriteriaType;
+  threshold: number;
+  project_type: ProjectType;
+}> = [
+  {
+    code: 'first_project',
+    name: 'Нужно с чего-то начинать',
+    description: 'Создайте первый проект.',
+    criteria_type: 'project_count',
+    threshold: 1,
+    project_type: 'calendar',
+  },
+  {
+    code: 'week_streak',
+    name: 'Недельный забег',
+    description: 'Отметьте 7 дней подряд в любом проекте типа «Календарь».',
+    criteria_type: 'streak',
+    threshold: 7,
+    project_type: 'calendar',
+  },
+  {
+    code: 'ten_streak',
+    name: 'Дальше - больше?',
+    description: 'Отметьте 10 дней подряд в любом проекте типа «Календарь».',
+    criteria_type: 'streak',
+    threshold: 10,
+    project_type: 'calendar',
+  },
+  {
+    code: 'marathon',
+    name: 'Марафонец',
+    description: 'Отметьте 60 дней подряд в любом проекте типа «Календарь».',
+    criteria_type: 'streak',
+    threshold: 60,
+    project_type: 'calendar',
+  },
+  {
+    code: 'notebook',
+    name: 'Запишу тебя в блокнотик',
+    description: 'Напишите 5 заметок в проектах.',
+    criteria_type: 'note_count',
+    threshold: 5,
+    project_type: 'calendar',
+  },
+  {
+    code: 'weekend_warrior',
+    name: 'Выходные для слабаков',
+    description: 'Поставьте отметки в субботу и воскресенье одних выходных.',
+    criteria_type: 'weekend_marked',
+    threshold: 1,
+    project_type: 'calendar',
+  },
+  {
+    code: 'analyst',
+    name: 'Аналитик',
+    description: 'Создайте 5 проектов.',
+    criteria_type: 'project_count',
+    threshold: 5,
+    project_type: 'calendar',
+  },
+  {
+    code: 'librarian',
+    name: 'Библиотекарь',
+    description: 'Создайте 15 проектов.',
+    criteria_type: 'project_count',
+    threshold: 15,
+    project_type: 'calendar',
+  },
+  {
+    code: 'perfectionist',
+    name: 'Перфицкионист',
+    description: 'Достигните 100% прогресса месяца в любом проекте.',
+    criteria_type: 'month_progress',
+    threshold: 100,
+    project_type: 'calendar',
+  },
+];
+
+const CRITERIA_SORT_ORDER: Record<AchievementCriteriaType, number> = {
+  project_count: 1,
+  streak: 2,
+  note_count: 3,
+  weekend_marked: 4,
+  month_progress: 5,
+};
+
+function mapCriteriaType(value: string): AchievementCriteriaType {
+  if (
+    value === 'project_count'
+    || value === 'month_progress'
+    || value === 'note_count'
+    || value === 'weekend_marked'
+  ) {
+    return value;
+  }
+
+  return 'streak';
+}
+
+function mapAchievement(row: {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  streak_days: number;
+  project_type: string;
+  criteria_type: string;
+}): Achievement {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    description: row.description,
+    criteria_type: mapCriteriaType(row.criteria_type),
+    streak_days: row.streak_days,
+    project_type: row.project_type === 'day' ? 'day' : 'calendar',
+  };
+}
+
+export function seedAchievements(): void {
+  const db = getDatabase();
+
+  for (const item of DEFAULT_ACHIEVEMENTS) {
+    if (queryExists(db, 'SELECT id FROM achievements WHERE code = ?', [item.code])) {
+      continue;
+    }
+
+    runStatement(
+      db,
+      `INSERT INTO achievements (code, name, description, streak_days, project_type, criteria_type)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [item.code, item.name, item.description, item.threshold, item.project_type, item.criteria_type],
+    );
+  }
+
+  persistDatabase();
+}
+
+export function getAllAchievements(): Achievement[] {
+  const db = getDatabase();
+  const rows = queryAll<{
+    id: number;
+    code: string;
+    name: string;
+    description: string;
+    streak_days: number;
+    project_type: string;
+    criteria_type: string;
+  }>(
+    db,
+    `SELECT id, code, name, description, streak_days, project_type, criteria_type
+     FROM achievements`,
+  );
+
+  return rows
+    .map(mapAchievement)
+    .sort((left, right) => {
+      const typeOrder = CRITERIA_SORT_ORDER[left.criteria_type] - CRITERIA_SORT_ORDER[right.criteria_type];
+      if (typeOrder !== 0) {
+        return typeOrder;
+      }
+
+      return left.streak_days - right.streak_days;
+    });
+}
+
+function getUserEarnedMap(userId: number): Map<number, string> {
+  const db = getDatabase();
+  const rows = queryAll<{ achievement_id: number; earned_at: string }>(
+    db,
+    'SELECT achievement_id, earned_at FROM user_achievements WHERE user_id = ?',
+    [userId],
+  );
+
+  return new Map(rows.map((row) => [row.achievement_id, row.earned_at]));
+}
+
+function getBestLongestStreakForType(userId: number, projectType: ProjectType): number {
+  const projects = getProjectsByUser(userId).filter((project) => project.project_type === projectType);
+
+  if (projects.length === 0) {
+    return 0;
+  }
+
+  return projects.reduce((best, project) => {
+    const { longestStreak } = getProjectStats(project.id);
+    return Math.max(best, longestStreak);
+  }, 0);
+}
+
+function getUserProjectCount(userId: number): number {
+  return getProjectsByUser(userId).length;
+}
+
+function getUserNoteCount(userId: number): number {
+  const db = getDatabase();
+  const rows = queryAll<{ total: number }>(
+    db,
+    `
+      SELECT COUNT(*) AS total
+      FROM day_notes dn
+      INNER JOIN projects p ON p.id = dn.project_id
+      WHERE p.user_id = ? AND TRIM(dn.content) != ''
+    `,
+    [userId],
+  );
+
+  return rows[0]?.total ?? 0;
+}
+
+function getUserMarkedDates(userId: number): Set<string> {
+  const db = getDatabase();
+  const rows = queryAll<{ date: string }>(
+    db,
+    `
+      SELECT m.date
+      FROM marked_days m
+      INNER JOIN projects p ON p.id = m.project_id
+      WHERE p.user_id = ?
+    `,
+    [userId],
+  );
+
+  return new Set(rows.map((row) => row.date));
+}
+
+function hasWeekendPairMarked(userId: number): boolean {
+  const markedDates = getUserMarkedDates(userId);
+
+  for (const dateKey of markedDates) {
+    const date = parseLocalDate(dateKey);
+
+    if (date.getDay() !== 6) {
+      continue;
+    }
+
+    const sundayKey = formatLocalDate(addDays(date, 1));
+
+    if (markedDates.has(sundayKey)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getBestMonthProgress(userId: number): number {
+  const projects = getProjectsByUser(userId);
+
+  if (projects.length === 0) {
+    return 0;
+  }
+
+  return projects.reduce((best, project) => {
+    const { monthProgress } = getProjectStats(project.id);
+    return Math.max(best, monthProgress);
+  }, 0);
+}
+
+function isAchievementEarned(userId: number, achievement: Achievement): boolean {
+  switch (achievement.criteria_type) {
+    case 'project_count':
+      return getUserProjectCount(userId) >= achievement.streak_days;
+    case 'month_progress':
+      return getBestMonthProgress(userId) >= achievement.streak_days;
+    case 'note_count':
+      return getUserNoteCount(userId) >= achievement.streak_days;
+    case 'weekend_marked':
+      return hasWeekendPairMarked(userId);
+    case 'streak':
+    default:
+      return getBestLongestStreakForType(userId, achievement.project_type) >= achievement.streak_days;
+  }
+}
+
+function awardAchievement(userId: number, achievementId: number): void {
+  const db = getDatabase();
+
+  if (queryExists(
+    db,
+    'SELECT id FROM user_achievements WHERE user_id = ? AND achievement_id = ?',
+    [userId, achievementId],
+  )) {
+    return;
+  }
+
+  runStatement(
+    db,
+    'INSERT INTO user_achievements (user_id, achievement_id) VALUES (?, ?)',
+    [userId, achievementId],
+  );
+}
+
+export function syncUserAchievements(userId: number): Achievement[] {
+  seedAchievements();
+
+  const earnedBefore = new Set(getUserEarnedMap(userId).keys());
+  const achievements = getAllAchievements();
+
+  for (const achievement of achievements) {
+    if (isAchievementEarned(userId, achievement)) {
+      awardAchievement(userId, achievement.id);
+    }
+  }
+
+  persistDatabase();
+
+  const earnedAfter = getUserEarnedMap(userId);
+
+  return achievements.filter(
+    (achievement) => earnedAfter.has(achievement.id) && !earnedBefore.has(achievement.id),
+  );
+}
+
+export async function syncUserAchievementsAndFlush(userId: number): Promise<void> {
+  syncUserAchievements(userId);
+  await flushDatabase();
+}
+
+export function getUserAchievements(userId: number): UserAchievementView[] {
+  seedAchievements();
+  syncUserAchievements(userId);
+
+  const earnedMap = getUserEarnedMap(userId);
+
+  return getAllAchievements().map((achievement) => ({
+    ...achievement,
+    earned: earnedMap.has(achievement.id),
+    earned_at: earnedMap.get(achievement.id) ?? null,
+  }));
+}
