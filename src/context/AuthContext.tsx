@@ -1,19 +1,18 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   getCurrentUser,
-  getStoredSession,
   loginUser,
   logoutUser,
   registerUser,
-} from '../db/auth';
-import { AuthError, type User } from '../db/types';
+} from '../api/auth';
+import { AuthError, type User } from '../types';
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -23,26 +22,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const session = getStoredSession();
-    if (session) {
-      setUser(getCurrentUser());
-    }
-    setLoading(false);
+    let cancelled = false;
+
+    getCurrentUser()
+      .then((currentUser) => {
+        if (!cancelled) {
+          setUser(currentUser);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string, remember = false) => {
     await loginUser(email, password, remember);
-    setUser(getCurrentUser());
+    setUser(await getCurrentUser());
   }, []);
 
   const register = useCallback(async (email: string, password: string) => {
     const newUser = await registerUser(email, password);
-    await loginUser(email, password, true);
     setUser(newUser);
   }, []);
 
-  const logout = useCallback(() => {
-    logoutUser();
+  const logout = useCallback(async () => {
+    await logoutUser();
     setUser(null);
   }, []);
 

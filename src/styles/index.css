@@ -93,9 +93,9 @@ body {
   }
 }
 
-.db-loading-screen,
+.api-loading-screen,
 .auth-loading-screen,
-.db-error-screen {
+.api-error-screen {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -108,12 +108,12 @@ body {
   background: var(--background);
 }
 
-.db-error-screen h1 {
+.api-error-screen h1 {
   font-size: 1.25rem;
   margin: 0;
 }
 
-.db-error-screen p {
+.api-error-screen p {
   color: var(--muted);
   margin: 0;
 }

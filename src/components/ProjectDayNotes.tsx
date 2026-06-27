@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pencil, PencilOff } from 'lucide-react';
-import { getNote, saveNote } from '../db/notes';
+import { getNote, saveNote } from '../api/notes';
 import { parseLocalDate } from '../utils/date';
 import '../styles/components/ProjectDayNotes.css';
 
@@ -33,11 +33,12 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
       return;
     }
 
-    const note = getNote(projectId, selectedDate);
-    const noteContent = note?.content ?? '';
-    setContent(noteContent);
-    setDraft(noteContent);
-    setEditMode(false);
+    void getNote(projectId, selectedDate).then((note) => {
+      const noteContent = note?.content ?? '';
+      setContent(noteContent);
+      setDraft(noteContent);
+      setEditMode(false);
+    });
   }, [projectId, selectedDate]);
 
   const handleSave = async () => {
@@ -45,7 +46,7 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
 
     setSaving(true);
     try {
-      const saved = saveNote(projectId, selectedDate, draft);
+      const saved = await saveNote(projectId, selectedDate, draft);
       setContent(saved.content);
       setEditMode(false);
       onNoteSaved?.();

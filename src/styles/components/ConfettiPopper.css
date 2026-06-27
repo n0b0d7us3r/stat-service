@@ -1,7 +1,7 @@
 .confetti-popper {
   position: fixed;
   inset: 0;
-  z-index: 1190;
+  z-index: 1300;
   pointer-events: none;
   overflow: hidden;
 }

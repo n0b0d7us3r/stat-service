@@ -4,9 +4,9 @@ import { Trophy } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { useAuth } from '../context/AuthContext';
-import { getUserAchievements } from '../db/achievements';
-import { getDashboardStats } from '../db/dashboard';
-import type { DashboardStats, UserAchievementView } from '../db/types';
+import { getUserAchievements } from '../api/achievements';
+import { getDashboardStats } from '../api/dashboard';
+import type { DashboardStats, UserAchievementView } from '../types';
 import '../styles/DashboardPage.css';
 
 function formatEarnedDate(value: string): string {
@@ -25,14 +25,17 @@ export function DashboardPage() {
 
   const reload = useCallback(() => {
     if (!user) return;
-    setStats(getDashboardStats(user.id));
-    setEarnedAchievements(
-      getUserAchievements(user.id).filter((item) => item.earned && item.earned_at),
-    );
+    void Promise.all([
+      getDashboardStats(user.id),
+      getUserAchievements(user.id),
+    ]).then(([nextStats, achievements]) => {
+      setStats(nextStats);
+      setEarnedAchievements(achievements.filter((item) => item.earned && item.earned_at));
+    });
   }, [user]);
 
   useEffect(() => {
-    document.title = 'Дашборд | Game Stat';
+    document.title = 'Статистика | Game Stat';
     reload();
   }, [reload]);
 
@@ -54,7 +57,7 @@ export function DashboardPage() {
   return (
     <Layout>
       <div className="dashboard-page">
-        <PageTitle title="Дашборд" subtitle="Сводная статистика по всем проектам" />
+        <PageTitle title="Статистика" subtitle="Сводная статистика по всем проектам" />
 
         <div className="dashboard-summary-grid">
           <article className="dashboard-stat-card">
@@ -82,14 +85,14 @@ export function DashboardPage() {
             </div>
           </article> */}
           <article className="dashboard-stat-card">
-            <span className="dashboard-stat-label">Лучшая серия</span>
+            <span className="dashboard-stat-label">Текущая серия</span>
             <strong className="dashboard-stat-value">{stats.bestCurrentStreak} дн.</strong>
-            <span className="dashboard-stat-caption">За этот месяц</span>
+            <span className="dashboard-stat-caption">От сегодня, макс. по проектам</span>
           </article>
           <article className="dashboard-stat-card">
             <span className="dashboard-stat-label">Рекорд серии</span>
             <strong className="dashboard-stat-value">{stats.bestLongestStreak} дн.</strong>
-            <span className="dashboard-stat-caption">За всё время</span>
+            <span className="dashboard-stat-caption">Лучшая подряд за всё время</span>
           </article>
           <article className="dashboard-stat-card">
             <span className="dashboard-stat-label">Достижения</span>
@@ -123,11 +126,11 @@ export function DashboardPage() {
                       className="dashboard-project-row"
                       onClick={() => navigate(`/projects/${project.id}`)}
                     >
-                      <td className="align-left">{project.name}</td>
-                      <td>{project.marked_count}</td>
-                      <td>{project.markedThisMonth}</td>
-                      <td>{project.currentStreak}</td>
-                      <td>{project.longestStreak}</td>
+                      <td className="align-left dashboard-project-name">{project.name}</td>
+                      <td data-label="Всего">{project.marked_count}</td>
+                      <td data-label="Месяц">{project.markedThisMonth}</td>
+                      <td data-label="Серия">{project.currentStreak}</td>
+                      <td data-label="Рекорд">{project.longestStreak}</td>
                     </tr>
                   ))}
                 </tbody>

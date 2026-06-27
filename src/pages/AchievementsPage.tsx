@@ -3,8 +3,8 @@ import { Trophy } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { useAuth } from '../context/AuthContext';
-import { getUserAchievements } from '../db/achievements';
-import type { UserAchievementView } from '../db/types';
+import { getUserAchievements } from '../api/achievements';
+import type { UserAchievementView } from '../types';
 import '../styles/AchievementsPage.css';
 
 function formatEarnedDate(value: string): string {
@@ -27,7 +27,7 @@ export function AchievementsPage() {
       return;
     }
 
-    setAchievements(getUserAchievements(user.id));
+    void getUserAchievements(user.id).then(setAchievements);
   }, [user]);
 
   const earnedCount = achievements.filter((item) => item.earned).length;

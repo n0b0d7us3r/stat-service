@@ -6,8 +6,8 @@ import { PageTitle } from '../components/PageTitle';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 import { useAuth } from '../context/AuthContext';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
-import { getProjectsByUser } from '../db/projects';
-import type { Project } from '../db/types';
+import { getProjectsByUser } from '../api/projects';
+import type { Project } from '../types';
 import '../styles/ProjectsPage.css';
 
 const PROJECT_TYPE_LABELS = {
@@ -24,7 +24,7 @@ export function ProjectsPage() {
 
   const reloadProjects = useCallback(() => {
     if (!user) return;
-    setProjects(getProjectsByUser(user.id));
+    void getProjectsByUser(user.id).then(setProjects);
   }, [user]);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function ProjectsPage() {
   const handleCreated = (project: Project) => {
     setIsModalOpen(false);
     reloadProjects();
-    celebrateAchievements();
+    void celebrateAchievements();
     navigate(`/projects/${project.id}`);
   };
 

@@ -1,4 +1,4 @@
-import type { ProjectStats as ProjectStatsData } from '../db/types';
+import type { ProjectStats as ProjectStatsData } from '../types';
 import { CircularChart } from './CircularChart';
 import '../styles/components/ProjectStats.css';
 

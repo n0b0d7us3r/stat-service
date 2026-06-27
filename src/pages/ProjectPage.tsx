@@ -7,10 +7,10 @@ import { ProjectCalendar, type ProjectCalendarHandle } from '../components/Proje
 import { ProjectDayNotes } from '../components/ProjectDayNotes';
 import { ProjectStats } from '../components/ProjectStats';
 import { useAuth } from '../context/AuthContext';
-import { verifyUserPassword } from '../db/auth';
-import { getProjectStats } from '../db/markedDays';
-import { deleteProject, getProjectById } from '../db/projects';
-import type { Project, ProjectStats as ProjectStatsData } from '../db/types';
+import { verifyUserPassword } from '../api/auth';
+import { getProjectStats } from '../api/marks';
+import { deleteProject, getProjectById } from '../api/projects';
+import type { Project, ProjectStats as ProjectStatsData } from '../types';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
 import '../styles/ProjectPage.css';
 
@@ -42,10 +42,17 @@ export function ProjectPage() {
       return;
     }
 
-    const loadedProject = getProjectById(user.id, projectId);
-    setProject(loadedProject);
-    setStats(loadedProject ? getProjectStats(projectId) : null);
-    setLoading(false);
+    setLoading(true);
+    void getProjectById(user.id, projectId)
+      .then(async (loadedProject) => {
+        setProject(loadedProject);
+        if (loadedProject) {
+          setStats(await getProjectStats(projectId));
+        } else {
+          setStats(null);
+        }
+      })
+      .finally(() => setLoading(false));
   }, [projectId, user]);
 
   useEffect(() => {
@@ -60,25 +67,33 @@ export function ProjectPage() {
 
   const handleStatsRefresh = () => {
     if (!project || !user) return;
-    setStats(getProjectStats(project.id));
-    setProject(getProjectById(user.id, project.id));
+    void Promise.all([
+      getProjectStats(project.id),
+      getProjectById(user.id, project.id),
+    ]).then(([nextStats, nextProject]) => {
+      setStats(nextStats);
+      if (nextProject) {
+        setProject(nextProject);
+      }
+    });
   };
 
   const handleNotesRefresh = () => {
     setNotesRefreshKey((value) => value + 1);
-    celebrateAchievements();
+    void celebrateAchievements();
   };
 
   const startEditMode = () => setEditMode(true);
 
   const applyEditMode = () => {
-    calendarRef.current?.applyMarks();
-    setEditMode(false);
-    handleStatsRefresh();
+    void calendarRef.current?.applyMarks().then(() => {
+      setEditMode(false);
+      handleStatsRefresh();
 
-    if (user) {
-      celebrateAchievements();
-    }
+      if (user) {
+        void celebrateAchievements();
+      }
+    });
   };
 
   const cancelEditMode = () => {

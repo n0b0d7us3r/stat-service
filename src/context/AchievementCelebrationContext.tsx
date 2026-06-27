@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { AchievementCelebrationModal } from '../components/AchievementCelebrationModal';
 import { ConfettiPopper } from '../components/ConfettiPopper';
-import { syncUserAchievements } from '../db/achievements';
-import type { Achievement } from '../db/types';
+import { syncUserAchievements } from '../api/achievements';
+import type { Achievement } from '../types';
 import { useAuth } from './AuthContext';
 
 interface AchievementCelebrationContextValue {
-  celebrateAchievements: () => Achievement[];
+  celebrateAchievements: () => Promise<Achievement[]>;
 }
 
 const AchievementCelebrationContext = createContext<AchievementCelebrationContextValue | null>(null);
@@ -18,12 +18,12 @@ export function AchievementCelebrationProvider({ children }: { children: ReactNo
   const currentCelebration = celebrationQueue[0] ?? null;
   const celebrationOpen = celebrationQueue.length > 0;
 
-  const celebrateAchievements = useCallback(() => {
+  const celebrateAchievements = useCallback(async () => {
     if (!user) {
       return [];
     }
 
-    const newlyEarned = syncUserAchievements(user.id);
+    const newlyEarned = await syncUserAchievements(user.id);
 
     if (newlyEarned.length > 0) {
       setCelebrationQueue((queue) => [...queue, ...newlyEarned]);

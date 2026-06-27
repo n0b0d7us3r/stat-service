@@ -3,6 +3,23 @@ services:
   #             STAT-SERVICE            #
   #######################################
 
+  stat-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: stat-api
+    container_name: stat-api
+    volumes:
+      - ./db/app_data/:/data
+    environment:
+      - DATA_DIR=/data
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - SEED_ADMIN_EMAIL=${VITE_SEED_ADMIN_EMAIL}
+      - SEED_ADMIN_PASSWORD=${VITE_SEED_ADMIN_PASSWORD}
+    networks:
+      - app_network
+    restart: unless-stopped
+
   stat-service:
     build:
       context: ./
@@ -12,14 +29,18 @@ services:
        - VITE_SEED_ADMIN_EMAIL=${VITE_SEED_ADMIN_EMAIL}
        - VITE_SEED_ADMIN_PASSWORD=${VITE_SEED_ADMIN_PASSWORD}
        - VITE_ALLOW_PUBLIC_REGISTER=${VITE_ALLOW_PUBLIC_REGISTER}
+       - VITE_API_BASE=${VITE_API_BASE:-/api}
     image: stat-service
     container_name: stat
+    depends_on:
+      - stat-api
     ports:
       - "127.0.0.1:3000:80"
     env_file:
       - .env
     networks:
       - app_network
+    restart: unless-stopped
 
   #######################################
   #              NETWORKS               #
@@ -29,3 +50,10 @@ networks:
   app_network:
     name: app_network
     external: true
+
+  #######################################
+  #               VOLUMES               #
+  #######################################
+
+volumes:
+  stat_data:

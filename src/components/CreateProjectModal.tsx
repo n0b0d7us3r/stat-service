@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { CalendarDays, Sun } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { Modal } from './Modal';
 import { Checkbox } from './Checkbox';
-import { createProject } from '../db/projects';
-import { DbError, type ProjectType } from '../db/types';
-import type { Project } from '../db/types';
+import { createProject } from '../api/projects';
+import { ApiDataError, type ProjectType } from '../types';
+import type { Project } from '../types';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -40,11 +40,11 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
     setCreating(true);
 
     try {
-      const project = createProject(userId, name, description, projectType, isMutable);
+      const project = await createProject(userId, name, description, projectType, isMutable);
       resetForm();
       onCreated(project);
     } catch (err) {
-      setError(err instanceof DbError ? err.message : 'Не удалось создать проект');
+      setError(err instanceof ApiDataError ? err.message : 'Не удалось создать проект');
     } finally {
       setCreating(false);
     }
@@ -94,6 +94,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
               <span>Календарь</span>
             </label>
 
+            {/* Временно скрыто: тип «День»
             <label className="create-project-type-option disabled" title="Скоро будет доступно">
               <input
                 type="radio"
@@ -105,6 +106,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
               <span>День</span>
               <em>Скоро</em>
             </label>
+            */}
           </div>
         </fieldset>
 

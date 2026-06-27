@@ -78,6 +78,11 @@
   animation: achievement-icon-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
+.achievement-celebration-icon-svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
 .achievement-celebration-badge {
   margin: 0;
   font-size: 0.75rem;
@@ -111,9 +116,7 @@
   padding: 0.95rem 1rem;
   font: inherit;
   font-size: 1rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-weight: 700;
   cursor: pointer;
   box-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
 }
@@ -168,6 +171,61 @@
   100% {
     opacity: 1;
     transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .achievement-celebration-overlay {
+    align-items: flex-end;
+    padding: 0.75rem;
+    padding-bottom: max(3.5rem, calc(3rem + env(safe-area-inset-bottom)));
+    background: rgba(8, 8, 12, 0.38);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .achievement-celebration-stack {
+    width: 100%;
+    max-width: none;
+    gap: 0.625rem;
+  }
+
+  .achievement-celebration-content {
+    padding: 1.125rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .achievement-celebration-icon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .achievement-celebration-icon-svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .achievement-celebration-badge {
+    font-size: 0.6875rem;
+  }
+
+  .achievement-celebration-title {
+    font-size: 1.125rem;
+  }
+
+  .achievement-celebration-description {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  .achievement-celebration-glow {
+    inset: -8px;
+    filter: blur(10px);
+  }
+
+  .achievement-celebration-btn {
+    padding: 0.8125rem 1rem;
+    font-size: 0.9375rem;
   }
 }
 

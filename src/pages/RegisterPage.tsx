@@ -103,27 +103,38 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="login-input password-input"
-                placeholder="Пароль (минимум 6 символов)"
+                placeholder="Пароль"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="password-toggle-btn"
+                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 
-            <input
-              type={showPassword ? 'text' : 'password'}
-              required
-              name="confirmPassword"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="login-input"
-              placeholder="Подтвердите пароль"
-            />
+            <div className="form-group">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                name="confirmPassword"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="login-input password-input"
+                placeholder="Подтвердите пароль"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="password-toggle-btn"
+                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
 
             <div className="login-remember-row">
               <ThemeToggle theme={theme} toggleTheme={toggleTheme} />

@@ -4,8 +4,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   envDir: '..',
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['sql.js'],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:9000',
+        changeOrigin: true,
+      },
+    },
   },
-  assetsInclude: ['**/*.wasm'],
 })

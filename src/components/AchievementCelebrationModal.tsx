@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Trophy } from 'lucide-react';
-import type { Achievement } from '../db/types';
+import type { Achievement } from '../types';
 import '../styles/components/AchievementCelebrationModal.css';
 
 interface AchievementCelebrationModalProps {
@@ -43,7 +43,7 @@ export function AchievementCelebrationModal({
 
           <div className="achievement-celebration-content">
             <div className="achievement-celebration-icon" aria-hidden="true">
-              <Trophy size={40} />
+              <Trophy size={32} className="achievement-celebration-icon-svg" />
             </div>
 
             <p className="achievement-celebration-badge">Достижение получено!</p>
@@ -55,7 +55,7 @@ export function AchievementCelebrationModal({
         </div>
 
         <button type="button" className="achievement-celebration-btn" onClick={onClose}>
-          Я МОЛОДЕЦ
+          Продолжить
         </button>
       </div>
     </div>

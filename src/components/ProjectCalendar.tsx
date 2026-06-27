@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { getNoteDatesForMonth } from '../db/notes';
-import { getAllMarkedDays, getMarkedDaysForMonth, getTodayKey, markDay, unmarkDay } from '../db/markedDays';
+import { getNoteDatesForMonth } from '../api/notes';
+import { getAllMarkedDays, getMarkedDaysForMonth, getTodayKey, syncMarkedDays } from '../api/marks';
 import {
   formatLocalDate,
   getCalendarGrid,
@@ -11,7 +11,7 @@ import {
 import '../styles/components/ProjectCalendar.css';
 
 export interface ProjectCalendarHandle {
-  applyMarks: () => void;
+  applyMarks: () => Promise<void>;
 }
 
 interface ProjectCalendarProps {
@@ -20,7 +20,7 @@ interface ProjectCalendarProps {
   isAdmin: boolean;
   isMutable: boolean;
   selectedDate: string | null;
-  onSelectDate: (date: string) => void;
+  onSelectDate: (date: string | null) => void;
   onChange?: () => void;
 }
 
@@ -47,14 +47,14 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
-  const [savedMarkedDays, setSavedMarkedDays] = useState<string[]>(() => getMarkedDaysForMonth(projectId, year, month));
-  const [noteDays, setNoteDays] = useState<string[]>(() => getNoteDatesForMonth(projectId, year, month));
+  const [savedMarkedDays, setSavedMarkedDays] = useState<string[]>([]);
+  const [noteDays, setNoteDays] = useState<string[]>([]);
+  const [todayKey, setTodayKey] = useState(formatLocalDate(today));
   const [baselineMarks, setBaselineMarks] = useState<Set<string> | null>(null);
   const [draftMarks, setDraftMarks] = useState<Set<string> | null>(null);
 
   const monthPrefix = getMonthPrefix(year, month);
   const grid = useMemo(() => getCalendarGrid(year, month), [year, month]);
-  const todayKey = getTodayKey();
   const noteSet = useMemo(() => new Set(noteDays), [noteDays]);
 
   const markedDays = useMemo(() => {
@@ -66,54 +66,71 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
 
   const markedSet = useMemo(() => new Set(markedDays), [markedDays]);
 
-  const reloadMonthFromDb = (nextYear: number, nextMonth: number) => {
-    setSavedMarkedDays(getMarkedDaysForMonth(projectId, nextYear, nextMonth));
-    setNoteDays(getNoteDatesForMonth(projectId, nextYear, nextMonth));
+  const isFutureDay = (dateKey: string): boolean => dateKey > todayKey;
+
+  const reloadMonthFromDb = async (nextYear: number, nextMonth: number) => {
+    const [marks, notes] = await Promise.all([
+      getMarkedDaysForMonth(projectId, nextYear, nextMonth),
+      getNoteDatesForMonth(projectId, nextYear, nextMonth),
+    ]);
+    setSavedMarkedDays(marks);
+    setNoteDays(notes);
   };
 
   useEffect(() => {
-    reloadMonthFromDb(year, month);
+    void getTodayKey().then(setTodayKey);
+  }, []);
+
+  useEffect(() => {
+    void reloadMonthFromDb(year, month);
   }, [projectId, year, month]);
 
   useEffect(() => {
     if (editMode) {
-      const initial = new Set(getAllMarkedDays(projectId));
-      setBaselineMarks(initial);
-      setDraftMarks(new Set(initial));
+      void getAllMarkedDays(projectId).then((dates) => {
+        const initial = new Set(dates);
+        setBaselineMarks(initial);
+        setDraftMarks(new Set(initial));
+      });
       return;
     }
 
     setBaselineMarks(null);
     setDraftMarks(null);
-    reloadMonthFromDb(year, month);
+    void reloadMonthFromDb(year, month);
   }, [editMode, projectId]);
 
   useImperativeHandle(ref, () => ({
-    applyMarks: () => {
+    applyMarks: async () => {
       if (!draftMarks || !baselineMarks) {
         return;
       }
 
+      const add: string[] = [];
+      const remove: string[] = [];
+
       for (const date of draftMarks) {
-        if (!baselineMarks.has(date)) {
-          markDay(projectId, date);
+        if (!baselineMarks.has(date) && !isFutureDay(date)) {
+          add.push(date);
         }
       }
 
       if (canRemoveMarks) {
         for (const date of baselineMarks) {
           if (!draftMarks.has(date)) {
-            unmarkDay(projectId, date);
+            remove.push(date);
           }
         }
       }
 
-      reloadMonthFromDb(year, month);
+      await syncMarkedDays(projectId, add, remove);
+      await reloadMonthFromDb(year, month);
       onChange?.();
     },
-  }), [baselineMarks, canRemoveMarks, draftMarks, onChange, projectId, year, month]);
+  }), [baselineMarks, canRemoveMarks, draftMarks, onChange, projectId, todayKey, year, month]);
 
   const goToPreviousMonth = () => {
+    onSelectDate(null);
     if (month === 1) {
       setYear(year - 1);
       setMonth(12);
@@ -123,6 +140,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
   };
 
   const goToNextMonth = () => {
+    onSelectDate(null);
     if (month === 12) {
       setYear(year + 1);
       setMonth(1);
@@ -133,6 +151,11 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
 
   const handleDayClick = (day: number) => {
     const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+
+    if (isFutureDay(dateKey)) {
+      return;
+    }
+
     onSelectDate(dateKey);
 
     if (!editMode || !draftMarks) {
@@ -194,23 +217,26 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
           }
 
           const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+          const isFuture = isFutureDay(dateKey);
           const isMarked = markedSet.has(dateKey);
           const hasNote = noteSet.has(dateKey);
           const isToday = dateKey === todayKey;
           const isSelected = dateKey === selectedDate;
-          const canMark = editMode && (!isMarked || canRemoveMarks);
+          const canMark = editMode && !isFuture && (!isMarked || canRemoveMarks);
 
           return (
             <button
               key={dateKey}
               type="button"
+              disabled={isFuture}
               className={[
                 'calendar-day',
+                isFuture ? 'calendar-day-disabled' : '',
                 isMarked ? 'calendar-day-marked' : '',
                 hasNote ? 'calendar-day-has-note' : '',
                 isToday ? 'calendar-day-today' : '',
                 isSelected ? 'calendar-day-selected' : '',
-                canMark ? 'calendar-day-interactive' : 'calendar-day-selectable',
+                canMark ? 'calendar-day-interactive' : isFuture ? '' : 'calendar-day-selectable',
               ].filter(Boolean).join(' ')}
               onClick={() => handleDayClick(day)}
             >
