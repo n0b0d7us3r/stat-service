@@ -315,7 +315,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
     : null;
 
   return (
-    <div className={`project-calendar ${editMode ? 'project-calendar-editing' : 'project-calendar-readonly'} ${isGoalsProject ? 'project-calendar-goals' : ''}`}>
+    <div className={`project-calendar ${editMode ? 'project-calendar-editing' : 'project-calendar-readonly'} ${isGoalsProject ? 'project-calendar-goals' : ''} ${projectType === 'calendar' ? 'project-calendar-calendar' : ''}`}>
       <div className="project-calendar-header">
         <button type="button" className="calendar-nav-btn" onClick={goToPreviousMonth} aria-label="Предыдущий месяц">
           <ChevronLeft size={18} />

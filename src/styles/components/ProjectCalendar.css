@@ -133,6 +133,17 @@
   color: var(--primary-dark);
 }
 
+.project-calendar-calendar .calendar-day-marked {
+  background: color-mix(in srgb, #22c55e 22%, var(--background));
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+.theme-light .project-calendar-calendar .calendar-day-marked {
+  background: #dcfce7;
+  color: #166534;
+}
+
 .project-calendar-goals .calendar-day-goal {
   border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
   background: color-mix(in srgb, var(--primary-soft) 45%, var(--background));
