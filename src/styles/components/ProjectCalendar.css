@@ -111,8 +111,16 @@
   opacity: 0.45;
 }
 
-.calendar-day-today {
-  border-color: var(--primary-dark);
+.project-calendar-hint {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.project-calendar-hint-today {
+  color: var(--primary-dark);
+  font-weight: 600;
 }
 
 .calendar-day-selected {
@@ -186,13 +194,6 @@
   .project-calendar-readonly .calendar-day-selectable:hover {
     border-color: var(--primary-dark);
   }
-}
-
-.project-calendar-hint {
-  margin: 0.75rem 0 0;
-  color: var(--muted);
-  font-size: 0.8125rem;
-  line-height: 1.4;
 }
 
 @media (max-width: 768px) {

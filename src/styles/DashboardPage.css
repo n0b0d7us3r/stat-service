@@ -156,6 +156,16 @@
   text-transform: uppercase;
 }
 
+.dashboard-section-title-spaced {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-section-title-matrix {
+    display: none;
+  }
+}
+
 .dashboard-achievements-section,
 .dashboard-recent-achievements-section {
   margin-top: 0;

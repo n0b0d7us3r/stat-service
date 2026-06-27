@@ -1,0 +1,225 @@
+.dashboard-week-matrix-wrapper {
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.dashboard-week-matrix-desktop {
+  display: block;
+}
+
+.dashboard-week-matrix-mobile {
+  display: none;
+}
+
+.dashboard-week-matrix {
+  width: 100%;
+  min-width: 1020px;
+  border-collapse: collapse;
+}
+
+.dashboard-week-matrix th,
+.dashboard-week-matrix td {
+  padding: 0.75rem 0.375rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.dashboard-week-matrix th {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.dashboard-week-matrix-project-header,
+.dashboard-week-matrix-progress-header {
+  padding-inline: 1rem;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-project-header,
+.dashboard-week-matrix td.dashboard-week-matrix-project {
+  text-align: left;
+}
+
+.dashboard-week-matrix-project {
+  min-width: 8rem;
+  max-width: 12rem;
+  padding-inline: 1rem;
+}
+
+.dashboard-week-matrix-project-btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .dashboard-week-matrix-project-btn:hover {
+    color: var(--primary-dark);
+  }
+
+  .dashboard-week-matrix-row:hover {
+    background: var(--card-hover);
+  }
+}
+
+.dashboard-week-matrix-day {
+  width: 2.25rem;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-day-week-divider,
+.dashboard-week-matrix td.dashboard-week-matrix-day-week-divider {
+  border-right: 2px solid var(--border);
+  padding-right: 1.5rem;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-day-week-start,
+.dashboard-week-matrix td.dashboard-week-matrix-day-week-start {
+  padding-left: 1.5rem;
+}
+
+.dashboard-week-matrix-cell {
+  display: inline-block;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+}
+
+.dashboard-week-matrix-cell-marked {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.dashboard-week-matrix-cell-goal-pending {
+  background: color-mix(in srgb, var(--primary-soft) 45%, var(--background));
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+.dashboard-week-matrix-cell-goal-success {
+  background: color-mix(in srgb, #22c55e 22%, var(--background));
+  border-color: #22c55e;
+}
+
+.theme-light .dashboard-week-matrix-cell-goal-success {
+  background: #dcfce7;
+}
+
+.dashboard-week-matrix-cell-goal-missed {
+  background: color-mix(in srgb, #ef4444 18%, var(--background));
+  border-color: #ef4444;
+}
+
+.theme-light .dashboard-week-matrix-cell-goal-missed {
+  background: #fee2e2;
+}
+
+.dashboard-week-matrix-progress {
+  min-width: 4.5rem;
+  padding-inline: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.dashboard-week-matrix-mobile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.dashboard-week-matrix-mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.dashboard-week-matrix-mobile-name {
+  font-size: 1rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-week-matrix-mobile-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.dashboard-week-matrix-mobile-progress {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.dashboard-week-matrix-mobile-chevron {
+  transition: transform 0.2s ease;
+  color: var(--muted);
+}
+
+.dashboard-week-matrix-mobile-card.expanded .dashboard-week-matrix-mobile-chevron {
+  transform: rotate(180deg);
+}
+
+.dashboard-week-matrix-mobile-days {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.dashboard-week-matrix-mobile-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+}
+
+.dashboard-week-matrix-mobile-day-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+@media (max-width: 768px) {
+  .dashboard-week-matrix-desktop {
+    display: none;
+  }
+
+  .dashboard-week-matrix-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

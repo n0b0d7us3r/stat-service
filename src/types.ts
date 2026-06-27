@@ -51,6 +51,27 @@ export interface DashboardProjectSummary {
   longestStreak: number;
 }
 
+export type DashboardWeekDayCellState = 'empty' | 'marked' | 'goal-success' | 'goal-missed' | 'goal-pending';
+
+export interface DashboardWeekDayCell {
+  date: string;
+  state: DashboardWeekDayCellState;
+}
+
+export interface DashboardWeeklyProjectRow {
+  id: number;
+  name: string;
+  project_type: ProjectType;
+  days: DashboardWeekDayCell[];
+  weekProgress: number;
+  mobileWeekProgress: number;
+}
+
+export interface DashboardWeeklyMatrix {
+  dates: string[];
+  projects: DashboardWeeklyProjectRow[];
+}
+
 export interface DashboardStats {
   projectsCount: number;
   totalMarked: number;
@@ -59,6 +80,7 @@ export interface DashboardStats {
   bestCurrentStreak: number;
   bestLongestStreak: number;
   projects: DashboardProjectSummary[];
+  weeklyMatrix: DashboardWeeklyMatrix;
 }
 
 export interface Achievement {

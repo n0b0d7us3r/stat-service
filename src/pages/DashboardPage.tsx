@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trophy } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
+import { DashboardWeeklyMatrix } from '../components/DashboardWeeklyMatrix';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
 import { getDashboardStats } from '../api/dashboard';
@@ -100,41 +101,48 @@ export function DashboardPage() {
         </div> */}
 
         <section>
-          <h2 className="dashboard-section-title">По проектам</h2>
-
           {stats.projects.length === 0 ? (
             <div className="dashboard-placeholder">
               <p>Нет проектов. Создайте первый на странице «Проекты».</p>
             </div>
           ) : (
-            <div className="dashboard-projects-table-wrapper">
-              <table className="dashboard-projects-table">
-                <thead>
-                  <tr>
-                    <th className="align-left">Проект</th>
-                    <th>Всего</th>
-                    <th>Месяц</th>
-                    <th>Серия</th>
-                    <th>Рекорд</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.projects.map((project) => (
-                    <tr
-                      key={project.id}
-                      className="dashboard-project-row"
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                      <td className="align-left dashboard-project-name">{project.name}</td>
-                      <td data-label="Всего">{project.marked_count}</td>
-                      <td data-label="Месяц">{project.markedThisMonth}</td>
-                      <td data-label="Серия">{project.currentStreak}</td>
-                      <td data-label="Рекорд">{project.longestStreak}</td>
+            <>
+              <h2 className="dashboard-section-title dashboard-section-title-matrix">Последние 3 недели</h2>
+              <DashboardWeeklyMatrix
+                matrix={stats.weeklyMatrix}
+                onProjectClick={(projectId) => navigate(`/projects/${projectId}`)}
+              />
+
+              <h2 className="dashboard-section-title dashboard-section-title-spaced">По проектам</h2>
+              <div className="dashboard-projects-table-wrapper">
+                <table className="dashboard-projects-table">
+                  <thead>
+                    <tr>
+                      <th className="align-left">Проект</th>
+                      <th>Всего</th>
+                      <th>Месяц</th>
+                      <th>Серия</th>
+                      <th>Рекорд</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {stats.projects.map((project) => (
+                      <tr
+                        key={project.id}
+                        className="dashboard-project-row"
+                        onClick={() => navigate(`/projects/${project.id}`)}
+                      >
+                        <td className="align-left dashboard-project-name">{project.name}</td>
+                        <td data-label="Всего">{project.marked_count}</td>
+                        <td data-label="Месяц">{project.markedThisMonth}</td>
+                        <td data-label="Серия">{project.currentStreak}</td>
+                        <td data-label="Рекорд">{project.longestStreak}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
 

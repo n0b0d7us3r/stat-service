@@ -277,6 +277,11 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
   const handleDayClick = (day: number) => {
     const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
 
+    if (selectedDate === dateKey) {
+      onSelectDate(null);
+      return;
+    }
+
     onSelectDate(dateKey);
 
     if (!editMode) {
@@ -295,7 +300,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
     toggleDraftSet(dateKey, draftMarks, setDraftMarks, markedSet.has(dateKey));
   };
 
-  const hint = editMode
+  const editHint = editMode
     ? isGoalsProject
       ? editLayer === 'goals'
         ? canRemove
@@ -307,9 +312,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
       : canRemove
         ? 'Отметки сохранятся после «Готово». «Отменить» сбросит изменения.'
         : 'Можно только добавлять отметки. Сохранение — после «Готово», отмена — «Отменить».'
-    : isGoalsProject
-      ? `Клик по дню открывает заметку. Зелёный — цель выполнена, красный — пропуск. Сегодня: ${formatLocalDate(today)}.`
-      : `Клик по дню открывает заметку. Сегодня: ${formatLocalDate(today)}.`;
+    : null;
 
   return (
     <div className={`project-calendar ${editMode ? 'project-calendar-editing' : 'project-calendar-readonly'} ${isGoalsProject ? 'project-calendar-goals' : ''}`}>
@@ -364,7 +367,6 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
           const isMarked = markedSet.has(dateKey);
           const isGoal = goalSet.has(dateKey);
           const hasNote = noteSet.has(dateKey);
-          const isToday = dateKey === todayKey;
           const isSelected = dateKey === selectedDate;
           const isGoalSuccess = isGoalsProject && isGoal && isMarked;
           const isGoalMissed = isGoalsProject && isGoal && isPast && !isMarked;
@@ -386,7 +388,6 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
                 isGoalSuccess ? 'calendar-day-goal-success' : '',
                 isGoalMissed ? 'calendar-day-goal-missed' : '',
                 hasNote ? 'calendar-day-has-note' : '',
-                isToday ? 'calendar-day-today' : '',
                 isSelected ? 'calendar-day-selected' : '',
                 canInteract ? 'calendar-day-interactive' : isFuture && !canEditGoals ? '' : 'calendar-day-selectable',
               ].filter(Boolean).join(' ')}
@@ -399,7 +400,21 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
         })}
       </div>
 
-      <p className="project-calendar-hint">{hint}</p>
+      <p className="project-calendar-hint">
+        {editHint ?? (
+          isGoalsProject ? (
+            <>
+              Клик по дню открывает заметку. Зелёный — цель выполнена, красный — пропуск. Сегодня:{' '}
+              <span className="project-calendar-hint-today">{todayKey}</span>.
+            </>
+          ) : (
+            <>
+              Клик по дню открывает заметку. Сегодня:{' '}
+              <span className="project-calendar-hint-today">{todayKey}</span>.
+            </>
+          )
+        )}
+      </p>
     </div>
   );
 });
