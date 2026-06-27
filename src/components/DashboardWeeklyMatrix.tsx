@@ -19,7 +19,7 @@ const CELL_LABELS = {
 
 const WEEK_DIVIDER_INDICES = new Set([6, 13]);
 const WEEK_START_INDICES = new Set([7, 14]);
-const MOBILE_MATRIX_DAYS = 14;
+const MOBILE_MATRIX_DAYS = 21;
 const todayKey = formatLocalDate(new Date());
 
 function formatWeekdayHeader(dateKey: string): string {
@@ -52,6 +52,16 @@ function DayCell({
       aria-label={`${label}, ${formatWeekdayHeader(day.date)}: ${CELL_LABELS[day.state]}`}
     />
   );
+}
+
+function chunkWeeks(days: DashboardWeekDayCell[]): DashboardWeekDayCell[][] {
+  const weeks: DashboardWeekDayCell[][] = [];
+
+  for (let index = 0; index < days.length; index += 7) {
+    weeks.push(days.slice(index, index + 7));
+  }
+
+  return weeks;
 }
 
 function dayCellClassName(index: number, lastIndex: number): string {
@@ -128,19 +138,23 @@ export function DashboardWeeklyMatrix({ matrix, onProjectClick }: DashboardWeekl
               >
                 <span className="dashboard-week-matrix-mobile-name">{project.name}</span>
                 <span className="dashboard-week-matrix-mobile-summary">
-                  <span className="dashboard-week-matrix-mobile-progress">{project.mobileWeekProgress}%</span>
+                  <span className="dashboard-week-matrix-mobile-progress">{project.weekProgress}%</span>
                   <ChevronDown size={18} className="dashboard-week-matrix-mobile-chevron" />
                 </span>
               </button>
 
               {isExpanded && (
-                <div className="dashboard-week-matrix-mobile-days">
-                  {mobileDays.map((day) => (
-                    <div key={`${project.id}-${day.date}`} className="dashboard-week-matrix-mobile-day">
-                      <span className="dashboard-week-matrix-mobile-day-label">
-                        {formatWeekdayHeader(day.date)}
-                      </span>
-                      <DayCell day={day} label={project.name} projectType={project.project_type} />
+                <div className="dashboard-week-matrix-mobile-weeks">
+                  {chunkWeeks(mobileDays).map((week, weekIndex) => (
+                    <div key={`${project.id}-week-${weekIndex}`} className="dashboard-week-matrix-mobile-week">
+                      {week.map((day) => (
+                        <div key={`${project.id}-${day.date}`} className="dashboard-week-matrix-mobile-day">
+                          <span className="dashboard-week-matrix-mobile-day-label">
+                            {formatWeekdayHeader(day.date)}
+                          </span>
+                          <DayCell day={day} label={project.name} projectType={project.project_type} />
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>

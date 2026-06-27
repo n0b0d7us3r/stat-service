@@ -68,7 +68,7 @@ function getLast21DayKeys(todayKey: string): string[] {
   return dates;
 }
 
-const MOBILE_MATRIX_DAYS = 14;
+const MOBILE_MATRIX_DAYS = 21;
 
 function getWeekCellState(
   projectType: ProjectType,
