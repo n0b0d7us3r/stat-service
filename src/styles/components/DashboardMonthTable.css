@@ -35,15 +35,26 @@
 
 .dashboard-month-filter-select {
   border: 1px solid var(--border);
-  background: var(--card);
+  background-color: var(--card);
   color: var(--foreground);
   font: inherit;
   font-size: 0.875rem;
   font-weight: 600;
-  padding: 0.4375rem 0.625rem;
+  padding: 0.4375rem 2rem 0.4375rem 0.625rem;
   min-height: 2.25rem;
   min-width: 7.5rem;
   cursor: pointer;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 1rem;
+}
+
+.theme-light .dashboard-month-filter-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 .dashboard-month-loading {
