@@ -46,7 +46,7 @@ export function ProjectsPage() {
         <div className="projects-page-intro">
           <PageTitle title="Проекты" subtitle="Создавайте проекты и отмечайте дни в календаре" />
           <button type="button" className="projects-create-open-btn" onClick={() => setIsModalOpen(true)}>
-            <Plus size={18} />
+            <Plus size={20} strokeWidth={2.5} />
             <span>Новый проект</span>
           </button>
         </div>
@@ -75,6 +75,11 @@ export function ProjectsPage() {
                       {project.description && <p>{project.description}</p>}
                       <div className="project-card-meta-row">
                         <span className="project-card-type">{PROJECT_TYPE_LABELS[project.project_type]}</span>
+                        <span
+                          className={`project-card-mutable ${project.is_mutable ? 'project-card-mutable-yes' : 'project-card-mutable-no'}`}
+                        >
+                          {project.is_mutable ? 'Изменяемый' : 'Неизменяемый'}
+                        </span>
                         <span className="project-card-meta">Отмечено дней: {project.marked_count}</span>
                       </div>
                     </div>

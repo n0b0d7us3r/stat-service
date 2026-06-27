@@ -66,7 +66,7 @@ export function syncMarkedDays(
   }
 
   const db = getUserDb(userId);
-  const canRemove = project.is_mutable && isAdmin;
+  const canRemove = project.is_mutable;
 
   for (const date of add) {
     if (!queryExists(db, 'SELECT id FROM marked_days WHERE project_id = ? AND date = ?', [projectId, date])) {
@@ -268,6 +268,6 @@ function getGoalsProjectStats(allMarkedDates: string[], allGoalDates: string[]):
 
 export { getTodayKey };
 
-export function canRemoveMarks(userId: number, projectId: number, isAdmin: boolean): boolean {
-  return isProjectMutable(userId, projectId) && isAdmin;
+export function canRemoveMarks(userId: number, projectId: number): boolean {
+  return isProjectMutable(userId, projectId);
 }

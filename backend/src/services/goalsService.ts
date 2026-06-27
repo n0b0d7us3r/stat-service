@@ -40,7 +40,7 @@ export function syncGoalDays(
   }
 
   const db = getUserDb(userId);
-  const canRemove = project.is_mutable && isAdmin;
+  const canRemove = project.is_mutable;
 
   for (const date of add) {
     if (!queryExists(db, 'SELECT id FROM goal_days WHERE project_id = ? AND date = ?', [projectId, date])) {

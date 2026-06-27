@@ -71,7 +71,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
   ref,
 ) {
   const isGoalsProject = projectType === 'goals';
-  const canRemove = isMutable && isAdmin;
+  const canRemove = isMutable;
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);

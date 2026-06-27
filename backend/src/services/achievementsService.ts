@@ -44,7 +44,7 @@ const DEFAULT_ACHIEVEMENTS: Array<{
   { code: 'weekend_warrior', name: 'Выходные для слабаков', description: 'Поставьте отметки в субботу и воскресенье одних выходных.', criteria_type: 'weekend_marked', threshold: 1, project_type: 'calendar' },
   { code: 'analyst', name: 'Аналитик', description: 'Создайте 5 проектов.', criteria_type: 'project_count', threshold: 5, project_type: 'calendar' },
   { code: 'librarian', name: 'Библиотекарь', description: 'Создайте 15 проектов.', criteria_type: 'project_count', threshold: 15, project_type: 'calendar' },
-  { code: 'perfectionist', name: 'Перфицкионист', description: 'Достигните 100% прогресса месяца в любом проекте.', criteria_type: 'month_progress', threshold: 100, project_type: 'calendar' },
+  { code: 'perfectionist', name: 'Перфецкионист', description: 'Достигните 100% прогресса месяца в любом проекте.', criteria_type: 'month_progress', threshold: 100, project_type: 'calendar' },
 ];
 
 const CRITERIA_SORT_ORDER: Record<AchievementCriteriaType, number> = {
@@ -87,6 +87,11 @@ export function seedAchievements(userId: number): void {
 
   for (const item of DEFAULT_ACHIEVEMENTS) {
     if (queryExists(db, 'SELECT id FROM achievements WHERE code = ?', [item.code])) {
+      runStatement(
+        db,
+        'UPDATE achievements SET name = ?, description = ? WHERE code = ?',
+        [item.name, item.description, item.code],
+      );
       continue;
     }
 
