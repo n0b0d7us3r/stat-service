@@ -25,6 +25,7 @@
     --border: #33333a;
     --muted: #a1a1aa;
     --bg-accent-amber: #221d18; /* Более мягкий темный оттенок, ближе к основному фону */
+    --cell-today: var(--foreground);
 
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -51,6 +52,7 @@
     --border: #e2e8f0;
     --muted: #64748b;
     --bg-accent-amber: #fbfaf7; /* Почти белый оттенок для минимизации контраста в светлой теме */
+    --cell-today: var(--background);
 
     /* Принудительно белый текст для элементов с темным градиентом в светлой теме */
     --on-gradient-text: #ffffff;

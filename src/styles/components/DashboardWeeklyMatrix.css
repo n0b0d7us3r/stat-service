@@ -14,13 +14,13 @@
 
 .dashboard-week-matrix {
   width: 100%;
-  min-width: 1020px;
+  min-width: 1080px;
   border-collapse: collapse;
 }
 
 .dashboard-week-matrix th,
 .dashboard-week-matrix td {
-  padding: 0.75rem 0.375rem;
+  padding: 0.4375rem 0.25rem;
   text-align: center;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
@@ -43,12 +43,14 @@
 .dashboard-week-matrix th.dashboard-week-matrix-project-header,
 .dashboard-week-matrix td.dashboard-week-matrix-project {
   text-align: left;
+  padding-left: 1.375rem;
+  padding-right: 1.5rem;
+  border-right: 1px solid var(--border);
 }
 
 .dashboard-week-matrix-project {
   min-width: 8rem;
   max-width: 12rem;
-  padding-inline: 1rem;
 }
 
 .dashboard-week-matrix-project-btn {
@@ -77,7 +79,22 @@
 }
 
 .dashboard-week-matrix-day {
-  width: 2.25rem;
+  width: 2.5rem;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-day,
+.dashboard-week-matrix td.dashboard-week-matrix-day {
+  padding-inline: 0.4375rem;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-day-after-project,
+.dashboard-week-matrix td.dashboard-week-matrix-day-after-project {
+  padding-left: 1.5rem;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-day-before-progress,
+.dashboard-week-matrix td.dashboard-week-matrix-day-before-progress {
+  padding-right: 1.5rem;
 }
 
 .dashboard-week-matrix th.dashboard-week-matrix-day-week-divider,
@@ -93,8 +110,8 @@
 
 .dashboard-week-matrix-cell {
   display: inline-block;
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.3125rem;
+  height: 1.3125rem;
   border: 1px solid var(--border);
   background: var(--background);
 }
@@ -104,9 +121,23 @@
   border-color: var(--primary);
 }
 
+.dashboard-week-matrix-cell-marked-calendar {
+  background: color-mix(in srgb, #22c55e 22%, var(--background));
+  border-color: #22c55e;
+}
+
+.theme-light .dashboard-week-matrix-cell-marked-calendar {
+  background: #dcfce7;
+}
+
 .dashboard-week-matrix-cell-goal-pending {
-  background: color-mix(in srgb, var(--primary-soft) 45%, var(--background));
-  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  /*background: color-mix(in srgb, var(--primary-soft) 45%, var(--background));*/
+  border-color: color-mix(in srgb, var(--foreground) 55%, var(--border));
+}
+
+.dashboard-week-matrix-cell-goal-pending-today {
+  background: var(--cell-today);
+  border-color: var(--border);
 }
 
 .dashboard-week-matrix-cell-goal-success {
@@ -133,6 +164,12 @@
   font-weight: 700;
   color: var(--foreground);
   white-space: nowrap;
+}
+
+.dashboard-week-matrix th.dashboard-week-matrix-progress-header,
+.dashboard-week-matrix td.dashboard-week-matrix-progress {
+  border-left: 1px solid var(--border);
+  padding-left: 1.5rem;
 }
 
 .dashboard-week-matrix-mobile-card {
@@ -191,7 +228,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.625rem;
-  padding: 0 1rem 1rem;
+  padding: 0.75rem 1rem 1rem;
   border-top: 1px solid var(--border);
 }
 

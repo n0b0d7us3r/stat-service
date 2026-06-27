@@ -3,8 +3,26 @@
   flex-shrink: 0;
 }
 
+.circular-chart-with-value {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
 .circular-chart-svg {
   display: block;
+}
+
+.circular-chart-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--foreground);
+  pointer-events: none;
 }
 
 .circular-chart-track {
