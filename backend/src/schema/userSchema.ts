@@ -128,6 +128,22 @@ function migrateToV7(db: Database.Database): void {
   }
 }
 
+function migrateToV8(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS goal_days (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      UNIQUE (project_id, date)
+    )
+  `);
+
+  db.exec('CREATE INDEX IF NOT EXISTS idx_goal_days_project_id ON goal_days(project_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_goal_days_date ON goal_days(date)');
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -170,6 +186,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 7) {
     migrateToV7(db);
     version = 7;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 8) {
+    migrateToV8(db);
+    version = 8;
     setSchemaVersion(db, version);
   }
 }

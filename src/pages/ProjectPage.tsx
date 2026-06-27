@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { verifyUserPassword } from '../api/auth';
 import { getProjectStats } from '../api/marks';
 import { deleteProject, getProjectById } from '../api/projects';
-import type { Project, ProjectStats as ProjectStatsData } from '../types';
+import type { Achievement, Project, ProjectStats as ProjectStatsData } from '../types';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
 import '../styles/ProjectPage.css';
 
@@ -18,21 +18,29 @@ export function ProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { celebrateAchievements } = useAchievementCelebration();
+  const { showAchievements } = useAchievementCelebration();
   const projectId = Number(id);
   const calendarRef = useRef<ProjectCalendarHandle>(null);
+  const today = new Date();
 
   const [project, setProject] = useState<Project | null>(null);
   const [stats, setStats] = useState<ProjectStatsData | null>(null);
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
-  const [statsExpanded, setStatsExpanded] = useState(false);
+  const [statsExpanded, setStatsExpanded] = useState(true);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  const loadStats = useCallback((year: number, month: number) => {
+    if (!Number.isFinite(projectId)) return;
+    void getProjectStats(projectId, year, month).then(setStats);
+  }, [projectId]);
 
   const reload = useCallback(() => {
     if (!user || !Number.isFinite(projectId)) {
@@ -44,11 +52,9 @@ export function ProjectPage() {
 
     setLoading(true);
     void getProjectById(user.id, projectId)
-      .then(async (loadedProject) => {
+      .then((loadedProject) => {
         setProject(loadedProject);
-        if (loadedProject) {
-          setStats(await getProjectStats(projectId));
-        } else {
+        if (!loadedProject) {
           setStats(null);
         }
       })
@@ -60,6 +66,14 @@ export function ProjectPage() {
   }, [reload]);
 
   useEffect(() => {
+    if (!project) {
+      setStats(null);
+      return;
+    }
+    loadStats(viewYear, viewMonth);
+  }, [project, viewYear, viewMonth, loadStats]);
+
+  useEffect(() => {
     if (project) {
       document.title = `${project.name} | Game Stat`;
     }
@@ -68,7 +82,7 @@ export function ProjectPage() {
   const handleStatsRefresh = () => {
     if (!project || !user) return;
     void Promise.all([
-      getProjectStats(project.id),
+      getProjectStats(project.id, viewYear, viewMonth),
       getProjectById(user.id, project.id),
     ]).then(([nextStats, nextProject]) => {
       setStats(nextStats);
@@ -78,21 +92,23 @@ export function ProjectPage() {
     });
   };
 
-  const handleNotesRefresh = () => {
+  const handleMonthChange = useCallback((year: number, month: number) => {
+    setViewYear(year);
+    setViewMonth(month);
+  }, []);
+
+  const handleNotesRefresh = (newlyEarned: Achievement[] = []) => {
     setNotesRefreshKey((value) => value + 1);
-    void celebrateAchievements();
+    showAchievements(newlyEarned);
   };
 
   const startEditMode = () => setEditMode(true);
 
   const applyEditMode = () => {
-    void calendarRef.current?.applyMarks().then(() => {
+    void calendarRef.current?.applyMarks().then((newlyEarned) => {
       setEditMode(false);
       handleStatsRefresh();
-
-      if (user) {
-        void celebrateAchievements();
-      }
+      showAchievements(newlyEarned);
     });
   };
 
@@ -165,7 +181,7 @@ export function ProjectPage() {
           </button>
         </div>
 
-        <PageTitle title={project.name} subtitle={project.description || 'Календарь и статистика проекта'} />
+        <PageTitle title={project.name} subtitle={project.description || 'Календарь проекта'} />
 
         <section className={`project-stats-section ${statsExpanded ? 'expanded' : 'collapsed'}`}>
           <button
@@ -178,7 +194,12 @@ export function ProjectPage() {
             <ChevronDown size={18} className="project-stats-toggle-icon" />
           </button>
           <div className="project-stats-panel">
-            <ProjectStats stats={stats} />
+            <ProjectStats
+              stats={stats}
+              projectType={project.project_type}
+              viewYear={viewYear}
+              viewMonth={viewMonth}
+            />
           </div>
         </section>
 
@@ -211,7 +232,9 @@ export function ProjectPage() {
                   onClick={startEditMode}
                 >
                   <Pencil size={18} />
-                  <span className="project-toolbar-label">Добавить отметки</span>
+                  <span className="project-toolbar-label">
+                    {project.project_type === 'goals' ? 'Редактировать' : 'Добавить отметки'}
+                  </span>
                 </button>
               )}
             </div>
@@ -219,12 +242,14 @@ export function ProjectPage() {
               ref={calendarRef}
               key={notesRefreshKey}
               projectId={project.id}
+              projectType={project.project_type}
               editMode={editMode}
               isAdmin={user.is_admin}
               isMutable={project.is_mutable}
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
               onChange={handleStatsRefresh}
+              onMonthChange={handleMonthChange}
             />
           </div>
           <ProjectDayNotes
@@ -247,7 +272,7 @@ export function ProjectPage() {
 
           <div className="project-settings-panel app-border-card">
             <p className="project-settings-description">
-              Удаление проекта «{project.name}» необратимо. Все отметки и заметки будут потеряны.
+              Удаление проекта «{project.name}» необратимо. Все отметки{project.project_type === 'goals' ? ', цели' : ''} и заметки будут потеряны.
             </p>
 
             <form className="project-delete-form" onSubmit={handleDelete}>

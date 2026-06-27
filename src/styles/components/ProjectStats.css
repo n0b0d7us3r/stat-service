@@ -4,6 +4,10 @@
   gap: 0.75rem;
 }
 
+.project-stats-goals {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .project-stat-card {
   background: var(--card);
   border: 1px solid var(--border);

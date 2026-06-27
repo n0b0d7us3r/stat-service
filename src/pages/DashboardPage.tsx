@@ -49,7 +49,6 @@ export function DashboardPage() {
     );
   }
 
-  const earnedCount = earnedAchievements.length;
   const recentAchievements = [...earnedAchievements]
     .sort((a, b) => (b.earned_at ?? '').localeCompare(a.earned_at ?? ''))
     .slice(0, 2);
@@ -57,9 +56,9 @@ export function DashboardPage() {
   return (
     <Layout>
       <div className="dashboard-page">
-        <PageTitle title="Статистика" subtitle="Сводная статистика по всем проектам" />
+        <PageTitle title="Статистика" subtitle="Сводка по проектам" />
 
-        <div className="dashboard-summary-grid">
+        {/* <div className="dashboard-summary-grid">
           <article className="dashboard-stat-card">
             <span className="dashboard-stat-label">Проектов</span>
             <strong className="dashboard-stat-value">{stats.projectsCount}</strong>
@@ -72,7 +71,7 @@ export function DashboardPage() {
             <span className="dashboard-stat-label">В этом месяце</span>
             <strong className="dashboard-stat-value">{stats.markedThisMonth}</strong>
           </article>
-          {/* <article className="dashboard-stat-card dashboard-stat-card-progress">
+          <article className="dashboard-stat-card dashboard-stat-card-progress">
             <span className="dashboard-stat-label">Прогресс месяца</span>
             <div className="dashboard-stat-progress-row">
               <strong className="dashboard-stat-value">{stats.monthProgress}%</strong>
@@ -83,7 +82,7 @@ export function DashboardPage() {
                 aria-label={`Прогресс месяца ${stats.monthProgress}%`}
               />
             </div>
-          </article> */}
+          </article>
           <article className="dashboard-stat-card">
             <span className="dashboard-stat-label">Текущая серия</span>
             <strong className="dashboard-stat-value">{stats.bestCurrentStreak} дн.</strong>
@@ -98,9 +97,9 @@ export function DashboardPage() {
             <span className="dashboard-stat-label">Достижения</span>
             <strong className="dashboard-stat-value">{earnedCount}</strong>
           </article>
-        </div>
+        </div> */}
 
-        <section className="dashboard-section-gap">
+        <section>
           <h2 className="dashboard-section-title">По проектам</h2>
 
           {stats.projects.length === 0 ? (

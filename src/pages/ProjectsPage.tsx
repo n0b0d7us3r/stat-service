@@ -10,10 +10,11 @@ import { getProjectsByUser } from '../api/projects';
 import type { Project } from '../types';
 import '../styles/ProjectsPage.css';
 
-const PROJECT_TYPE_LABELS = {
+const PROJECT_TYPE_LABELS: Record<Project['project_type'], string> = {
   calendar: 'Календарь',
   day: 'День',
-} as const;
+  goals: 'Цели',
+};
 
 export function ProjectsPage() {
   const navigate = useNavigate();

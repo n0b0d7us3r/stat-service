@@ -58,6 +58,72 @@ export function computeStreaks(markedDates: string[]): { currentStreak: number; 
   return { currentStreak, longestStreak };
 }
 
+function getMonthStreakAnchor(year: number, month: number, todayKey: string): string | null {
+  const monthPrefix = getMonthPrefix(year, month);
+  const daysInMonth = getDaysInMonth(year, month);
+  const monthStart = `${monthPrefix}-01`;
+  const monthEnd = `${monthPrefix}-${String(daysInMonth).padStart(2, '0')}`;
+
+  if (todayKey < monthStart) {
+    return null;
+  }
+
+  if (todayKey.startsWith(monthPrefix)) {
+    return todayKey;
+  }
+
+  return monthEnd;
+}
+
+export function computeStreaksInMonth(
+  markedDates: string[],
+  year: number,
+  month: number,
+  todayKey: string,
+): { currentStreak: number; longestStreak: number } {
+  const monthPrefix = getMonthPrefix(year, month);
+  const inMonth = [...new Set(markedDates)]
+    .filter((date) => date.startsWith(`${monthPrefix}-`))
+    .sort();
+
+  if (inMonth.length === 0) {
+    return { currentStreak: 0, longestStreak: 0 };
+  }
+
+  let longestStreak = 1;
+  let run = 1;
+
+  for (let index = 1; index < inMonth.length; index += 1) {
+    const previous = parseLocalDate(inMonth[index - 1]);
+    const current = parseLocalDate(inMonth[index]);
+    const diffDays = Math.round((current.getTime() - previous.getTime()) / 86_400_000);
+
+    if (diffDays === 1) {
+      run += 1;
+      longestStreak = Math.max(longestStreak, run);
+    } else if (diffDays > 1) {
+      run = 1;
+    }
+  }
+
+  const anchor = getMonthStreakAnchor(year, month, todayKey);
+  if (!anchor) {
+    return { currentStreak: 0, longestStreak };
+  }
+
+  const markedSet = new Set(inMonth);
+  let currentStreak = 0;
+  let cursor = parseLocalDate(anchor);
+  const monthStart = parseLocalDate(`${monthPrefix}-01`);
+
+  while (cursor >= monthStart && markedSet.has(formatLocalDate(cursor))) {
+    currentStreak += 1;
+    cursor = addDays(cursor, -1);
+  }
+
+  return { currentStreak, longestStreak };
+}
+
 export function getTodayKey(): string {
   return formatLocalDate(new Date());
 }

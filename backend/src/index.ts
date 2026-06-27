@@ -19,6 +19,11 @@ import {
   getTodayKey,
   syncMarkedDays,
 } from './services/marksService.js';
+import {
+  getAllGoalDays,
+  getGoalDaysForMonth,
+  syncGoalDays,
+} from './services/goalsService.js';
 import { getNote, getNoteDatesForMonth, saveNote } from './services/notesService.js';
 import { DbError, createProject, deleteProject, getProjectById, getProjectsByUser } from './services/projectsService.js';
 
@@ -92,7 +97,7 @@ app.post('/api/projects', requireAuth, (req: AuthRequest, res) => {
     const { name, description, projectType, isMutable } = req.body as {
       name?: string;
       description?: string;
-      projectType?: 'calendar' | 'day';
+      projectType?: 'calendar' | 'day' | 'goals';
       isMutable?: boolean;
     };
     const project = createProject(
@@ -167,8 +172,55 @@ app.post('/api/projects/:projectId/marks/sync', requireAuth, (req: AuthRequest, 
   res.json({ ok: true, newlyEarned });
 });
 
+app.get('/api/projects/:projectId/goals', requireAuth, (req: AuthRequest, res) => {
+  const projectId = Number(req.params.projectId);
+  const userId = req.user!.id;
+  const year = Number(req.query.year);
+  const month = Number(req.query.month);
+  const scope = req.query.scope;
+
+  if (scope === 'all') {
+    res.json({ dates: getAllGoalDays(userId, projectId) });
+    return;
+  }
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    res.status(400).json({ message: 'year и month обязательны' });
+    return;
+  }
+
+  res.json({ dates: getGoalDaysForMonth(userId, projectId, year, month) });
+});
+
+app.post('/api/projects/:projectId/goals/sync', requireAuth, (req: AuthRequest, res) => {
+  const projectId = Number(req.params.projectId);
+  const { add = [], remove = [] } = req.body as { add?: string[]; remove?: string[] };
+
+  syncGoalDays(req.user!.id, projectId, add, remove, req.user!.is_admin);
+  const newlyEarned = syncUserAchievements(req.user!.id);
+
+  res.json({ ok: true, newlyEarned });
+});
+
 app.get('/api/projects/:projectId/stats', requireAuth, (req: AuthRequest, res) => {
-  res.json({ stats: getProjectStats(req.user!.id, Number(req.params.projectId)) });
+  const projectId = Number(req.params.projectId);
+  const yearRaw = req.query.year;
+  const monthRaw = req.query.month;
+
+  if (yearRaw !== undefined && monthRaw !== undefined) {
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+
+    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+      res.status(400).json({ message: 'Некорректные year и month' });
+      return;
+    }
+
+    res.json({ stats: getProjectStats(req.user!.id, projectId, year, month) });
+    return;
+  }
+
+  res.json({ stats: getProjectStats(req.user!.id, projectId) });
 });
 
 app.get('/api/projects/:projectId/notes/:date', requireAuth, (req: AuthRequest, res) => {

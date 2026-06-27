@@ -1,4 +1,4 @@
-import type { ProjectStats } from '../types';
+import type { Achievement, ProjectStats } from '../types';
 import { apiFetch } from './client';
 
 export async function getMarkedDaysForMonth(
@@ -23,15 +23,26 @@ export async function syncMarkedDays(
   projectId: number,
   add: string[],
   remove: string[],
-): Promise<void> {
-  await apiFetch(`/projects/${projectId}/marks/sync`, {
-    method: 'POST',
-    body: JSON.stringify({ add, remove }),
-  });
+): Promise<Achievement[]> {
+  const { newlyEarned } = await apiFetch<{ ok: true; newlyEarned: Achievement[] }>(
+    `/projects/${projectId}/marks/sync`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ add, remove }),
+    },
+  );
+  return newlyEarned;
 }
 
-export async function getProjectStats(projectId: number): Promise<ProjectStats> {
-  const { stats } = await apiFetch<{ stats: ProjectStats }>(`/projects/${projectId}/stats`);
+export async function getProjectStats(
+  projectId: number,
+  year?: number,
+  month?: number,
+): Promise<ProjectStats> {
+  const query = year !== undefined && month !== undefined
+    ? `?year=${year}&month=${month}`
+    : '';
+  const { stats } = await apiFetch<{ stats: ProjectStats }>(`/projects/${projectId}/stats${query}`);
   return stats;
 }
 

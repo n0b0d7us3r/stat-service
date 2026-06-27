@@ -5,7 +5,7 @@ export interface User {
   created_at: string;
 }
 
-export type ProjectType = 'calendar' | 'day';
+export type ProjectType = 'calendar' | 'day' | 'goals';
 
 export type AchievementCriteriaType =
   | 'streak'

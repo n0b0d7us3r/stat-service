@@ -1,23 +1,44 @@
-import type { ProjectStats as ProjectStatsData } from '../types';
+import type { ProjectStats as ProjectStatsData, ProjectType } from '../types';
+import { getMonthLabel } from '../utils/date';
 import { CircularChart } from './CircularChart';
 import '../styles/components/ProjectStats.css';
 
 interface ProjectStatsProps {
   stats: ProjectStatsData;
+  projectType?: ProjectType;
+  viewYear: number;
+  viewMonth: number;
 }
 
-export function ProjectStats({ stats }: ProjectStatsProps) {
+export function ProjectStats({
+  stats,
+  projectType = 'calendar',
+  viewYear,
+  viewMonth,
+}: ProjectStatsProps) {
+  const isGoalsProject = projectType === 'goals';
+  const monthLabel = getMonthLabel(viewYear, viewMonth);
+  const today = new Date();
+  const isCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth() + 1;
+
   return (
-    <div className="project-stats">
+    <div className={`project-stats ${isGoalsProject ? 'project-stats-goals' : ''}`}>
       <article className="project-stat-card">
-        <span className="project-stat-label">Всего отмечено</span>
+        <span className="project-stat-label">
+          {isGoalsProject ? 'Выполнено целей' : 'Отметок'}
+        </span>
         <strong className="project-stat-value">{stats.totalMarked}</strong>
+        <span className="project-stat-meta">
+          {isGoalsProject ? `из ${stats.daysInMonth} целей` : `из ${stats.daysInMonth} дней`}
+        </span>
       </article>
 
       <article className="project-stat-card">
-        <span className="project-stat-label">В этом месяце</span>
+        <span className="project-stat-label">{monthLabel}</span>
         <strong className="project-stat-value">{stats.markedThisMonth}</strong>
-        <span className="project-stat-meta">из {stats.daysInMonth} дней</span>
+        <span className="project-stat-meta">
+          {isGoalsProject ? 'выполнено за месяц' : 'отмечено за месяц'}
+        </span>
       </article>
 
       <article className="project-stat-card project-stat-card-progress">
@@ -33,17 +54,23 @@ export function ProjectStats({ stats }: ProjectStatsProps) {
         </div>
       </article>
 
-      <article className="project-stat-card">
-        <span className="project-stat-label">Текущая серия</span>
-        <strong className="project-stat-value">{stats.currentStreak}</strong>
-        <span className="project-stat-meta">дней подряд</span>
-      </article>
+      {!isGoalsProject && (
+        <>
+          <article className="project-stat-card">
+            <span className="project-stat-label">Серия в месяце</span>
+            <strong className="project-stat-value">{stats.currentStreak} дн.</strong>
+            <span className="project-stat-meta">
+              {isCurrentMonth ? 'От сегодня' : 'На конец месяца'}
+            </span>
+          </article>
 
-      <article className="project-stat-card">
-        <span className="project-stat-label">Лучшая серия</span>
-        <strong className="project-stat-value">{stats.longestStreak}</strong>
-        <span className="project-stat-meta">дней подряд</span>
-      </article>
+          <article className="project-stat-card">
+            <span className="project-stat-label">Рекорд в месяце</span>
+            <strong className="project-stat-value">{stats.longestStreak} дн.</strong>
+            <span className="project-stat-meta">Лучшая подряд</span>
+          </article>
+        </>
+      )}
     </div>
   );
 }

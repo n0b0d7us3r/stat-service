@@ -12,6 +12,7 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -117,7 +118,7 @@ export function RegisterPage() {
 
             <div className="form-group">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? 'text' : 'password'}
                 required
                 name="confirmPassword"
                 autoComplete="new-password"
@@ -128,11 +129,11 @@ export function RegisterPage() {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
                 className="password-toggle-btn"
-                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                aria-label={showConfirmPassword ? 'Скрыть пароль' : 'Показать пароль'}
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 

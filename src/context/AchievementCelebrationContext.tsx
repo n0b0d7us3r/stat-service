@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext';
 
 interface AchievementCelebrationContextValue {
   celebrateAchievements: () => Promise<Achievement[]>;
+  showAchievements: (achievements: Achievement[]) => void;
 }
 
 const AchievementCelebrationContext = createContext<AchievementCelebrationContextValue | null>(null);
@@ -18,27 +19,30 @@ export function AchievementCelebrationProvider({ children }: { children: ReactNo
   const currentCelebration = celebrationQueue[0] ?? null;
   const celebrationOpen = celebrationQueue.length > 0;
 
+  const showAchievements = useCallback((achievements: Achievement[]) => {
+    if (achievements.length > 0) {
+      setCelebrationQueue((queue) => [...queue, ...achievements]);
+    }
+  }, []);
+
   const celebrateAchievements = useCallback(async () => {
     if (!user) {
       return [];
     }
 
     const newlyEarned = await syncUserAchievements(user.id);
-
-    if (newlyEarned.length > 0) {
-      setCelebrationQueue((queue) => [...queue, ...newlyEarned]);
-    }
+    showAchievements(newlyEarned);
 
     return newlyEarned;
-  }, [user]);
+  }, [showAchievements, user]);
 
   const closeCelebration = useCallback(() => {
     setCelebrationQueue((queue) => queue.slice(1));
   }, []);
 
   const value = useMemo(
-    () => ({ celebrateAchievements }),
-    [celebrateAchievements],
+    () => ({ celebrateAchievements, showAchievements }),
+    [celebrateAchievements, showAchievements],
   );
 
   return (

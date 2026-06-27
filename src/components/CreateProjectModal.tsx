@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Target } from 'lucide-react';
 import { Modal } from './Modal';
 import { Checkbox } from './Checkbox';
 import { createProject } from '../api/projects';
@@ -17,7 +17,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [projectType, setProjectType] = useState<ProjectType>('calendar');
-  const [isMutable, setIsMutable] = useState(false);
+  const [isMutable, setIsMutable] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -25,7 +25,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
     setName('');
     setDescription('');
     setProjectType('calendar');
-    setIsMutable(false);
+    setIsMutable(true);
     setError('');
   };
 
@@ -94,6 +94,18 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
               <span>Календарь</span>
             </label>
 
+            <label className={`create-project-type-option ${projectType === 'goals' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="projectType"
+                value="goals"
+                checked={projectType === 'goals'}
+                onChange={() => setProjectType('goals')}
+              />
+              <Target size={18} />
+              <span>Цели</span>
+            </label>
+
             {/* Временно скрыто: тип «День»
             <label className="create-project-type-option disabled" title="Скоро будет доступно">
               <input
@@ -117,7 +129,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
             label="Изменяемый"
           />
           <p className="create-project-mutable-hint">
-            Если выключено, отметки можно только ставить — удалить их нельзя.
+            Если выключено, отметки{projectType === 'goals' ? ' и цели' : ''} можно только ставить — удалить их нельзя.
           </p>
         </div>
 

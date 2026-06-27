@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Pencil, PencilOff } from 'lucide-react';
 import { getNote, saveNote } from '../api/notes';
+import type { Achievement } from '../types';
 import { parseLocalDate } from '../utils/date';
 import '../styles/components/ProjectDayNotes.css';
 
 interface ProjectDayNotesProps {
   projectId: number;
   selectedDate: string | null;
-  onNoteSaved?: () => void;
+  onNoteSaved?: (newlyEarned: Achievement[]) => void;
 }
 
 function formatSelectedDate(dateKey: string): string {
@@ -46,10 +47,10 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
 
     setSaving(true);
     try {
-      const saved = await saveNote(projectId, selectedDate, draft);
-      setContent(saved.content);
+      const { note, newlyEarned } = await saveNote(projectId, selectedDate, draft);
+      setContent(note.content);
       setEditMode(false);
-      onNoteSaved?.();
+      onNoteSaved?.(newlyEarned);
     } finally {
       setSaving(false);
     }
