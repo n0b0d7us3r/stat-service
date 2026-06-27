@@ -11,7 +11,7 @@ import {
   seedInitialAdmin,
   verifyUserPassword,
 } from './services/authService.js';
-import { getDashboardStats } from './services/dashboardService.js';
+import { getDashboardMonthlyStats, getDashboardStats } from './services/dashboardService.js';
 import {
   getAllMarkedDays,
   getMarkedDaysForMonth,
@@ -255,6 +255,18 @@ app.get('/api/projects/:projectId/notes', requireAuth, (req: AuthRequest, res) =
 
 app.get('/api/dashboard', requireAuth, (req: AuthRequest, res) => {
   res.json({ stats: getDashboardStats(req.user!.id) });
+});
+
+app.get('/api/dashboard/month', requireAuth, (req: AuthRequest, res) => {
+  const year = Number(req.query.year);
+  const month = Number(req.query.month);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+    res.status(400).json({ message: 'Некорректные year и month' });
+    return;
+  }
+
+  res.json({ stats: getDashboardMonthlyStats(req.user!.id, year, month) });
 });
 
 app.get('/api/achievements', requireAuth, (req: AuthRequest, res) => {

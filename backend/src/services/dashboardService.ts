@@ -24,6 +24,21 @@ export interface DashboardWeeklyMatrix {
   projects: DashboardWeeklyProjectRow[];
 }
 
+export interface DashboardMonthlyProjectRow {
+  id: number;
+  name: string;
+  project_type: ProjectType;
+  completed: number;
+  total: number;
+  progress: number;
+}
+
+export interface DashboardMonthlyStats {
+  year: number;
+  month: number;
+  projects: DashboardMonthlyProjectRow[];
+}
+
 export interface DashboardStats {
   projectsCount: number;
   totalMarked: number;
@@ -134,6 +149,25 @@ function buildWeeklyMatrix(userId: number): DashboardWeeklyMatrix {
   });
 
   return { dates, projects: rows };
+}
+
+export function getDashboardMonthlyStats(userId: number, year: number, month: number): DashboardMonthlyStats {
+  const projects = getProjectsByUser(userId);
+
+  const rows = projects.map((project) => {
+    const stats = getProjectStats(userId, project.id, year, month);
+
+    return {
+      id: project.id,
+      name: project.name,
+      project_type: project.project_type,
+      completed: stats.totalMarked,
+      total: stats.daysInMonth,
+      progress: stats.monthProgress,
+    };
+  });
+
+  return { year, month, projects: rows };
 }
 
 export function getDashboardStats(userId: number): DashboardStats {

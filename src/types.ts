@@ -72,6 +72,21 @@ export interface DashboardWeeklyMatrix {
   projects: DashboardWeeklyProjectRow[];
 }
 
+export interface DashboardMonthlyProjectRow {
+  id: number;
+  name: string;
+  project_type: ProjectType;
+  completed: number;
+  total: number;
+  progress: number;
+}
+
+export interface DashboardMonthlyStats {
+  year: number;
+  month: number;
+  projects: DashboardMonthlyProjectRow[];
+}
+
 export interface DashboardStats {
   projectsCount: number;
   totalMarked: number;

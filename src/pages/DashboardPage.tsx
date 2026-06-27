@@ -4,6 +4,7 @@ import { Trophy } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { DashboardWeeklyMatrix } from '../components/DashboardWeeklyMatrix';
+import { DashboardMonthTable } from '../components/DashboardMonthTable';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
 import { getDashboardStats } from '../api/dashboard';
@@ -113,34 +114,46 @@ export function DashboardPage() {
                 onProjectClick={(projectId) => navigate(`/projects/${projectId}`)}
               />
 
-              <h2 className="dashboard-section-title dashboard-section-title-spaced">По проектам</h2>
-              <div className="dashboard-projects-table-wrapper">
-                <table className="dashboard-projects-table">
-                  <thead>
-                    <tr>
-                      <th className="align-left">Проект</th>
-                      <th>Всего</th>
-                      <th>Месяц</th>
-                      <th>Серия</th>
-                      <th>Рекорд</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.projects.map((project) => (
-                      <tr
-                        key={project.id}
-                        className="dashboard-project-row"
-                        onClick={() => navigate(`/projects/${project.id}`)}
-                      >
-                        <td className="align-left dashboard-project-name">{project.name}</td>
-                        <td data-label="Всего">{project.marked_count}</td>
-                        <td data-label="Месяц">{project.markedThisMonth}</td>
-                        <td data-label="Серия">{project.currentStreak}</td>
-                        <td data-label="Рекорд">{project.longestStreak}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="dashboard-tables-row">
+                <div className="dashboard-tables-column dashboard-tables-column-month">
+                  <h2 className="dashboard-section-title dashboard-section-title-inline">По месяцам</h2>
+                  <DashboardMonthTable onProjectClick={(projectId) => navigate(`/projects/${projectId}`)} />
+                </div>
+
+                {/* <div className="dashboard-tables-column dashboard-tables-column-projects">
+                  <h2 className="dashboard-section-title dashboard-section-title-inline">По проектам</h2>
+                  <div className="dashboard-projects-section">
+                    <div className="dashboard-projects-controls-spacer" aria-hidden="true" />
+                    <div className="dashboard-projects-table-wrapper">
+                      <table className="dashboard-projects-table">
+                      <thead>
+                        <tr>
+                          <th className="align-left">Проект</th>
+                          <th>Всего</th>
+                          <th>Месяц</th>
+                          <th>Серия</th>
+                          <th>Рекорд</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.projects.map((project) => (
+                          <tr
+                            key={project.id}
+                            className="dashboard-project-row"
+                            onClick={() => navigate(`/projects/${project.id}`)}
+                          >
+                            <td className="align-left dashboard-project-name">{project.name}</td>
+                            <td data-label="Всего">{project.marked_count}</td>
+                            <td data-label="Месяц">{project.markedThisMonth}</td>
+                            <td data-label="Серия">{project.currentStreak}</td>
+                            <td data-label="Рекорд">{project.longestStreak}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>
+                </div> */}
               </div>
             </>
           )}
