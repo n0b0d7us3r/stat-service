@@ -197,8 +197,18 @@
   color: var(--primary-dark);
 }
 
-.project-calendar-editing .calendar-day-interactive:hover {
-  border-color: var(--primary-dark);
+.project-calendar-editing .calendar-day-interactive {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.project-calendar-editing .calendar-day:focus {
+  outline: none;
+}
+
+@media (hover: hover) {
+  .project-calendar-editing .calendar-day-interactive:hover {
+    border-color: var(--primary-dark);
+  }
 }
 
 @media (hover: hover) {

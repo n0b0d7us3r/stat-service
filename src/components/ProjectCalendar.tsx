@@ -183,6 +183,9 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
 
       for (const date of draftMarks) {
         if (!baselineMarks.has(date) && !isFutureDay(date)) {
+          if (isGoalsProject && draftGoals && !draftGoals.has(date)) {
+            continue;
+          }
           markAdd.push(date);
         }
       }
@@ -190,6 +193,17 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
       if (canRemove) {
         for (const date of baselineMarks) {
           if (!draftMarks.has(date)) {
+            markRemove.push(date);
+          }
+        }
+      }
+
+      if (isGoalsProject && draftGoals && baselineGoals) {
+        const { remove: goalRemove } = diffSets(draftGoals, baselineGoals);
+        const allowedGoalRemove = canRemove ? goalRemove : [];
+
+        for (const date of allowedGoalRemove) {
+          if (baselineMarks.has(date) && !markRemove.includes(date)) {
             markRemove.push(date);
           }
         }
@@ -280,12 +294,29 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
     });
   };
 
+  const removeDraftMark = (dateKey: string) => {
+    setDraftMarks((current) => {
+      if (!current?.has(dateKey)) return current;
+      const next = new Set(current);
+      next.delete(dateKey);
+      return next;
+    });
+  };
+
   const handleDayClick = (day: number) => {
     const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
 
     if (editMode) {
       if (isGoalsProject && editLayer === 'goals') {
-        toggleDraftSet(dateKey, draftGoals, setDraftGoals, goalSet.has(dateKey));
+        const hadGoal = goalSet.has(dateKey);
+        toggleDraftSet(dateKey, draftGoals, setDraftGoals, hadGoal);
+        if (hadGoal && canRemove) {
+          removeDraftMark(dateKey);
+        }
+        return;
+      }
+
+      if (isGoalsProject && !goalSet.has(dateKey)) {
         return;
       }
 
@@ -312,8 +343,8 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
           ? 'Режим «Цели»: добавляйте или снимайте цели на любые дни. Сохранение — «Готово».'
           : 'Режим «Цели»: можно только добавлять цели. Сохранение — «Готово».'
         : canRemove
-          ? 'Режим «Отметки»: отметки только за сегодня и прошлые дни. Сохранение — «Готово».'
-          : 'Режим «Отметки»: можно только добавлять отметки за сегодня и прошлые дни.'
+          ? 'Режим «Отметки»: отметки только на днях с целью, за сегодня и прошлые дни. Сохранение — «Готово».'
+          : 'Режим «Отметки»: можно ставить отметки только на днях с целью, за сегодня и прошлые дни.'
       : canRemove
         ? 'Отметки сохранятся после «Готово». «Отменить» сбросит изменения.'
         : 'Можно только добавлять отметки. Сохранение — после «Готово», отмена — «Отменить».'
@@ -377,7 +408,11 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
           const isGoalMissed = isGoalsProject && isGoal && isPast && !isMarked;
 
           const canEditGoals = editMode && isGoalsProject && editLayer === 'goals' && (!isGoal || canRemove);
-          const canEditMarks = editMode && (!isGoalsProject || editLayer === 'marks') && !isFuture && (!isMarked || canRemove);
+          const canEditMarks = editMode
+            && (!isGoalsProject || editLayer === 'marks')
+            && (!isGoalsProject || isGoal)
+            && !isFuture
+            && (!isMarked || canRemove);
           const canInteract = canEditGoals || canEditMarks;
 
           return (
@@ -394,7 +429,8 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
                 isGoalMissed ? 'calendar-day-goal-missed' : '',
                 hasNote ? 'calendar-day-has-note' : '',
                 isSelected ? 'calendar-day-selected' : '',
-                canInteract ? 'calendar-day-interactive' : isFuture && !canEditGoals ? '' : 'calendar-day-selectable',
+                canInteract ? 'calendar-day-interactive' : '',
+                !editMode && !(isFuture && !canEditGoals) ? 'calendar-day-selectable' : '',
               ].filter(Boolean).join(' ')}
               onClick={() => handleDayClick(day)}
             >
