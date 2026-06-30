@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { DashboardWeekDayCell, DashboardWeeklyMatrix as DashboardWeeklyMatrixData, ProjectType } from '../types';
-import { formatLocalDate, parseLocalDate } from '../utils/date';
+import { parseLocalDate } from '../utils/date';
 import '../styles/components/DashboardWeeklyMatrix.css';
 
 interface DashboardWeeklyMatrixProps {
@@ -20,7 +20,6 @@ const CELL_LABELS = {
 const WEEK_DIVIDER_INDICES = new Set([6, 13]);
 const WEEK_START_INDICES = new Set([7, 14]);
 const MOBILE_MATRIX_DAYS = 21;
-const todayKey = formatLocalDate(new Date());
 
 function formatWeekdayHeader(dateKey: string): string {
   return parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
@@ -39,7 +38,6 @@ function DayCell({
   projectType: ProjectType;
 }) {
   const isCalendarMarked = projectType === 'calendar' && day.state === 'marked';
-  const isTodayGoalPending = day.state === 'goal-pending' && day.date === todayKey;
 
   return (
     <span
@@ -47,7 +45,6 @@ function DayCell({
         'dashboard-week-matrix-cell',
         `dashboard-week-matrix-cell-${day.state}`,
         isCalendarMarked ? 'dashboard-week-matrix-cell-marked-calendar' : '',
-        isTodayGoalPending ? 'dashboard-week-matrix-cell-goal-pending-today' : '',
       ].filter(Boolean).join(' ')}
       aria-label={`${label}, ${formatWeekdayHeader(day.date)}: ${CELL_LABELS[day.state]}`}
     />
@@ -64,11 +61,10 @@ function chunkWeeks(days: DashboardWeekDayCell[]): DashboardWeekDayCell[][] {
   return weeks;
 }
 
-function dayCellClassName(index: number, lastIndex: number): string {
+function dayCellClassName(index: number): string {
   return [
     'dashboard-week-matrix-day',
     index === 0 ? 'dashboard-week-matrix-day-after-project' : '',
-    index === lastIndex ? 'dashboard-week-matrix-day-before-progress' : '',
     WEEK_DIVIDER_INDICES.has(index) ? 'dashboard-week-matrix-day-week-divider' : '',
     WEEK_START_INDICES.has(index) ? 'dashboard-week-matrix-day-week-start' : '',
   ].filter(Boolean).join(' ');
@@ -89,11 +85,11 @@ export function DashboardWeeklyMatrix({ matrix, onProjectClick }: DashboardWeekl
             <tr>
               <th className="dashboard-week-matrix-project-header align-left">Проект</th>
               {matrix.dates.map((date, index) => (
-                <th key={date} className={dayCellClassName(index, matrix.dates.length - 1)}>
+                <th key={date} className={dayCellClassName(index)}>
                   {formatWeekdayHeader(date)}
                 </th>
               ))}
-              <th className="dashboard-week-matrix-progress-header">3 недели</th>
+              {/* <th className="dashboard-week-matrix-progress-header">3 недели</th> */}
             </tr>
           </thead>
           <tbody>
@@ -109,11 +105,11 @@ export function DashboardWeeklyMatrix({ matrix, onProjectClick }: DashboardWeekl
                   </button>
                 </td>
                 {project.days.map((day, index) => (
-                  <td key={`${project.id}-${day.date}`} className={dayCellClassName(index, project.days.length - 1)}>
+                  <td key={`${project.id}-${day.date}`} className={dayCellClassName(index)}>
                     <DayCell day={day} label={project.name} projectType={project.project_type} />
                   </td>
                 ))}
-                <td className="dashboard-week-matrix-progress">{project.weekProgress}%</td>
+                {/* <td className="dashboard-week-matrix-progress">{project.weekProgress}%</td> */}
               </tr>
             ))}
           </tbody>
@@ -138,7 +134,7 @@ export function DashboardWeeklyMatrix({ matrix, onProjectClick }: DashboardWeekl
               >
                 <span className="dashboard-week-matrix-mobile-name">{project.name}</span>
                 <span className="dashboard-week-matrix-mobile-summary">
-                  <span className="dashboard-week-matrix-mobile-progress">{project.weekProgress}%</span>
+                  {/* <span className="dashboard-week-matrix-mobile-progress">{project.weekProgress}%</span> */}
                   <ChevronDown size={18} className="dashboard-week-matrix-mobile-chevron" />
                 </span>
               </button>

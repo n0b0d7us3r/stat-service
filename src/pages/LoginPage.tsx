@@ -4,6 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { AuthError, useAuth } from '../context/AuthContext';
 import { Checkbox } from '../components/Checkbox';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { isPublicRegisterAllowed } from '../config/features';
 import '../styles/LoginPage.css';
 
 export function LoginPage() {
@@ -127,9 +128,11 @@ export function LoginPage() {
               {loading ? 'Авторизация...' : 'Войти в систему'}
             </button>
 
-            <p className="login-switch-link">
-              Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
-            </p>
+            {isPublicRegisterAllowed && (
+              <p className="login-switch-link">
+                Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+              </p>
+            )}
           </form>
         </div>
       </div>

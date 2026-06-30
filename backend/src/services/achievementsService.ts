@@ -1,7 +1,8 @@
 import { getUserDb } from '../db/userDb.js';
 import { queryAll, queryExists, runStatement } from '../query.js';
-import { addDays, formatLocalDate, parseLocalDate } from '../utils/date.js';
-import { getProjectStats } from './marksService.js';
+import { addDays, computeStreaks, formatLocalDate, getTodayKey, parseLocalDate } from '../utils/date.js';
+import { getAllGoalDays } from './goalsService.js';
+import { getAllMarkedDays, getProjectStats } from './marksService.js';
 import { getProjectsByUser } from './projectsService.js';
 
 export type AchievementCriteriaType =
@@ -9,7 +10,9 @@ export type AchievementCriteriaType =
   | 'project_count'
   | 'month_progress'
   | 'note_count'
-  | 'weekend_marked';
+  | 'weekend_marked'
+  | 'goal_streak'
+  | 'global_streak';
 
 export type ProjectType = 'calendar' | 'day';
 
@@ -43,20 +46,31 @@ const DEFAULT_ACHIEVEMENTS: Array<{
   { code: 'notebook', name: 'Запишу тебя в блокнотик', description: 'Напишите 5 заметок в проектах.', criteria_type: 'note_count', threshold: 5, project_type: 'calendar' },
   { code: 'weekend_warrior', name: 'Выходные для слабаков', description: 'Поставьте отметки в субботу и воскресенье одних выходных.', criteria_type: 'weekend_marked', threshold: 1, project_type: 'calendar' },
   { code: 'analyst', name: 'Аналитик', description: 'Создайте 5 проектов.', criteria_type: 'project_count', threshold: 5, project_type: 'calendar' },
-  { code: 'librarian', name: 'Библиотекарь', description: 'Создайте 15 проектов.', criteria_type: 'project_count', threshold: 15, project_type: 'calendar' },
+  { code: 'librarian', name: 'Библиотекарь', description: 'Создайте 10 проектов.', criteria_type: 'project_count', threshold: 10, project_type: 'calendar' },
   { code: 'perfectionist', name: 'Перфецкионист', description: 'Достигните 100% прогресса месяца в любом проекте.', criteria_type: 'month_progress', threshold: 100, project_type: 'calendar' },
+  { code: 'goal_streak_10', name: 'Целеустремлённый', description: 'Выполните 10 целей подряд в одном проекте типа «Цели».', criteria_type: 'goal_streak', threshold: 10, project_type: 'calendar' },
+  { code: 'stay_long', name: 'Ты со мной надолго?', description: 'Продолжайте ставить отметки в любом проекте в течение двух месяцев.', criteria_type: 'global_streak', threshold: 60, project_type: 'calendar' },
 ];
 
 const CRITERIA_SORT_ORDER: Record<AchievementCriteriaType, number> = {
   project_count: 1,
   streak: 2,
-  note_count: 3,
-  weekend_marked: 4,
-  month_progress: 5,
+  goal_streak: 3,
+  global_streak: 4,
+  note_count: 5,
+  weekend_marked: 6,
+  month_progress: 7,
 };
 
 function mapCriteriaType(value: string): AchievementCriteriaType {
-  if (value === 'project_count' || value === 'month_progress' || value === 'note_count' || value === 'weekend_marked') {
+  if (
+    value === 'project_count'
+    || value === 'month_progress'
+    || value === 'note_count'
+    || value === 'weekend_marked'
+    || value === 'goal_streak'
+    || value === 'global_streak'
+  ) {
     return value;
   }
   return 'streak';
@@ -89,8 +103,8 @@ export function seedAchievements(userId: number): void {
     if (queryExists(db, 'SELECT id FROM achievements WHERE code = ?', [item.code])) {
       runStatement(
         db,
-        'UPDATE achievements SET name = ?, description = ? WHERE code = ?',
-        [item.name, item.description, item.code],
+        'UPDATE achievements SET name = ?, description = ?, streak_days = ?, criteria_type = ? WHERE code = ?',
+        [item.name, item.description, item.threshold, item.criteria_type, item.code],
       );
       continue;
     }
@@ -202,6 +216,38 @@ function getBestMonthProgress(userId: number): number {
   }, 0);
 }
 
+function getBestGoalCompletionStreak(userId: number): number {
+  const todayKey = getTodayKey();
+  const goalProjects = getProjectsByUser(userId).filter((project) => project.project_type === 'goals');
+  let bestOverall = 0;
+
+  for (const project of goalProjects) {
+    const goalDays = getAllGoalDays(userId, project.id);
+    const markedSet = new Set(getAllMarkedDays(userId, project.id));
+    let current = 0;
+
+    for (const date of goalDays) {
+      if (date > todayKey) {
+        continue;
+      }
+
+      if (markedSet.has(date)) {
+        current += 1;
+        bestOverall = Math.max(bestOverall, current);
+      } else {
+        current = 0;
+      }
+    }
+  }
+
+  return bestOverall;
+}
+
+function getGlobalLongestMarkStreak(userId: number): number {
+  const markedDates = [...getUserMarkedDates(userId)];
+  return computeStreaks(markedDates).longestStreak;
+}
+
 function isAchievementEarned(userId: number, achievement: Achievement): boolean {
   switch (achievement.criteria_type) {
     case 'project_count':
@@ -212,6 +258,10 @@ function isAchievementEarned(userId: number, achievement: Achievement): boolean 
       return getUserNoteCount(userId) >= achievement.streak_days;
     case 'weekend_marked':
       return hasWeekendPairMarked(userId);
+    case 'goal_streak':
+      return getBestGoalCompletionStreak(userId) >= achievement.streak_days;
+    case 'global_streak':
+      return getGlobalLongestMarkStreak(userId) >= achievement.streak_days;
     case 'streak':
     default:
       return getBestLongestStreakForType(userId, achievement.project_type) >= achievement.streak_days;

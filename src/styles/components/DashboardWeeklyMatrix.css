@@ -14,7 +14,7 @@
 
 .dashboard-week-matrix {
   width: 100%;
-  min-width: 1080px;
+  min-width: 980px;
   border-collapse: collapse;
 }
 
@@ -131,13 +131,12 @@
 }
 
 .dashboard-week-matrix-cell-goal-pending {
-  /*background: color-mix(in srgb, var(--primary-soft) 45%, var(--background));*/
-  border-color: color-mix(in srgb, var(--foreground) 55%, var(--border));
+  background: var(--background);
+  border-color: var(--primary);
 }
 
-.dashboard-week-matrix-cell-goal-pending-today {
-  background: var(--cell-today);
-  border-color: var(--border);
+.theme-light .dashboard-week-matrix-cell-goal-pending {
+  background: color-mix(in srgb, var(--primary) 14%, var(--background));
 }
 
 .dashboard-week-matrix-cell-goal-success {

@@ -1,6 +1,6 @@
 services:
   #######################################
-  #             STAT-SERVICE            #
+  #               STAT-API              #
   #######################################
 
   stat-api:
@@ -10,7 +10,9 @@ services:
     image: stat-api
     container_name: stat-api
     volumes:
-      - ./db/app_data/:/data
+      - ./db/app_data/:/data/
+      - ./scripts/:/scripts/
+      - ./temp/:/tmp/
     environment:
       - DATA_DIR=/data
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
@@ -19,6 +21,10 @@ services:
     networks:
       - app_network
     restart: unless-stopped
+
+  #######################################
+  #             STAT-SERVICE            #
+  #######################################
 
   stat-service:
     build:

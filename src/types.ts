@@ -12,7 +12,9 @@ export type AchievementCriteriaType =
   | 'project_count'
   | 'month_progress'
   | 'note_count'
-  | 'weekend_marked';
+  | 'weekend_marked'
+  | 'goal_streak'
+  | 'global_streak';
 
 export interface Project {
   id: number;
