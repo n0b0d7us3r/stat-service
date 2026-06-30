@@ -18,6 +18,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - SEED_ADMIN_EMAIL=${VITE_SEED_ADMIN_EMAIL}
       - SEED_ADMIN_PASSWORD=${VITE_SEED_ADMIN_PASSWORD}
+      - TZ=${TZ:-Europe/Minsk}
     networks:
       - app_network
     restart: unless-stopped

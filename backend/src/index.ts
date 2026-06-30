@@ -304,5 +304,5 @@ app.use((error: unknown, _req: express.Request, res: express.Response, _next: ex
 await seedInitialAdmin();
 
 app.listen(PORT, () => {
-  console.log(`stat-service API listening on :${PORT}`);
+  console.log(`stat-service API listening on :${PORT} (TZ=${process.env.TZ ?? 'system'}, today=${getTodayKey()})`);
 });
