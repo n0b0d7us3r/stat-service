@@ -24,7 +24,7 @@ import {
   getGoalDaysForMonth,
   syncGoalDays,
 } from './services/goalsService.js';
-import { getNote, getNoteDatesForMonth, saveNote } from './services/notesService.js';
+import { getNote, getNoteDatesForMonth, listUserNotes, saveNote } from './services/notesService.js';
 import { DbError, createProject, deleteProject, getProjectById, getProjectsByUser } from './services/projectsService.js';
 
 const app = express();
@@ -221,6 +221,21 @@ app.get('/api/projects/:projectId/stats', requireAuth, (req: AuthRequest, res) =
   }
 
   res.json({ stats: getProjectStats(req.user!.id, projectId) });
+});
+
+app.get('/api/notes', requireAuth, (req: AuthRequest, res) => {
+  const sortRaw = String(req.query.sort ?? 'date');
+  const sort = sortRaw === 'project' ? 'project' : 'date';
+  const page = Number(req.query.page);
+  const limit = Number(req.query.limit);
+
+  res.json({
+    result: listUserNotes(req.user!.id, {
+      sort,
+      page: Number.isFinite(page) ? page : 1,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    }),
+  });
 });
 
 app.get('/api/projects/:projectId/notes/:date', requireAuth, (req: AuthRequest, res) => {

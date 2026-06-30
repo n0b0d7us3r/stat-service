@@ -4,6 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { AuthError, useAuth } from '../context/AuthContext';
 import { Checkbox } from '../components/Checkbox';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { APP_NAME } from '../config/app';
 import { isPublicRegisterAllowed } from '../config/features';
 import '../styles/LoginPage.css';
 
@@ -17,12 +18,10 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const APP_NAME = import.meta.env.VITE_APP_NAME || 'Game Stat';
-
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
-    document.title = 'Авторизация | Game Stat';
+    document.title = `Авторизация | ${APP_NAME}`;
   }, []);
 
   useEffect(() => {

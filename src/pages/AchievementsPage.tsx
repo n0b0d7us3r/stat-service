@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
+import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
 import type { UserAchievementView } from '../types';
@@ -20,7 +21,7 @@ export function AchievementsPage() {
   const [achievements, setAchievements] = useState<UserAchievementView[]>([]);
 
   useEffect(() => {
-    document.title = 'Достижения | Game Stat';
+    document.title = `Достижения | ${APP_NAME}`;
 
     if (!user) {
       setAchievements([]);

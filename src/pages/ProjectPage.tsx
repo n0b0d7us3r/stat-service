@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronDown, ChevronLeft, Pencil, PencilOff, Trash2, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { ProjectCalendar, type ProjectCalendarHandle } from '../components/ProjectCalendar';
 import { ProjectDayNotes } from '../components/ProjectDayNotes';
 import { ProjectStats } from '../components/ProjectStats';
+import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { verifyUserPassword } from '../api/auth';
 import { getProjectStats } from '../api/marks';
 import { deleteProject, getProjectById } from '../api/projects';
 import type { Achievement, Project, ProjectStats as ProjectStatsData } from '../types';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
+import { parseLocalDate } from '../utils/date';
 import '../styles/ProjectPage.css';
 
 export function ProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { showAchievements } = useAchievementCelebration();
   const projectId = Number(id);
@@ -31,7 +34,7 @@ export function ProjectPage() {
   const [editMode, setEditMode] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
-  const [statsExpanded, setStatsExpanded] = useState(true);
+  const [statsExpanded, setStatsExpanded] = useState(() => window.innerWidth > 640);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -75,9 +78,20 @@ export function ProjectPage() {
 
   useEffect(() => {
     if (project) {
-      document.title = `${project.name} | Game Stat`;
+      document.title = `${project.name} | ${APP_NAME}`;
     }
   }, [project]);
+
+  useEffect(() => {
+    const state = location.state as { selectedDate?: string } | null;
+    if (!project || !state?.selectedDate) return;
+
+    setSelectedDate(state.selectedDate);
+    const noteDate = parseLocalDate(state.selectedDate);
+    setViewYear(noteDate.getFullYear());
+    setViewMonth(noteDate.getMonth() + 1);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [project, location.pathname, location.state, navigate]);
 
   const handleStatsRefresh = () => {
     if (!project || !user) return;

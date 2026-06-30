@@ -5,6 +5,7 @@ import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { DashboardWeeklyMatrix } from '../components/DashboardWeeklyMatrix';
 import { DashboardMonthTable } from '../components/DashboardMonthTable';
+import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
 import { getDashboardStats } from '../api/dashboard';
@@ -37,7 +38,7 @@ export function DashboardPage() {
   }, [user]);
 
   useEffect(() => {
-    document.title = 'Статистика | Game Stat';
+    document.title = `Статистика | ${APP_NAME}`;
     reload();
   }, [reload]);
 

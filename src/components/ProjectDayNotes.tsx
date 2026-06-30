@@ -62,10 +62,15 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
   };
 
   return (
-    <section className="project-day-notes app-border-card">
+    <section className={`project-day-notes app-border-card${selectedDate ? ' project-day-notes-has-date' : ''}`}>
       <div className="project-day-notes-header">
         <h2 className="project-day-notes-title">Заметки</h2>
-        {selectedDate && (
+      </div>
+
+      {!selectedDate ? (
+        <p className="project-day-notes-empty">Выберите день в календаре, чтобы посмотреть или добавить заметку.</p>
+      ) : (
+        <>
           <button
             type="button"
             className={`project-day-notes-edit-btn ${editMode ? 'active' : ''}`}
@@ -74,13 +79,7 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
             {editMode ? <PencilOff size={16} /> : <Pencil size={16} />}
             <span>{editMode ? 'Просмотр' : 'Редактировать'}</span>
           </button>
-        )}
-      </div>
 
-      {!selectedDate ? (
-        <p className="project-day-notes-empty">Выберите день в календаре, чтобы посмотреть или добавить заметку.</p>
-      ) : (
-        <>
           <p className="project-day-notes-date">{formatSelectedDate(selectedDate)}</p>
 
           {editMode ? (

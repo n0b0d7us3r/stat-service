@@ -4,6 +4,7 @@ import { ChevronRight, FolderKanban, Plus } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { CreateProjectModal } from '../components/CreateProjectModal';
+import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
 import { getProjectsByUser } from '../api/projects';
@@ -29,7 +30,7 @@ export function ProjectsPage() {
   }, [user]);
 
   useEffect(() => {
-    document.title = 'Проекты | Game Stat';
+    document.title = `Проекты | ${APP_NAME}`;
     reloadProjects();
   }, [reloadProjects]);
 
@@ -72,7 +73,6 @@ export function ProjectsPage() {
                   >
                     <div className="project-card-content">
                       <h3>{project.name}</h3>
-                      {project.description && <p>{project.description}</p>}
                       <div className="project-card-meta-row">
                         <span className="project-card-type">{PROJECT_TYPE_LABELS[project.project_type]}</span>
                         <span
@@ -80,8 +80,8 @@ export function ProjectsPage() {
                         >
                           {project.is_mutable ? 'Изменяемый' : 'Неизменяемый'}
                         </span>
-                        <span className="project-card-meta">Отмечено дней: {project.marked_count}</span>
                       </div>
+                      <span className="project-card-meta">Отмечено дней: {project.marked_count}</span>
                     </div>
                     <ChevronRight size={20} />
                   </button>

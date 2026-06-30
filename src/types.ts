@@ -35,6 +35,21 @@ export interface DayNote {
   updated_at: string;
 }
 
+export type NotesSortMode = 'date' | 'project';
+
+export interface DayNoteListItem extends DayNote {
+  project_name: string;
+}
+
+export interface NotesListResult {
+  notes: DayNoteListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  sort: NotesSortMode;
+}
+
 export interface ProjectStats {
   totalMarked: number;
   markedThisMonth: number;

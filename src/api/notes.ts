@@ -1,5 +1,21 @@
-import type { Achievement, DayNote } from '../types';
+import type { Achievement, DayNote, NotesListResult, NotesSortMode } from '../types';
 import { apiFetch } from './client';
+
+export const NOTES_PAGE_SIZE = 25;
+
+export async function getNotes(options: {
+  sort?: NotesSortMode;
+  page?: number;
+  limit?: number;
+} = {}): Promise<NotesListResult> {
+  const params = new URLSearchParams();
+  params.set('sort', options.sort ?? 'date');
+  params.set('page', String(options.page ?? 1));
+  params.set('limit', String(options.limit ?? NOTES_PAGE_SIZE));
+
+  const { result } = await apiFetch<{ result: NotesListResult }>(`/notes?${params.toString()}`);
+  return result;
+}
 
 export async function getNote(projectId: number, date: string): Promise<DayNote | null> {
   const { note } = await apiFetch<{ note: DayNote | null }>(`/projects/${projectId}/notes/${date}`);

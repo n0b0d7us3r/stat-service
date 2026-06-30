@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { AuthError, useAuth } from '../context/AuthContext';
+import { APP_NAME } from '../config/app';
 import { ThemeToggle } from '../components/ThemeToggle';
 import '../styles/LoginPage.css';
 
@@ -16,12 +17,10 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const APP_NAME = import.meta.env.VITE_APP_NAME || 'Game Stat';
-
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
-    document.title = 'Регистрация | Game Stat';
+    document.title = `Регистрация | ${APP_NAME}`;
   }, []);
 
   useEffect(() => {

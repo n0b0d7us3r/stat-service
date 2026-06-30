@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, BarChart3, FolderKanban, Trophy } from 'lucide-react';
+import { LogOut, BarChart3, FolderKanban, StickyNote, Trophy } from 'lucide-react';
+import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { SidebarToggle } from './SidebarToggle';
 import { ThemeToggle } from './ThemeToggle';
@@ -29,7 +30,6 @@ export function Layout({ children }: LayoutProps) {
 
   const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
 
-  const APP_NAME = import.meta.env.VITE_APP_NAME || 'Game Stat';
   const displayedAppName = APP_NAME.length > 19 ? `${APP_NAME.substring(0, 19)}...` : APP_NAME;
 
   useEffect(() => {
@@ -65,13 +65,17 @@ export function Layout({ children }: LayoutProps) {
               <div className="sidebar-user-email">{user.email}</div>
             </div>
           )}
+          <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <FolderKanban size={20} />
+            <span>ПРОЕКТЫ</span>
+          </NavLink>
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <BarChart3 size={20} />
             <span>СТАТИСТИКА</span>
           </NavLink>
-          <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <FolderKanban size={20} />
-            <span>ПРОЕКТЫ</span>
+          <NavLink to="/notes" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <StickyNote size={20} />
+            <span>ЗАМЕТКИ</span>
           </NavLink>
           <NavLink to="/achievements" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Trophy size={20} />
