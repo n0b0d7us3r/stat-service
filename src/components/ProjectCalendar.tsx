@@ -166,6 +166,12 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
     void reloadMonthFromDb(year, month);
   }, [editMode, projectId, isGoalsProject]);
 
+  useEffect(() => {
+    if (editMode) {
+      onSelectDate(null);
+    }
+  }, [editMode, onSelectDate]);
+
   useImperativeHandle(ref, () => ({
     applyMarks: async () => {
       if (!draftMarks || !baselineMarks) {
@@ -277,27 +283,26 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
   const handleDayClick = (day: number) => {
     const dateKey = `${monthPrefix}-${String(day).padStart(2, '0')}`;
 
+    if (editMode) {
+      if (isGoalsProject && editLayer === 'goals') {
+        toggleDraftSet(dateKey, draftGoals, setDraftGoals, goalSet.has(dateKey));
+        return;
+      }
+
+      if (isFutureDay(dateKey)) {
+        return;
+      }
+
+      toggleDraftSet(dateKey, draftMarks, setDraftMarks, markedSet.has(dateKey));
+      return;
+    }
+
     if (selectedDate === dateKey) {
       onSelectDate(null);
       return;
     }
 
     onSelectDate(dateKey);
-
-    if (!editMode) {
-      return;
-    }
-
-    if (isGoalsProject && editLayer === 'goals') {
-      toggleDraftSet(dateKey, draftGoals, setDraftGoals, goalSet.has(dateKey));
-      return;
-    }
-
-    if (isFutureDay(dateKey)) {
-      return;
-    }
-
-    toggleDraftSet(dateKey, draftMarks, setDraftMarks, markedSet.has(dateKey));
   };
 
   const editHint = editMode
@@ -367,7 +372,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
           const isMarked = markedSet.has(dateKey);
           const isGoal = goalSet.has(dateKey);
           const hasNote = noteSet.has(dateKey);
-          const isSelected = dateKey === selectedDate;
+          const isSelected = !editMode && dateKey === selectedDate;
           const isGoalSuccess = isGoalsProject && isGoal && isMarked;
           const isGoalMissed = isGoalsProject && isGoal && isPast && !isMarked;
 

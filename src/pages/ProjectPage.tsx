@@ -116,7 +116,10 @@ export function ProjectPage() {
     showAchievements(newlyEarned);
   };
 
-  const startEditMode = () => setEditMode(true);
+  const startEditMode = () => {
+    setSelectedDate(null);
+    setEditMode(true);
+  };
 
   const applyEditMode = () => {
     void calendarRef.current?.applyMarks().then((newlyEarned) => {
