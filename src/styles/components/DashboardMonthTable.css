@@ -98,6 +98,82 @@
   padding-right: 1rem;
 }
 
+.dashboard-month-project-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dashboard-month-table td.dashboard-month-data-col {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-month-project-name-text {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 0 1 auto;
+  max-width: 20ch;
+}
+
+.dashboard-month-project-inline-stats {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.dashboard-month-stat-separator {
+  padding-left: 0.875rem;
+  padding-right: 0.5rem;
+  color: var(--border);
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.dashboard-month-stat-ratio {
+  min-width: 5.5ch;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dashboard-month-stat-percent {
+  width: 4.5ch;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dashboard-month-table th.dashboard-month-data-col-progress,
+.dashboard-month-table td.dashboard-month-data-col-progress {
+  width: 5rem;
+  min-width: 5rem;
+  white-space: nowrap;
+}
+
+.dashboard-month-row-complete .dashboard-month-data-col,
+.dashboard-month-row-complete .dashboard-month-project-inline-stats {
+  color: #15803d;
+}
+
+.theme-light .dashboard-month-row-complete .dashboard-month-data-col,
+.theme-light .dashboard-month-row-complete .dashboard-month-project-inline-stats {
+  color: #166534;
+}
+
+.dashboard-month-row-complete .dashboard-month-stat-separator {
+  color: color-mix(in srgb, #22c55e 45%, var(--border));
+}
+
 .dashboard-month-row {
   cursor: pointer;
 }
@@ -128,67 +204,23 @@
     min-width: 0;
   }
 
-  .dashboard-month-table-wrapper {
-    overflow-x: visible;
-    background: transparent;
-    border: none;
-  }
-
-  .dashboard-month-table {
-    display: block;
-  }
-
-  .dashboard-month-table thead {
+  .dashboard-month-table th.dashboard-month-data-col,
+  .dashboard-month-table td.dashboard-month-data-col {
     display: none;
   }
 
-  .dashboard-month-table tbody {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+  .dashboard-month-project-inline-stats {
+    display: inline-flex;
   }
 
-  .dashboard-month-row {
-    display: block;
-    background: var(--card);
-    border: 1px solid var(--border);
+  .dashboard-month-table th,
+  .dashboard-month-table td {
+    padding: 0.625rem 0.75rem;
   }
 
-  .dashboard-month-row td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.625rem 1rem;
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .dashboard-month-row td:last-child {
-    border-bottom: none;
-  }
-
-  .dashboard-month-row td.dashboard-month-project-name {
-    font-size: 1rem;
-    font-weight: 700;
-    text-align: left;
-    justify-content: flex-start;
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .dashboard-month-row td.dashboard-month-project-name::before {
-    display: none;
-  }
-
-  .dashboard-month-row td::before {
-    content: attr(data-label);
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    text-align: left;
-    flex-shrink: 0;
+  .dashboard-month-table th.dashboard-month-project-header,
+  .dashboard-month-table td.dashboard-month-project-name {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
   }
 }

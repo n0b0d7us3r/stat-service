@@ -19,7 +19,6 @@ const CELL_LABELS = {
 
 const WEEK_DIVIDER_INDICES = new Set([6, 13]);
 const WEEK_START_INDICES = new Set([7, 14]);
-const MOBILE_MATRIX_DAYS = 21;
 
 function formatWeekdayHeader(dateKey: string): string {
   return parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
@@ -119,7 +118,7 @@ export function DashboardWeeklyMatrix({ matrix, onProjectClick }: DashboardWeekl
       <div className="dashboard-week-matrix-mobile">
         {matrix.projects.map((project) => {
           const isExpanded = expandedProjectId === project.id;
-          const mobileDays = project.days.slice(-MOBILE_MATRIX_DAYS);
+          const mobileDays = project.days;
 
           return (
             <article

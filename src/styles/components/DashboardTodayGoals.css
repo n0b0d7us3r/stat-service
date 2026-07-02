@@ -1,0 +1,121 @@
+.dashboard-today-goals {
+  margin: 0;
+}
+
+.dashboard-today-goals-summary {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.dashboard-today-goals-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.dashboard-today-goals-empty svg {
+  color: var(--primary-dark);
+}
+
+.dashboard-today-goals-empty p {
+  margin: 0;
+  max-width: 24rem;
+  line-height: 1.5;
+}
+
+.dashboard-today-goals-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.dashboard-today-goals-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .dashboard-today-goals-item:hover {
+    border-color: var(--primary);
+  }
+}
+
+.dashboard-today-goals-project {
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-today-goals-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.dashboard-today-goals-type {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.dashboard-today-goals-status {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-today-goals-item-done {
+  border-left: 4px solid #22c55e;
+}
+
+.dashboard-today-goals-item-done .dashboard-today-goals-status {
+  color: #15803d;
+}
+
+.theme-light .dashboard-today-goals-item-done .dashboard-today-goals-status {
+  color: #166534;
+}
+
+.dashboard-today-goals-item-pending {
+  border-left: 4px solid var(--primary);
+}
+
+.dashboard-today-goals-item-pending .dashboard-today-goals-status {
+  color: var(--primary-dark);
+}
+
+@media (min-width: 769px) {
+  .dashboard-today-goals-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}

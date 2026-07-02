@@ -31,6 +31,32 @@ function buildYearOptions(currentYear: number): number[] {
   return Array.from({ length: YEAR_RANGE }, (_, index) => currentYear - index);
 }
 
+function truncateProjectName(name: string, maxLength = 20): string {
+  if (name.length <= maxLength) {
+    return name;
+  }
+
+  return `${name.slice(0, maxLength)}…`;
+}
+
+function ProjectProgressStats({
+  completed,
+  total,
+  progress,
+}: {
+  completed: number;
+  total: number;
+  progress: number;
+}) {
+  return (
+    <span className="dashboard-month-project-inline-stats">
+      <span className="dashboard-month-stat-ratio">{completed}/{total}</span>
+      <span className="dashboard-month-stat-separator" aria-hidden="true">|</span>
+      <span className="dashboard-month-stat-percent">{progress}%</span>
+    </span>
+  );
+}
+
 export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps) {
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
@@ -106,24 +132,37 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
             <thead>
               <tr>
                 <th className="dashboard-month-project-header">Проект</th>
-                <th>Сделано</th>
-                <th>Всего</th>
-                <th>Прогресс</th>
+                <th className="dashboard-month-data-col">Сделано</th>
+                <th className="dashboard-month-data-col">Всего</th>
+                <th className="dashboard-month-data-col dashboard-month-data-col-progress">Прогресс</th>
               </tr>
             </thead>
             <tbody>
-              {stats.projects.map((project) => (
+              {stats.projects.map((project) => {
+                const isComplete = project.progress >= 100;
+
+                return (
                 <tr
                   key={project.id}
-                  className="dashboard-month-row"
+                  className={`dashboard-month-row ${isComplete ? 'dashboard-month-row-complete' : ''}`}
                   onClick={() => onProjectClick(project.id)}
                 >
-                  <td className="dashboard-month-project-name">{project.name}</td>
-                  <td data-label="Сделано">{project.completed}</td>
-                  <td data-label="Всего">{project.total}</td>
-                  <td data-label="Прогресс">{project.progress}%</td>
+                  <td className="dashboard-month-project-name">
+                    <span className="dashboard-month-project-name-text" title={project.name}>
+                      {truncateProjectName(project.name)}
+                    </span>
+                    <ProjectProgressStats
+                      completed={project.completed}
+                      total={project.total}
+                      progress={project.progress}
+                    />
+                  </td>
+                  <td className="dashboard-month-data-col" data-label="Сделано">{project.completed}</td>
+                  <td className="dashboard-month-data-col" data-label="Всего">{project.total}</td>
+                  <td className="dashboard-month-data-col dashboard-month-data-col-progress" data-label="Прогресс">{project.progress}%</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

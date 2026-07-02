@@ -1,4 +1,4 @@
-import { addDays, formatLocalDate, getTodayKey, parseLocalDate } from '../utils/date.js';
+import { getThreeCalendarWeekDayKeys, getTodayKey } from '../utils/date.js';
 import { getAllGoalDays } from './goalsService.js';
 import { getAllMarkedDays, getProjectStats } from './marksService.js';
 import { getProjectsByUser, type ProjectType } from './projectsService.js';
@@ -55,20 +55,20 @@ export interface DashboardStats {
     longestStreak: number;
   }>;
   weeklyMatrix: DashboardWeeklyMatrix;
+  todayGoals: DashboardTodayGoals;
 }
 
-function getLast21DayKeys(todayKey: string): string[] {
-  const today = parseLocalDate(todayKey);
-  const dates: string[] = [];
-
-  for (let offset = 20; offset >= 0; offset -= 1) {
-    dates.push(formatLocalDate(addDays(today, -offset)));
-  }
-
-  return dates;
+export interface DashboardTodayGoalItem {
+  projectId: number;
+  projectName: string;
+  projectType: ProjectType;
+  completed: boolean;
 }
 
-const MOBILE_MATRIX_DAYS = 21;
+export interface DashboardTodayGoals {
+  date: string;
+  goals: DashboardTodayGoalItem[];
+}
 
 function getWeekCellState(
   projectType: ProjectType,
@@ -127,8 +127,7 @@ function getWeekProgress(
 function buildWeeklyMatrix(userId: number): DashboardWeeklyMatrix {
   const projects = getProjectsByUser(userId);
   const todayKey = getTodayKey();
-  const dates = getLast21DayKeys(todayKey);
-  const mobileDates = dates.slice(-MOBILE_MATRIX_DAYS);
+  const dates = getThreeCalendarWeekDayKeys(todayKey);
 
   const rows = projects.map((project) => {
     const markedSet = new Set(getAllMarkedDays(userId, project.id));
@@ -144,11 +143,48 @@ function buildWeeklyMatrix(userId: number): DashboardWeeklyMatrix {
       project_type: project.project_type,
       days,
       weekProgress: getWeekProgress(project.project_type, dates, todayKey, markedSet, goalSet),
-      mobileWeekProgress: getWeekProgress(project.project_type, mobileDates, todayKey, markedSet, goalSet),
+      mobileWeekProgress: getWeekProgress(project.project_type, dates, todayKey, markedSet, goalSet),
     };
   });
 
   return { dates, projects: rows };
+}
+
+function buildTodayGoals(userId: number): DashboardTodayGoals {
+  const todayKey = getTodayKey();
+  const goals: DashboardTodayGoalItem[] = [];
+
+  for (const project of getProjectsByUser(userId)) {
+    const markedSet = new Set(getAllMarkedDays(userId, project.id));
+
+    if (project.project_type === 'calendar') {
+      goals.push({
+        projectId: project.id,
+        projectName: project.name,
+        projectType: 'calendar',
+        completed: markedSet.has(todayKey),
+      });
+      continue;
+    }
+
+    if (project.project_type === 'goals') {
+      const goalDays = getAllGoalDays(userId, project.id);
+      if (!goalDays.includes(todayKey)) {
+        continue;
+      }
+
+      goals.push({
+        projectId: project.id,
+        projectName: project.name,
+        projectType: 'goals',
+        completed: markedSet.has(todayKey),
+      });
+    }
+  }
+
+  goals.sort((left, right) => left.projectName.localeCompare(right.projectName, 'ru'));
+
+  return { date: todayKey, goals };
 }
 
 export function getDashboardMonthlyStats(userId: number, year: number, month: number): DashboardMonthlyStats {
@@ -209,5 +245,6 @@ export function getDashboardStats(userId: number): DashboardStats {
     bestLongestStreak,
     projects: projectSummaries,
     weeklyMatrix: buildWeeklyMatrix(userId),
+    todayGoals: buildTodayGoals(userId),
   };
 }

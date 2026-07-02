@@ -127,3 +127,24 @@ export function computeStreaksInMonth(
 export function getTodayKey(): string {
   return formatLocalDate(new Date());
 }
+
+export function getMondayOfWeek(date: Date): Date {
+  const weekday = date.getDay();
+  const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
+  return addDays(date, mondayOffset);
+}
+
+/** Предыдущая, текущая и следующая календарные недели (пн–вс), 21 день. */
+export function getThreeCalendarWeekDayKeys(todayKey: string): string[] {
+  const currentMonday = getMondayOfWeek(parseLocalDate(todayKey));
+  const dates: string[] = [];
+
+  for (let week = -1; week <= 1; week += 1) {
+    const weekStart = addDays(currentMonday, week * 7);
+    for (let day = 0; day < 7; day += 1) {
+      dates.push(formatLocalDate(addDays(weekStart, day)));
+    }
+  }
+
+  return dates;
+}

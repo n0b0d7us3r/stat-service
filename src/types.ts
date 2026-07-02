@@ -113,6 +113,19 @@ export interface DashboardStats {
   bestLongestStreak: number;
   projects: DashboardProjectSummary[];
   weeklyMatrix: DashboardWeeklyMatrix;
+  todayGoals: DashboardTodayGoals;
+}
+
+export interface DashboardTodayGoalItem {
+  projectId: number;
+  projectName: string;
+  projectType: ProjectType;
+  completed: boolean;
+}
+
+export interface DashboardTodayGoals {
+  date: string;
+  goals: DashboardTodayGoalItem[];
 }
 
 export interface Achievement {

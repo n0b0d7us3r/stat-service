@@ -167,10 +167,8 @@ function getGoalsProjectStatsForMonth(
   }
 
   const completedInMonth = goalDaysInMonth.filter((date) => markedSet.has(date));
-  const goalDaysDueInMonth = goalDaysInMonth.filter((date) => date <= todayKey);
-  const completedDueInMonth = goalDaysDueInMonth.filter((date) => markedSet.has(date));
-  const monthProgress = goalDaysDueInMonth.length > 0
-    ? Math.round((completedDueInMonth.length / goalDaysDueInMonth.length) * 100)
+  const monthProgress = goalDaysInMonth.length > 0
+    ? Math.round((completedInMonth.length / goalDaysInMonth.length) * 100)
     : 0;
 
   const completedDates = allGoalDates.filter((date) => markedSet.has(date));
@@ -236,13 +234,10 @@ function getGoalsProjectStats(allMarkedDates: string[], allGoalDates: string[]):
 
   const now = new Date();
   const monthPrefix = getMonthPrefix(now.getFullYear(), now.getMonth() + 1);
-  const todayKey = getTodayKey();
   const goalDaysThisMonth = allGoalDates.filter((date) => date.startsWith(monthPrefix));
   const completedThisMonth = goalDaysThisMonth.filter((date) => markedSet.has(date));
-  const goalDaysDueThisMonth = goalDaysThisMonth.filter((date) => date <= todayKey);
-  const completedDueThisMonth = goalDaysDueThisMonth.filter((date) => markedSet.has(date));
-  const monthProgress = goalDaysDueThisMonth.length > 0
-    ? Math.round((completedDueThisMonth.length / goalDaysDueThisMonth.length) * 100)
+  const monthProgress = goalDaysThisMonth.length > 0
+    ? Math.round((completedThisMonth.length / goalDaysThisMonth.length) * 100)
     : 0;
 
   const { currentStreak, longestStreak } = computeStreaks(completedDates);

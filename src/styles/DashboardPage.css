@@ -156,6 +156,29 @@
   text-transform: uppercase;
 }
 
+.dashboard-stats-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-collapsible-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-collapsible-toggle {
+  display: none;
+}
+
+.dashboard-collapsible-title {
+  margin: 0 0 0.75rem;
+}
+
+.dashboard-collapsible-panel {
+  display: block;
+}
+
 .dashboard-section-title-spaced {
   margin-top: 1.5rem;
 }
@@ -216,6 +239,64 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-stats-sections {
+    gap: 0;
+  }
+
+  .dashboard-collapsible-section + .dashboard-collapsible-section,
+  .dashboard-collapsible-section + .dashboard-placeholder,
+  .dashboard-placeholder + .dashboard-collapsible-section {
+    border-top: 1px solid var(--border);
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  .dashboard-collapsible-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--foreground);
+    font: inherit;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .dashboard-collapsible-title {
+    display: none;
+  }
+
+  .dashboard-collapsible-toggle-icon {
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+  }
+
+  .dashboard-collapsible-section.expanded .dashboard-collapsible-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .dashboard-collapsible-panel {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.2s ease;
+    margin-top: 0;
+  }
+
+  .dashboard-collapsible-section.expanded .dashboard-collapsible-panel {
+    max-height: 5000px;
+    opacity: 1;
+    margin-top: 0.75rem;
+  }
+
   .dashboard-section-title-inline {
     margin-top: 0;
   }
@@ -314,6 +395,13 @@
 }
 
 @media (min-width: 769px) {
+  .dashboard-collapsible-section.collapsed .dashboard-collapsible-panel,
+  .dashboard-collapsible-section.expanded .dashboard-collapsible-panel {
+    max-height: none;
+    opacity: 1;
+    margin-top: 0;
+  }
+
   .dashboard-achievements-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
