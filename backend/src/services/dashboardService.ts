@@ -172,13 +172,12 @@ export function getDashboardMonthlyStats(userId: number, year: number, month: nu
 
 export function getDashboardStats(userId: number): DashboardStats {
   const projects = getProjectsByUser(userId);
-  const now = new Date();
-  const today = now.getDate();
 
   let totalMarked = 0;
   let markedThisMonth = 0;
   let bestCurrentStreak = 0;
   let bestLongestStreak = 0;
+  let bestCalendarMonthProgress = 0;
 
   const projectSummaries = projects.map((project) => {
     const stats = getProjectStats(userId, project.id);
@@ -186,6 +185,10 @@ export function getDashboardStats(userId: number): DashboardStats {
     markedThisMonth += stats.markedThisMonth;
     bestCurrentStreak = Math.max(bestCurrentStreak, stats.currentStreak);
     bestLongestStreak = Math.max(bestLongestStreak, stats.longestStreak);
+
+    if (project.project_type === 'calendar') {
+      bestCalendarMonthProgress = Math.max(bestCalendarMonthProgress, stats.monthProgress);
+    }
 
     return {
       id: project.id,
@@ -197,13 +200,11 @@ export function getDashboardStats(userId: number): DashboardStats {
     };
   });
 
-  const monthProgress = today > 0 ? Math.min(Math.round((markedThisMonth / today) * 100), 100) : 0;
-
   return {
     projectsCount: projects.length,
     totalMarked,
     markedThisMonth,
-    monthProgress,
+    monthProgress: bestCalendarMonthProgress,
     bestCurrentStreak,
     bestLongestStreak,
     projects: projectSummaries,

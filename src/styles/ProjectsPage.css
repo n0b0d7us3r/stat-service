@@ -150,6 +150,14 @@
   color: var(--muted);
 }
 
+.project-card-chevron {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
 @media (hover: hover) {
   .project-card-main:hover {
     background: var(--card-hover);

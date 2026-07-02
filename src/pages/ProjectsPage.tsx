@@ -83,7 +83,9 @@ export function ProjectsPage() {
                       </div>
                       <span className="project-card-meta">Отмечено дней: {project.marked_count}</span>
                     </div>
-                    <ChevronRight size={20} />
+                    <span className="project-card-chevron" aria-hidden="true">
+                      <ChevronRight size={20} />
+                    </span>
                   </button>
                 </article>
               ))}

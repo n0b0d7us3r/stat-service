@@ -47,7 +47,7 @@ const DEFAULT_ACHIEVEMENTS: Array<{
   { code: 'weekend_warrior', name: 'Выходные для слабаков', description: 'Поставьте отметки в субботу и воскресенье одних выходных.', criteria_type: 'weekend_marked', threshold: 1, project_type: 'calendar' },
   { code: 'analyst', name: 'Аналитик', description: 'Создайте 5 проектов.', criteria_type: 'project_count', threshold: 5, project_type: 'calendar' },
   { code: 'librarian', name: 'Библиотекарь', description: 'Создайте 10 проектов.', criteria_type: 'project_count', threshold: 10, project_type: 'calendar' },
-  { code: 'perfectionist', name: 'Перфецкионист', description: 'Достигните 100% прогресса месяца в любом проекте типа «Календарь».', criteria_type: 'month_progress', threshold: 100, project_type: 'calendar' },
+  { code: 'perfectionist', name: 'Перфецкионист', description: 'Отметьте все дни месяца в проекте типа «Календарь».', criteria_type: 'month_progress', threshold: 100, project_type: 'calendar' },
   { code: 'goal_streak_10', name: 'Целеустремлённый', description: 'Выполните 10 целей подряд в одном проекте типа «Цели».', criteria_type: 'goal_streak', threshold: 10, project_type: 'calendar' },
   { code: 'stay_long', name: 'Ты со мной надолго?', description: 'Продолжайте ставить отметки в любом проекте в течение двух месяцев.', criteria_type: 'global_streak', threshold: 60, project_type: 'calendar' },
 ];

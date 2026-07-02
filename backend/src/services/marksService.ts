@@ -134,17 +134,10 @@ function getCalendarProjectStatsForMonth(
   const todayKey = getTodayKey();
   const markedInMonth = allDates.filter((date) => date.startsWith(`${monthPrefix}-`));
   const daysInMonth = getDaysInMonth(year, month);
-  const monthEnd = `${monthPrefix}-${String(daysInMonth).padStart(2, '0')}`;
 
-  let monthProgress = 0;
-  if (todayKey < `${monthPrefix}-01`) {
-    monthProgress = 0;
-  } else if (todayKey.startsWith(monthPrefix)) {
-    const today = parseInt(todayKey.split('-')[2], 10);
-    monthProgress = today > 0 ? Math.round((markedInMonth.length / today) * 100) : 0;
-  } else if (todayKey > monthEnd) {
-    monthProgress = daysInMonth > 0 ? Math.round((markedInMonth.length / daysInMonth) * 100) : 0;
-  }
+  const monthProgress = todayKey < `${monthPrefix}-01` || daysInMonth === 0
+    ? 0
+    : Math.round((markedInMonth.length / daysInMonth) * 100);
 
   const { currentStreak, longestStreak } = computeStreaksInMonth(allDates, year, month, todayKey);
 
@@ -203,12 +196,10 @@ function getCalendarProjectStats(
   projectId: number,
   allDates: string[],
 ): ProjectStats {
-  const now = new Date();
-  const monthPrefix = getMonthPrefix(now.getFullYear(), now.getMonth() + 1);
-  const markedThisMonth = allDates.filter((date) => date.startsWith(monthPrefix)).length;
-  const daysInMonth = getDaysInMonth(now.getFullYear(), now.getMonth() + 1);
-  const today = now.getDate();
-  const monthProgress = today > 0 ? Math.round((markedThisMonth / today) * 100) : 0;
+  const todayKey = getTodayKey();
+  const year = Number(todayKey.slice(0, 4));
+  const month = Number(todayKey.slice(5, 7));
+  const monthStats = getCalendarProjectStatsForMonth(allDates, year, month);
 
   const totalRow = queryAll<{ total: number }>(
     getUserDb(userId),
@@ -220,9 +211,9 @@ function getCalendarProjectStats(
 
   return {
     totalMarked: totalRow[0]?.total ?? 0,
-    markedThisMonth,
-    daysInMonth,
-    monthProgress: Math.min(monthProgress, 100),
+    markedThisMonth: monthStats.markedThisMonth,
+    daysInMonth: monthStats.daysInMonth,
+    monthProgress: monthStats.monthProgress,
     currentStreak,
     longestStreak,
   };
