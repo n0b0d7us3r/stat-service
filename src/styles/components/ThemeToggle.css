@@ -1,5 +1,5 @@
 .theme-toggle-btn {
-  background: var(--primary-soft);
+  background: var(--background);
   border: 1px solid var(--border);
   color: var(--foreground);
   width: 40px;
@@ -12,9 +12,10 @@
   border-radius: 0; /* Сохраняем строгий стиль проекта */
 }
 
-.theme-toggle-btn:hover {
-  background: var(--card-hover);
-  border-color: var(--primary);
+@media (hover: hover) {
+  .theme-toggle-btn:hover {
+    border-color: var(--primary);
+  }
 }
 
 .theme-icon {
