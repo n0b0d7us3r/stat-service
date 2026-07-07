@@ -10,22 +10,14 @@ import { parseLocalDate } from '../utils/date';
 import '../styles/NotesPage.css';
 
 function formatNoteDate(dateKey: string): string {
-  return parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
+  const label = parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
-}
 
-function formatUpdatedAt(value: string): string {
-  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export function NotesPage() {
@@ -129,10 +121,6 @@ export function NotesPage() {
                       <div className="note-card-content-wrap">
                         <p className="note-card-content">{note.content}</p>
                       </div>
-
-                      <p className="note-card-updated">
-                        Изменено: {formatUpdatedAt(note.updated_at)}
-                      </p>
                     </button>
                   </div>
                 );

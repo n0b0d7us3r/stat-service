@@ -270,11 +270,6 @@
     align-items: stretch;
   }
 
-  .project-toolbar-back .project-toolbar-label {
-    display: none;
-    color: var(--card-foreground);
-  }
-
   .project-stats-toggle {
     display: flex;
     align-items: center;

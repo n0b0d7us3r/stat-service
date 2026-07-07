@@ -82,7 +82,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--primary-dark);
+  background: var(--foreground);
 }
 
 .calendar-day-selectable,
