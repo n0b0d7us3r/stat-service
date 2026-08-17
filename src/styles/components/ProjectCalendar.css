@@ -107,6 +107,10 @@
   background: color-mix(in srgb, var(--background) 85%, var(--muted));
 }
 
+.calendar-day-disabled.calendar-day-selectable {
+  cursor: pointer;
+}
+
 .calendar-day-disabled.calendar-day-marked {
   opacity: 0.45;
 }

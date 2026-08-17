@@ -415,6 +415,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
             && (!isMarked || canRemove);
           const canInteract = canEditGoals || canEditMarks;
           const isFutureDisabledForEdit = editMode && isFuture && !canEditGoals;
+          const isFutureInactive = isFuture && !(editMode && canEditGoals);
 
           return (
             <button
@@ -423,7 +424,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
               disabled={isFutureDisabledForEdit}
               className={[
                 'calendar-day',
-                isFutureDisabledForEdit ? 'calendar-day-disabled' : '',
+                isFutureInactive ? 'calendar-day-disabled' : '',
                 !isGoalsProject && isMarked ? 'calendar-day-marked' : '',
                 isGoalsProject && isGoal && !isGoalSuccess && !isGoalMissed ? 'calendar-day-goal' : '',
                 isGoalSuccess ? 'calendar-day-goal-success' : '',
