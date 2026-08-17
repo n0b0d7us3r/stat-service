@@ -414,15 +414,16 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
             && !isFuture
             && (!isMarked || canRemove);
           const canInteract = canEditGoals || canEditMarks;
+          const isFutureDisabledForEdit = editMode && isFuture && !canEditGoals;
 
           return (
             <button
               key={dateKey}
               type="button"
-              disabled={isFuture && !canEditGoals}
+              disabled={isFutureDisabledForEdit}
               className={[
                 'calendar-day',
-                isFuture && !canEditGoals ? 'calendar-day-disabled' : '',
+                isFutureDisabledForEdit ? 'calendar-day-disabled' : '',
                 !isGoalsProject && isMarked ? 'calendar-day-marked' : '',
                 isGoalsProject && isGoal && !isGoalSuccess && !isGoalMissed ? 'calendar-day-goal' : '',
                 isGoalSuccess ? 'calendar-day-goal-success' : '',
@@ -430,7 +431,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
                 hasNote ? 'calendar-day-has-note' : '',
                 isSelected ? 'calendar-day-selected' : '',
                 canInteract ? 'calendar-day-interactive' : '',
-                !editMode && !(isFuture && !canEditGoals) ? 'calendar-day-selectable' : '',
+                !editMode || canInteract ? 'calendar-day-selectable' : '',
               ].filter(Boolean).join(' ')}
               onClick={() => handleDayClick(day)}
             >
