@@ -8,10 +8,10 @@ export const TASK_PRIORITIES: Array<{ value: TaskPriority; label: string }> = [
 ];
 
 export const TAG_COLOR_PRESETS: Array<{ value: string; label: string }> = [
-  { value: '#ef4444', label: 'Красный' },
+  { value: 'rgb(147, 0, 0)', label: 'Красный' },
   { value: '#f97316', label: 'Оранжевый' },
-  { value: '#eab308', label: 'Жёлтый' },
-  { value: '#22c55e', label: 'Зелёный' },
+  { value: '#6b7280', label: 'Серый' },
+  { value: 'rgba(134, 245, 29, 0.87)', label: 'Зелёный' },
   { value: '#3b82f6', label: 'Синий' },
   { value: '#8b5cf6', label: 'Фиолетовый' },
 ];
@@ -25,16 +25,26 @@ export function formatTagName(name: string): string {
 }
 
 function tagChannels(color: string): [number, number, number] | null {
-  const hex = color.replace('#', '');
-  if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+  const hex = color.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    return [
+      Number.parseInt(hex.slice(1, 3), 16),
+      Number.parseInt(hex.slice(3, 5), 16),
+      Number.parseInt(hex.slice(5, 7), 16),
+    ];
+  }
+
+  const rgba = hex.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i);
+  if (!rgba) {
     return null;
   }
 
-  return [
-    Number.parseInt(hex.slice(0, 2), 16),
-    Number.parseInt(hex.slice(2, 4), 16),
-    Number.parseInt(hex.slice(4, 6), 16),
-  ];
+  const channels = [Number(rgba[1]), Number(rgba[2]), Number(rgba[3])] as [number, number, number];
+  if (channels.some((channel) => channel > 255)) {
+    return null;
+  }
+
+  return channels;
 }
 
 export function tagForeground(color: string): string {
