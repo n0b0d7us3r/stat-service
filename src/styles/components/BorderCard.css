@@ -12,4 +12,9 @@
   .app-border-card-accent {
     border-left: 6px solid var(--primary) !important;
   }
+
+  .project-card.app-border-card,
+  .task-card.app-border-card {
+    border-width: 3px !important;
+  }
 }

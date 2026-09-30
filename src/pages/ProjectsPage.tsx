@@ -65,7 +65,7 @@ export function ProjectsPage() {
           ) : (
             <div className="projects-list">
               {projects.map((project) => (
-                <article key={project.id} className="project-card app-border-card app-border-card-accent">
+                <article key={project.id} className="project-card app-border-card">
                   <button
                     type="button"
                     className="project-card-main"

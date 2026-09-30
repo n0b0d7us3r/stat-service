@@ -520,6 +520,14 @@
   min-height: 96px;
 }
 
+.task-editor-date {
+  color-scheme: dark;
+}
+
+.theme-light .task-editor-date {
+  color-scheme: light;
+}
+
 .task-editor-select {
   cursor: pointer;
   appearance: none;

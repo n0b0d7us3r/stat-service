@@ -310,16 +310,18 @@ app.get('/api/tasks', requireAuth, (req: AuthRequest, res) => {
 
 app.post('/api/tasks', requireAuth, (req: AuthRequest, res) => {
   try {
-    const { title, description, priority, tagIds } = req.body as {
+    const { title, description, priority, dueDate, tagIds } = req.body as {
       title?: string;
       description?: string;
       priority?: number;
+      dueDate?: string | null;
       tagIds?: number[];
     };
     const task = createTask(req.user!.id, {
       title: title ?? '',
       description,
       priority,
+      dueDate,
       tagIds,
     });
     res.status(201).json({ task });
@@ -340,14 +342,22 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       return;
     }
 
-    const { title, description, priority, completed, tagIds } = req.body as {
+    const { title, description, priority, dueDate, completed, tagIds } = req.body as {
       title?: string;
       description?: string;
       priority?: number;
+      dueDate?: string | null;
       completed?: boolean;
       tagIds?: number[];
     };
-    const task = updateTask(req.user!.id, taskId, { title, description, priority, completed, tagIds });
+    const task = updateTask(req.user!.id, taskId, {
+      title,
+      description,
+      priority,
+      dueDate: Object.prototype.hasOwnProperty.call(req.body, 'dueDate') ? dueDate : undefined,
+      completed,
+      tagIds,
+    });
     if (!task) {
       res.status(404).json({ message: 'Задача не найдена' });
       return;

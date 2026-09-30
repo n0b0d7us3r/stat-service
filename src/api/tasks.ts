@@ -26,6 +26,7 @@ export async function createTask(input: {
   title: string;
   description: string;
   priority: TaskPriority;
+  dueDate: string | null;
   tagIds: number[];
 }): Promise<Task> {
   const { task } = await apiFetch<{ task: Task }>('/tasks', {
@@ -41,6 +42,7 @@ export async function updateTask(
     title?: string;
     description?: string;
     priority?: TaskPriority;
+    dueDate?: string | null;
     completed?: boolean;
     tagIds?: number[];
   },

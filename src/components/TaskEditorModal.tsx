@@ -27,7 +27,8 @@ export function TaskEditorModal({
   const [detailsEditable, setDetailsEditable] = useState(task === null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 2);
-  const [tagIds, setTagIds] = useState<number[]>(task?.tags.map((item) => item.id) ?? []);
+  const [dueDate, setDueDate] = useState(task?.due_date ?? '');
+  const [tagIds, setTagIds] = useState<number[]>(task?.tags[0] ? [task.tags[0].id] : []);
   const [tagName, setTagName] = useState('');
   const [tagColor, setTagColor] = useState(TAG_COLOR_PRESETS[5].value);
   const [error, setError] = useState('');
@@ -35,15 +36,7 @@ export function TaskEditorModal({
   const [tagSaving, setTagSaving] = useState(false);
 
   const toggleTag = (tagId: number) => {
-    setTagIds((current) => {
-      if (current.includes(tagId)) {
-        return current.filter((id) => id !== tagId);
-      }
-      if (current.length >= 10) {
-        return current;
-      }
-      return [...current, tagId];
-    });
+    setTagIds((current) => (current[0] === tagId ? [] : [tagId]));
   };
 
   const handleCreateTag = async () => {
@@ -59,9 +52,7 @@ export function TaskEditorModal({
     try {
       const created = await createTag(name, tagColor);
       onTagCreated(created);
-      setTagIds((current) => (current.includes(created.id) || current.length >= 10
-        ? current
-        : [...current, created.id]));
+      setTagIds([created.id]);
       setTagName('');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось создать тег');
@@ -77,8 +68,8 @@ export function TaskEditorModal({
 
     try {
       const saved = task
-        ? await updateTask(task.id, { title, description, priority, tagIds })
-        : await createTask({ title, description, priority, tagIds });
+        ? await updateTask(task.id, { title, description, priority, dueDate: dueDate || null, tagIds })
+        : await createTask({ title, description, priority, dueDate: dueDate || null, tagIds });
       onSaved(saved);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось сохранить задачу');
@@ -149,6 +140,16 @@ export function TaskEditorModal({
           </select>
         </label>
 
+        <label className="task-editor-field">
+          <span>Дата выполнения</span>
+          <input
+            type="date"
+            className="task-editor-input task-editor-date"
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+          />
+        </label>
+
         <fieldset className="task-editor-fieldset">
           <legend>Теги</legend>
           {tags.length > 0 && (
@@ -173,7 +174,7 @@ export function TaskEditorModal({
                       <button
                         type="button"
                         className="task-tag-remove"
-                        aria-label={`Снять тег ${formatTagName(tag.name)} с задачи`}
+                        aria-label={`Удалить тег ${formatTagName(tag.name)}`}
                         onClick={() => toggleTag(tag.id)}
                       >
                         <X size={14} />

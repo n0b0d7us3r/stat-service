@@ -162,6 +162,7 @@ export interface Task {
   completed: boolean;
   created_at: string;
   completed_at: string | null;
+  due_date: string | null;
   tags: Tag[];
 }
 

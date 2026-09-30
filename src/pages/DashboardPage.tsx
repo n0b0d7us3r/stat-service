@@ -6,12 +6,16 @@ import { PageTitle } from '../components/PageTitle';
 import { DashboardCollapsibleSection } from '../components/DashboardCollapsibleSection';
 import { DashboardWeeklyMatrix } from '../components/DashboardWeeklyMatrix';
 import { DashboardMonthTable } from '../components/DashboardMonthTable';
+import { DashboardTaskList } from '../components/DashboardTaskList';
 import { DashboardTodayGoals } from '../components/DashboardTodayGoals';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
 import { getDashboardStats } from '../api/dashboard';
-import type { DashboardStats, UserAchievementView } from '../types';
+import { getTodayKey } from '../api/marks';
+import { getTaskBoard } from '../api/tasks';
+import type { DashboardStats, Task, UserAchievementView } from '../types';
+import { addDays, formatLocalDate, parseLocalDate } from '../utils/date';
 import '../styles/DashboardPage.css';
 
 function formatEarnedDate(value: string): string {
@@ -27,15 +31,21 @@ export function DashboardPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [earnedAchievements, setEarnedAchievements] = useState<UserAchievementView[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [todayKey, setTodayKey] = useState('');
 
   const reload = useCallback(() => {
     if (!user) return;
     void Promise.all([
       getDashboardStats(user.id),
       getUserAchievements(user.id),
-    ]).then(([nextStats, achievements]) => {
+      getTaskBoard().catch(() => ({ tasks: [] as Task[], tags: [] })),
+      getTodayKey().catch(() => formatLocalDate(new Date())),
+    ]).then(([nextStats, achievements, board, today]) => {
       setStats(nextStats);
       setEarnedAchievements(achievements.filter((item) => item.earned && item.earned_at));
+      setTasks(board.tasks);
+      setTodayKey(today);
     });
   }, [user]);
 
@@ -57,6 +67,11 @@ export function DashboardPage() {
   const recentAchievements = [...earnedAchievements]
     .sort((a, b) => (b.earned_at ?? '').localeCompare(a.earned_at ?? ''))
     .slice(0, 2);
+  const tomorrowKey = todayKey
+    ? formatLocalDate(addDays(parseLocalDate(todayKey), 1))
+    : '';
+  const tasksToday = tasks.filter((task) => task.due_date === todayKey);
+  const tasksTomorrow = tasks.filter((task) => task.due_date === tomorrowKey);
 
   return (
     <Layout>
@@ -69,6 +84,14 @@ export function DashboardPage() {
               data={stats.todayGoals}
               onProjectClick={(projectId) => navigate(`/projects/${projectId}`, { state: { selectedDate: stats.todayGoals.date } })}
             />
+          </DashboardCollapsibleSection>
+
+          <DashboardCollapsibleSection title="Список задач на сегодня" defaultExpandedOnMobile>
+            <DashboardTaskList tasks={tasksToday} emptyText="На сегодня задач нет." />
+          </DashboardCollapsibleSection>
+
+          <DashboardCollapsibleSection title="Список задач на завтра" defaultExpandedOnMobile>
+            <DashboardTaskList tasks={tasksTomorrow} emptyText="На завтра задач нет." />
           </DashboardCollapsibleSection>
 
           {stats.projects.length === 0 ? (

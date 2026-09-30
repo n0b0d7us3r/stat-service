@@ -187,6 +187,13 @@ function migrateToV10(db: Database.Database): void {
   }
 }
 
+function migrateToV11(db: Database.Database): void {
+  if (!columnExists(db, 'tasks', 'due_date')) {
+    db.exec('ALTER TABLE tasks ADD COLUMN due_date TEXT');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)');
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -247,6 +254,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 10) {
     migrateToV10(db);
     version = 10;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 11) {
+    migrateToV11(db);
+    version = 11;
     setSchemaVersion(db, version);
   }
 }

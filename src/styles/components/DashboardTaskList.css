@@ -1,0 +1,73 @@
+.dashboard-task-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.dashboard-task-list-empty svg {
+  color: var(--primary-dark);
+}
+
+.dashboard-task-list-empty p {
+  margin: 0;
+  max-width: 24rem;
+  line-height: 1.5;
+}
+
+.dashboard-task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.dashboard-task-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-task-list-title {
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-task-list-tag {
+  margin-right: 0.35rem;
+}
+
+.dashboard-task-list-status {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard-task-list-item-done .dashboard-task-list-title {
+  text-decoration: line-through;
+  opacity: 0.72;
+}
+
+@media (hover: hover) {
+  .dashboard-task-list-item:hover {
+    border-color: var(--primary);
+  }
+}

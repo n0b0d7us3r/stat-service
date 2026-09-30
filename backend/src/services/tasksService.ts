@@ -20,14 +20,15 @@ export interface Task {
   completed: boolean;
   created_at: string;
   completed_at: string | null;
+  due_date: string | null;
   tags: Tag[];
 }
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_TAG_NAME_LENGTH = 32;
-const MAX_TAGS_PER_TASK = 10;
-const TASK_COLUMNS = 'id, title, description, priority, completed, created_at, completed_at';
+const MAX_TAGS_PER_TASK = 1;
+const TASK_COLUMNS = 'id, title, description, priority, completed, created_at, completed_at, due_date';
 
 interface TaskRow {
   id: number;
@@ -37,6 +38,7 @@ interface TaskRow {
   completed: number;
   created_at: string;
   completed_at: string | null;
+  due_date: string | null;
 }
 
 function normalizeTitle(raw: string): string {
@@ -88,6 +90,31 @@ function normalizeColor(raw: string): string {
   return color;
 }
 
+function normalizeDueDate(value: unknown): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (typeof value !== 'string') {
+    throw new DbError('Некорректная дата выполнения');
+  }
+
+  const date = value.trim();
+  if (!date) {
+    return null;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new DbError('Некорректная дата выполнения');
+  }
+
+  const [year, month, day] = date.split('-').map(Number);
+  const parsed = new Date(year, month - 1, day);
+  if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) {
+    throw new DbError('Некорректная дата выполнения');
+  }
+
+  return date;
+}
+
 function normalizePriority(value: unknown): TaskPriority {
   const priority = Number(value ?? 2);
   if (priority !== 1 && priority !== 2 && priority !== 3 && priority !== 4) {
@@ -116,7 +143,7 @@ function normalizeTagIds(value: unknown): number[] {
   }
 
   if (ids.length > MAX_TAGS_PER_TASK) {
-    throw new DbError('У задачи не больше 10 тегов');
+    return [ids[ids.length - 1]];
   }
 
   return ids;
@@ -188,7 +215,8 @@ function mapTask(row: TaskRow, tags: Tag[]): Task {
     completed: row.completed === 1,
     created_at: row.created_at,
     completed_at: row.completed_at,
-    tags,
+    due_date: row.due_date,
+    tags: tags.slice(0, 1),
   };
 }
 
@@ -278,17 +306,18 @@ export function deleteTag(userId: number, tagId: number): boolean {
 
 export function createTask(
   userId: number,
-  input: { title: string; description?: unknown; priority?: unknown; tagIds?: unknown },
+  input: { title: string; description?: unknown; priority?: unknown; dueDate?: unknown; tagIds?: unknown },
 ): Task {
   const db = getUserDb(userId);
   const title = normalizeTitle(input.title);
   const description = normalizeDescription(input.description);
   const priority = normalizePriority(input.priority);
+  const dueDate = normalizeDueDate(input.dueDate);
   const tagIds = normalizeTagIds(input.tagIds);
   assertTagsExist(db, tagIds);
 
   const taskId = db.transaction(() => {
-    const result = db.prepare('INSERT INTO tasks (title, description, priority) VALUES (?, ?, ?)').run(title, description, priority);
+    const result = db.prepare('INSERT INTO tasks (title, description, priority, due_date) VALUES (?, ?, ?, ?)').run(title, description, priority, dueDate);
     const id = Number(result.lastInsertRowid);
     insertTaskTags(db, id, tagIds);
     return id;
@@ -305,7 +334,7 @@ export function createTask(
 export function updateTask(
   userId: number,
   taskId: number,
-  input: { title?: string; description?: unknown; priority?: unknown; completed?: boolean; tagIds?: unknown },
+  input: { title?: string; description?: unknown; priority?: unknown; dueDate?: unknown; completed?: boolean; tagIds?: unknown },
 ): Task | null {
   const db = getUserDb(userId);
   const existing = readTask(db, taskId);
@@ -316,6 +345,7 @@ export function updateTask(
   const title = input.title === undefined ? existing.title : normalizeTitle(input.title);
   const description = input.description === undefined ? existing.description : normalizeDescription(input.description);
   const priority = input.priority === undefined ? existing.priority : normalizePriority(input.priority);
+  const dueDate = input.dueDate === undefined ? existing.due_date : normalizeDueDate(input.dueDate);
   const completed = input.completed === undefined ? existing.completed : Boolean(input.completed);
   const tagIds = input.tagIds === undefined ? null : normalizeTagIds(input.tagIds);
   if (tagIds !== null) {
@@ -333,6 +363,7 @@ export function updateTask(
           title = ?,
           description = ?,
           priority = ?,
+          due_date = ?,
           completed = ?,
           completed_at = CASE
             WHEN ? = 0 THEN NULL
@@ -341,7 +372,7 @@ export function updateTask(
           END
         WHERE id = ?
       `,
-      [title, description, priority, completedFlag, completedFlag, taskId],
+      [title, description, priority, dueDate, completedFlag, completedFlag, taskId],
     );
 
     if (tagIds !== null) {

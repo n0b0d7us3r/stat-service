@@ -341,11 +341,11 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
         <div className="task-card-top">
           <div className="task-card-heading">
             <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
-              {task.tags.map((tag) => (
-                <span key={tag.id} className="task-title-tag" style={{ color: tag.color }}>
-                  [ {formatTagName(tag.name)} ]{' '}
+              {task.tags[0] && (
+                <span className="task-title-tag" style={{ color: task.tags[0].color }}>
+                  [ {formatTagName(task.tags[0].name)} ]{' '}
                 </span>
-              ))}
+              )}
               <span className="task-title-text">{task.title}</span>
             </button>
             {task.completed && task.completed_at && (
