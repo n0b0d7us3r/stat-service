@@ -10,7 +10,7 @@ import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
 import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority, TaskSortMode } from '../types';
-import { compareTasks, formatTagName, priorityLabel, tagChipStyle } from '../utils/taskUi';
+import { compareTasks, formatTagName, priorityLabel } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
 function errorText(error: unknown, fallback: string): string {
@@ -38,6 +38,7 @@ export function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sort, setSort] = useState<TaskSortMode>('priority');
+  const [tagFilter, setTagFilter] = useState('all');
   const [showCompleted, setShowCompleted] = useState(false);
   const [editorTask, setEditorTask] = useState<Task | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -74,10 +75,13 @@ export function TasksPage() {
     };
   }, [loadBoard]);
 
-  const activeTasks = tasks
+  const visibleTasks = tagFilter === 'all'
+    ? tasks
+    : tasks.filter((task) => task.tags.some((tag) => String(tag.id) === tagFilter));
+  const activeTasks = visibleTasks
     .filter((task) => !task.completed)
     .sort((a, b) => compareTasks(a, b, sort));
-  const completedTasks = tasks
+  const completedTasks = visibleTasks
     .filter((task) => task.completed)
     .sort((a, b) => compareTasks(a, b, sort));
 
@@ -144,17 +148,6 @@ export function TasksPage() {
     setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
   };
 
-  const handleTagDeleted = (tagId: number) => {
-    setTags((current) => current.filter((item) => item.id !== tagId));
-    setTasks((current) => current.map((task) => ({
-      ...task,
-      tags: task.tags.filter((item) => item.id !== tagId),
-    })));
-    setEditorTask((current) => (current
-      ? { ...current, tags: current.tags.filter((item) => item.id !== tagId) }
-      : current));
-  };
-
   return (
     <Layout>
       <div className="tasks-page">
@@ -176,6 +169,16 @@ export function TasksPage() {
                 { value: 'created', label: 'По дате' },
               ]}
               onChange={setSort}
+            />
+
+            <SortSelect
+              label="По тегам"
+              value={tagFilter}
+              options={[
+                { value: 'all', label: 'Все' },
+                ...tags.map((tag) => ({ value: String(tag.id), label: formatTagName(tag.name) })),
+              ]}
+              onChange={setTagFilter}
             />
 
             <label className="tasks-completed-field">
@@ -200,7 +203,14 @@ export function TasksPage() {
           </div>
         ) : (
           <div className="tasks-groups">
-            {activeTasks.length === 0 && !showCompleted && (
+            {activeTasks.length === 0 && completedTasks.length === 0 && (
+              <div className="tasks-empty app-border-card">
+                <ListTodo size={40} aria-hidden="true" />
+                <p>Нет задач с этим тегом.</p>
+              </div>
+            )}
+
+            {activeTasks.length === 0 && completedTasks.length > 0 && !showCompleted && (
               <div className="tasks-empty app-border-card">
                 <ListTodo size={40} aria-hidden="true" />
                 <p>Активных задач нет. Отметьте «Выполненные», чтобы увидеть их.</p>
@@ -282,7 +292,6 @@ export function TasksPage() {
           }}
           onSaved={handleSaved}
           onTagCreated={handleTagCreated}
-          onTagDeleted={handleTagDeleted}
         />
       )}
     </Layout>
@@ -331,7 +340,7 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
       <div className="task-card-body">
         <div className="task-card-top">
           <div className="task-card-heading">
-            <button type="button" className="task-card-title" onClick={() => onEdit(task)}>
+            <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
               {task.tags.map((tag) => (
                 <span key={tag.id} className="task-title-tag" style={{ color: tag.color }}>
                   [ {formatTagName(tag.name)} ]{' '}
@@ -368,20 +377,6 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
             </div>
           </div>
         </div>
-
-        {task.tags.length > 0 && (
-          <div className="task-card-tags">
-            {task.tags.map((tag) => (
-              <span
-                key={tag.id}
-                className="task-tag"
-                style={tagChipStyle(tag.color)}
-              >
-                #{formatTagName(tag.name)}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
     </article>
   );

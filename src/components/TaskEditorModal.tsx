@@ -3,7 +3,7 @@ import { Pencil, X } from 'lucide-react';
 import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
-import { createTag, createTask, deleteTag, updateTask } from '../api/tasks';
+import { createTag, createTask, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority } from '../types';
 import { TAG_COLOR_PRESETS, TASK_PRIORITIES, formatTagName, tagChipStyle } from '../utils/taskUi';
 
@@ -13,7 +13,6 @@ interface TaskEditorModalProps {
   onClose: () => void;
   onSaved: (task: Task) => void;
   onTagCreated: (tag: Tag) => void;
-  onTagDeleted: (tagId: number) => void;
 }
 
 export function TaskEditorModal({
@@ -22,7 +21,6 @@ export function TaskEditorModal({
   onClose,
   onSaved,
   onTagCreated,
-  onTagDeleted,
 }: TaskEditorModalProps) {
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
@@ -69,18 +67,6 @@ export function TaskEditorModal({
       setError(err instanceof ApiError ? err.message : 'Не удалось создать тег');
     } finally {
       setTagSaving(false);
-    }
-  };
-
-  const handleDeleteTag = async (tag: Tag) => {
-    setError('');
-
-    try {
-      await deleteTag(tag.id);
-      setTagIds((current) => current.filter((id) => id !== tag.id));
-      onTagDeleted(tag.id);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось удалить тег');
     }
   };
 
@@ -183,14 +169,16 @@ export function TaskEditorModal({
                     >
                       #{formatTagName(tag.name)}
                     </button>
-                    <button
-                      type="button"
-                      className="task-tag-remove"
-                      aria-label={`Удалить тег ${formatTagName(tag.name)}`}
-                      onClick={() => void handleDeleteTag(tag)}
-                    >
-                      <X size={14} />
-                    </button>
+                    {selected && (
+                      <button
+                        type="button"
+                        className="task-tag-remove"
+                        aria-label={`Снять тег ${formatTagName(tag.name)} с задачи`}
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </span>
                 );
               })}
