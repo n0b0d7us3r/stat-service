@@ -14,6 +14,21 @@ function errorText(error: unknown, fallback: string): string {
   return error instanceof ApiError ? error.message : fallback;
 }
 
+function formatCompletedAt(value: string): string {
+  const datePart = value.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return value;
+  }
+
+  const [year, month, day] = datePart.split('-').map(Number);
+  const label = new Date(year, month - 1, day).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  return `Выполнено ${label}`;
+}
+
 export function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -142,41 +157,34 @@ export function TasksPage() {
             title="Задачи"
             subtitle={loading ? 'Загрузка...' : `Активных: ${activeTasks.length} · Выполненных: ${completedTasks.length}`}
           />
-          <button type="button" className="tasks-create-btn" onClick={openCreate}>
-            <Plus size={20} strokeWidth={2.5} />
-            <span>Новая задача</span>
-          </button>
-        </div>
+          <div className="tasks-controls">
+            <button type="button" className="tasks-create-btn" onClick={openCreate}>
+              <Plus size={20} strokeWidth={2.5} />
+              <span>Новая задача</span>
+            </button>
 
-        <div className="tasks-toolbar">
-          <div className="tasks-sort-toggle" role="group" aria-label="Сортировка задач">
-            <button
-              type="button"
-              className={`tasks-sort-btn ${sort === 'priority' ? 'tasks-sort-btn-active' : ''}`}
-              aria-pressed={sort === 'priority'}
-              onClick={() => setSort('priority')}
-            >
-              По приоритету
-            </button>
-            <button
-              type="button"
-              className={`tasks-sort-btn ${sort === 'created' ? 'tasks-sort-btn-active' : ''}`}
-              aria-pressed={sort === 'created'}
-              onClick={() => setSort('created')}
-            >
-              По дате
-            </button>
+            <label className="tasks-sort-field">
+              <span>Сортировка</span>
+              <select
+                className="tasks-sort-select"
+                value={sort}
+                aria-label="Сортировка"
+                onChange={(event) => setSort(event.target.value as TaskSortMode)}
+              >
+                <option value="priority">По приоритету</option>
+                <option value="created">По дате</option>
+              </select>
+            </label>
+
+            <label className="tasks-completed-field">
+              <span>Выполненные:</span>
+              <input
+                type="checkbox"
+                checked={showCompleted}
+                onChange={(event) => setShowCompleted(event.target.checked)}
+              />
+            </label>
           </div>
-
-          <button
-            type="button"
-            className={`tasks-completed-toggle ${showCompleted ? 'tasks-completed-toggle-active' : ''}`}
-            aria-pressed={showCompleted}
-            onClick={() => setShowCompleted((value) => !value)}
-          >
-            {showCompleted ? 'Скрыть выполненные' : 'Показать выполненные'}
-            {completedTasks.length > 0 ? ` (${completedTasks.length})` : ''}
-          </button>
         </div>
 
         {error && <p className="tasks-error">{error}</p>}
@@ -193,7 +201,7 @@ export function TasksPage() {
             {activeTasks.length === 0 && !showCompleted && (
               <div className="tasks-empty app-border-card">
                 <ListTodo size={40} aria-hidden="true" />
-                <p>Активных задач нет. Выполненные можно показать кнопкой выше.</p>
+                <p>Активных задач нет. Отметьте «Выполненные», чтобы увидеть их.</p>
               </div>
             )}
 
@@ -272,9 +280,16 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
 
       <div className="task-card-body">
         <div className="task-card-top">
-          <button type="button" className="task-card-title" onClick={() => onEdit(task)}>
-            {task.title}
-          </button>
+          <div className="task-card-heading">
+            <button type="button" className="task-card-title" onClick={() => onEdit(task)}>
+              {task.title}
+            </button>
+            {task.completed && task.completed_at && (
+              <time className="task-card-completed-at" dateTime={task.completed_at}>
+                {formatCompletedAt(task.completed_at)}
+              </time>
+            )}
+          </div>
           <span className={`task-priority-badge task-priority-badge-${task.priority}`}>
             {priorityLabel(task.priority)}
           </span>

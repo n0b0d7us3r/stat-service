@@ -109,7 +109,6 @@ export function TaskEditorModal({
           <input
             type="text"
             className="task-editor-input"
-            placeholder="Что нужно сделать"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             maxLength={200}
@@ -122,7 +121,6 @@ export function TaskEditorModal({
           <span>Описание</span>
           <textarea
             className="task-editor-input task-editor-textarea"
-            placeholder="Подробности, если нужны"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             maxLength={2000}
