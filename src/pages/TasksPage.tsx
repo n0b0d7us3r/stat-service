@@ -375,7 +375,7 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
         <div className="task-card-body">
           <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
             {task.tags[0] && (
-              <span className="task-title-tag">
+              <span className="task-title-tag" style={{ color: task.tags[0].color }}>
                 [ {formatTagName(task.tags[0].name)} ]{' '}
               </span>
             )}
