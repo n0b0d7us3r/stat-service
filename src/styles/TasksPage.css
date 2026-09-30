@@ -325,6 +325,13 @@
   line-height: inherit;
 }
 
+.task-title-sep {
+  color: inherit;
+  font-size: 1em;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
 .task-title-text {
   min-width: 0;
 }
