@@ -11,8 +11,7 @@
 }
 
 .tasks-create-btn,
-.tasks-tag-submit,
-.task-editor-submit {
+.tasks-tag-submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -37,8 +36,7 @@
 
 @media (hover: hover) {
   .tasks-create-btn:hover,
-  .tasks-tag-submit:hover:not(:disabled),
-  .task-editor-submit:hover:not(:disabled) {
+  .tasks-tag-submit:hover:not(:disabled) {
     background: var(--primary-dark);
   }
 }
@@ -102,22 +100,12 @@
   color: var(--primary-dark);
 }
 
-.tasks-tags {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-  padding: 1.25rem;
-}
-
-.tasks-tags-hint,
-.tasks-placeholder,
-.task-editor-hint {
+.tasks-placeholder {
   margin: 0;
   color: var(--muted);
   line-height: 1.5;
 }
 
-.tasks-tag-list,
 .task-card-tags,
 .task-tag-picker {
   display: flex;
@@ -129,16 +117,21 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.28rem 0.55rem;
+  box-sizing: border-box;
+  padding: 0.2rem 0.45rem;
   font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
-.task-tag-button {
-  border: 2px solid transparent;
-  cursor: pointer;
+.task-tag-pick {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
   font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .task-tag-selected {
@@ -180,7 +173,8 @@
 }
 
 .tasks-tag-name input,
-.task-editor-input {
+.task-editor-input,
+.task-editor-select {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--border);
@@ -235,8 +229,7 @@
   font-size: 0.875rem;
 }
 
-.tasks-tag-submit:disabled,
-.task-editor-submit:disabled {
+.tasks-tag-submit:disabled {
   opacity: 0.7;
   cursor: default;
 }
@@ -465,42 +458,32 @@
   color: var(--muted);
 }
 
-.task-priority-options {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+.task-editor-textarea {
+  resize: vertical;
+  min-height: 96px;
 }
 
-.task-priority-option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  background: var(--background);
-  color: var(--muted);
+.task-editor-select {
   cursor: pointer;
-  text-align: center;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
 }
 
-.task-priority-option input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.theme-light .task-editor-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
-.task-priority-option span {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.task-priority-option-active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
+.task-card-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .task-editor-error {
@@ -508,35 +491,9 @@
   color: #f87171;
 }
 
-.task-editor-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.task-editor-cancel,
-.task-editor-submit {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.task-editor-cancel {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--foreground);
-  padding: 0.75rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 @media (max-width: 720px) {
   .task-card-top {
     flex-wrap: wrap;
-  }
-
-  .task-priority-options {
-    grid-template-columns: 1fr 1fr;
   }
 
   .tasks-create-btn,

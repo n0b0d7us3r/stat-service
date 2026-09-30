@@ -24,6 +24,7 @@ export async function deleteTag(tagId: number): Promise<void> {
 
 export async function createTask(input: {
   title: string;
+  description: string;
   priority: TaskPriority;
   tagIds: number[];
 }): Promise<Task> {
@@ -38,6 +39,7 @@ export async function updateTask(
   taskId: number,
   input: {
     title?: string;
+    description?: string;
     priority?: TaskPriority;
     completed?: boolean;
     tagIds?: number[];

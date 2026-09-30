@@ -15,6 +15,7 @@ export interface Tag {
 export interface Task {
   id: number;
   title: string;
+  description: string;
   priority: TaskPriority;
   completed: boolean;
   created_at: string;
@@ -23,12 +24,15 @@ export interface Task {
 }
 
 const MAX_TITLE_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_TAG_NAME_LENGTH = 32;
 const MAX_TAGS_PER_TASK = 10;
+const TASK_COLUMNS = 'id, title, description, priority, completed, created_at, completed_at';
 
 interface TaskRow {
   id: number;
   title: string;
+  description: string;
   priority: number;
   completed: number;
   created_at: string;
@@ -44,6 +48,22 @@ function normalizeTitle(raw: string): string {
     throw new DbError('Название задачи слишком длинное');
   }
   return title;
+}
+
+function normalizeDescription(value: unknown): string {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  if (typeof value !== 'string') {
+    throw new DbError('Некорректное описание задачи');
+  }
+
+  const description = value.trim();
+  if (description.length > MAX_DESCRIPTION_LENGTH) {
+    throw new DbError('Описание задачи слишком длинное');
+  }
+
+  return description;
 }
 
 function normalizeTagName(raw: string): string {
@@ -163,6 +183,7 @@ function mapTask(row: TaskRow, tags: Tag[]): Task {
   return {
     id: row.id,
     title: row.title,
+    description: row.description ?? '',
     priority: readPriority(row.priority),
     completed: row.completed === 1,
     created_at: row.created_at,
@@ -174,7 +195,7 @@ function mapTask(row: TaskRow, tags: Tag[]): Task {
 function readTask(db: Database.Database, taskId: number): Task | null {
   const row = queryOne<TaskRow>(
     db,
-    'SELECT id, title, priority, completed, created_at, completed_at FROM tasks WHERE id = ?',
+    `SELECT ${TASK_COLUMNS} FROM tasks WHERE id = ?`,
     [taskId],
   );
   if (!row) {
@@ -199,7 +220,7 @@ export function listTaskBoard(userId: number): { tasks: Task[]; tags: Tag[] } {
   );
   const rows = queryAll<TaskRow>(
     db,
-    'SELECT id, title, priority, completed, created_at, completed_at FROM tasks',
+    `SELECT ${TASK_COLUMNS} FROM tasks`,
   );
   const byTask = tagsForTaskIds(db, rows.map((row) => row.id));
 
@@ -257,16 +278,17 @@ export function deleteTag(userId: number, tagId: number): boolean {
 
 export function createTask(
   userId: number,
-  input: { title: string; priority?: unknown; tagIds?: unknown },
+  input: { title: string; description?: unknown; priority?: unknown; tagIds?: unknown },
 ): Task {
   const db = getUserDb(userId);
   const title = normalizeTitle(input.title);
+  const description = normalizeDescription(input.description);
   const priority = normalizePriority(input.priority);
   const tagIds = normalizeTagIds(input.tagIds);
   assertTagsExist(db, tagIds);
 
   const taskId = db.transaction(() => {
-    const result = db.prepare('INSERT INTO tasks (title, priority) VALUES (?, ?)').run(title, priority);
+    const result = db.prepare('INSERT INTO tasks (title, description, priority) VALUES (?, ?, ?)').run(title, description, priority);
     const id = Number(result.lastInsertRowid);
     insertTaskTags(db, id, tagIds);
     return id;
@@ -283,7 +305,7 @@ export function createTask(
 export function updateTask(
   userId: number,
   taskId: number,
-  input: { title?: string; priority?: unknown; completed?: boolean; tagIds?: unknown },
+  input: { title?: string; description?: unknown; priority?: unknown; completed?: boolean; tagIds?: unknown },
 ): Task | null {
   const db = getUserDb(userId);
   const existing = readTask(db, taskId);
@@ -292,6 +314,7 @@ export function updateTask(
   }
 
   const title = input.title === undefined ? existing.title : normalizeTitle(input.title);
+  const description = input.description === undefined ? existing.description : normalizeDescription(input.description);
   const priority = input.priority === undefined ? existing.priority : normalizePriority(input.priority);
   const completed = input.completed === undefined ? existing.completed : Boolean(input.completed);
   const tagIds = input.tagIds === undefined ? null : normalizeTagIds(input.tagIds);
@@ -308,6 +331,7 @@ export function updateTask(
         UPDATE tasks
         SET
           title = ?,
+          description = ?,
           priority = ?,
           completed = ?,
           completed_at = CASE
@@ -317,7 +341,7 @@ export function updateTask(
           END
         WHERE id = ?
       `,
-      [title, priority, completedFlag, completedFlag, taskId],
+      [title, description, priority, completedFlag, completedFlag, taskId],
     );
 
     if (tagIds !== null) {

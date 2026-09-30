@@ -157,6 +157,7 @@ export interface Tag {
 export interface Task {
   id: number;
   title: string;
+  description: string;
   priority: TaskPriority;
   completed: boolean;
   created_at: string;

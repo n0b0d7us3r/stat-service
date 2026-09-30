@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CalendarDays, Target } from 'lucide-react';
 import { Modal } from './Modal';
+import { ModalActions } from './ModalActions';
 import { Checkbox } from './Checkbox';
 import { createProject } from '../api/projects';
 import { ApiDataError, type ProjectType } from '../types';
@@ -133,14 +134,12 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
           </p>
         </div>
 
-        <div className="create-project-actions">
-          <button type="button" className="create-project-cancel-btn" onClick={handleClose}>
-            Отмена
-          </button>
-          <button type="submit" className="create-project-submit-btn" disabled={creating}>
-            {creating ? 'Создание...' : 'Создать'}
-          </button>
-        </div>
+        <ModalActions
+          onCancel={handleClose}
+          submitLabel="Создать"
+          pending={creating}
+          pendingLabel="Создание..."
+        />
       </form>
     </Modal>
   );

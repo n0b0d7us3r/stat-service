@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ListTodo, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ListTodo, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { TaskEditorModal } from '../components/TaskEditorModal';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
-import { createTag, deleteTag, deleteTask, getTaskBoard, updateTask } from '../api/tasks';
+import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskSortMode } from '../types';
-import { TAG_COLOR_PRESETS, compareTasks, priorityLabel, tagForeground } from '../utils/taskUi';
+import { compareTasks, priorityLabel, tagChipStyle } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
 function errorText(error: unknown, fallback: string): string {
@@ -23,10 +23,6 @@ export function TasksPage() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [editorTask, setEditorTask] = useState<Task | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [tagName, setTagName] = useState('');
-  const [tagColor, setTagColor] = useState(TAG_COLOR_PRESETS[2].value);
-  const [tagError, setTagError] = useState('');
-  const [tagSaving, setTagSaving] = useState(false);
   const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
 
   const loadBoard = useCallback(async () => {
@@ -123,36 +119,19 @@ export function TasksPage() {
     }
   };
 
-  const handleCreateTag = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setTagError('');
-    setTagSaving(true);
-
-    try {
-      const tag = await createTag(tagName, tagColor);
-      setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
-      setTagName('');
-    } catch (err) {
-      setTagError(errorText(err, 'Не удалось создать тег'));
-    } finally {
-      setTagSaving(false);
-    }
+  const handleTagCreated = (tag: Tag) => {
+    setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
   };
 
-  const handleDeleteTag = async (tag: Tag) => {
-    setTagError('');
-    setError('');
-
-    try {
-      await deleteTag(tag.id);
-      setTags((current) => current.filter((item) => item.id !== tag.id));
-      setTasks((current) => current.map((task) => ({
-        ...task,
-        tags: task.tags.filter((item) => item.id !== tag.id),
-      })));
-    } catch (err) {
-      setError(errorText(err, 'Не удалось удалить тег'));
-    }
+  const handleTagDeleted = (tagId: number) => {
+    setTags((current) => current.filter((item) => item.id !== tagId));
+    setTasks((current) => current.map((task) => ({
+      ...task,
+      tags: task.tags.filter((item) => item.id !== tagId),
+    })));
+    setEditorTask((current) => (current
+      ? { ...current, tags: current.tags.filter((item) => item.id !== tagId) }
+      : current));
   };
 
   return (
@@ -201,69 +180,6 @@ export function TasksPage() {
         </div>
 
         {error && <p className="tasks-error">{error}</p>}
-
-        <section className="tasks-tags app-border-card" aria-labelledby="tasks-tags-title">
-          <h2 id="tasks-tags-title" className="tasks-section-title">Теги</h2>
-          <p className="tasks-tags-hint">Свои метки вроде #работа, #машина, #здоровье. У каждого тега свой цвет.</p>
-
-          {tags.length > 0 && (
-            <div className="tasks-tag-list">
-              {tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="task-tag"
-                  style={{ backgroundColor: tag.color, color: tagForeground(tag.color) }}
-                >
-                  #{tag.name}
-                  <button
-                    type="button"
-                    className="task-tag-remove"
-                    aria-label={`Удалить тег ${tag.name}`}
-                    onClick={() => void handleDeleteTag(tag)}
-                  >
-                    <X size={14} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          <form className="tasks-tag-form" onSubmit={handleCreateTag}>
-            <label className="tasks-tag-name">
-              <span className="tasks-tag-hash" aria-hidden="true">#</span>
-              <input
-                type="text"
-                value={tagName}
-                onChange={(event) => setTagName(event.target.value)}
-                placeholder="название"
-                maxLength={32}
-                aria-label="Название тега"
-                required
-              />
-            </label>
-
-            <div className="tasks-color-picker" role="radiogroup" aria-label="Цвет тега">
-              {TAG_COLOR_PRESETS.map((preset) => (
-                <label key={preset.value} className="tasks-color-option" title={preset.label}>
-                  <input
-                    type="radio"
-                    name="tagColor"
-                    value={preset.value}
-                    checked={tagColor === preset.value}
-                    onChange={() => setTagColor(preset.value)}
-                  />
-                  <span style={{ backgroundColor: preset.value }} />
-                  <span className="visually-hidden">{preset.label}</span>
-                </label>
-              ))}
-            </div>
-
-            <button type="submit" className="tasks-tag-submit" disabled={tagSaving}>
-              {tagSaving ? '...' : 'Добавить'}
-            </button>
-          </form>
-          {tagError && <p className="tasks-error">{tagError}</p>}
-        </section>
 
         {loading && tasks.length === 0 ? (
           <p className="tasks-placeholder">Загрузка задач...</p>
@@ -325,6 +241,8 @@ export function TasksPage() {
             setEditorTask(null);
           }}
           onSaved={handleSaved}
+          onTagCreated={handleTagCreated}
+          onTagDeleted={handleTagDeleted}
         />
       )}
     </Layout>
@@ -381,13 +299,17 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
           </div>
         </div>
 
+        {task.description && (
+          <p className="task-card-description">{task.description}</p>
+        )}
+
         {task.tags.length > 0 && (
           <div className="task-card-tags">
             {task.tags.map((tag) => (
               <span
                 key={tag.id}
                 className="task-tag"
-                style={{ backgroundColor: tag.color, color: tagForeground(tag.color) }}
+                style={tagChipStyle(tag.color)}
               >
                 #{tag.name}
               </span>

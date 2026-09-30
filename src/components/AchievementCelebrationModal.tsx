@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import { Trophy } from 'lucide-react';
 import type { Achievement } from '../types';
+import { Modal } from './Modal';
 import '../styles/components/AchievementCelebrationModal.css';
 
 interface AchievementCelebrationModalProps {
@@ -14,50 +14,22 @@ export function AchievementCelebrationModal({
   isOpen,
   onClose,
 }: AchievementCelebrationModalProps) {
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  if (!isOpen || !achievement) {
-    return null;
-  }
-
   return (
-    <div className="achievement-celebration-overlay">
-      <div className="achievement-celebration-stack">
-        <div
-          className="achievement-celebration-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="achievement-celebration-title"
-        >
-          <div className="achievement-celebration-glow" aria-hidden="true" />
-
-          <div className="achievement-celebration-content">
-            <div className="achievement-celebration-icon" aria-hidden="true">
-              <Trophy size={32} className="achievement-celebration-icon-svg" />
-            </div>
-
-            <p className="achievement-celebration-badge">Достижение получено!</p>
-            <h2 id="achievement-celebration-title" className="achievement-celebration-title">
-              {achievement.name}
-            </h2>
-            <p className="achievement-celebration-description">{achievement.description}</p>
+    <Modal title="Достижение получено!" isOpen={isOpen && achievement !== null} onClose={onClose}>
+      {achievement && (
+        <div className="achievement-celebration-content">
+          <div className="achievement-celebration-icon" aria-hidden="true">
+            <Trophy size={32} className="achievement-celebration-icon-svg" />
           </div>
-        </div>
 
-        <button type="button" className="achievement-celebration-btn" onClick={onClose}>
-          Продолжить
-        </button>
-      </div>
-    </div>
+          <h2 className="achievement-celebration-title">{achievement.name}</h2>
+          <p className="achievement-celebration-description">{achievement.description}</p>
+
+          <button type="button" className="achievement-celebration-btn" onClick={onClose}>
+            Продолжить
+          </button>
+        </div>
+      )}
+    </Modal>
   );
 }

@@ -158,6 +158,7 @@ function migrateToV9(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS tasks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
       priority INTEGER NOT NULL DEFAULT 2 CHECK (priority BETWEEN 1 AND 4),
       completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -178,6 +179,12 @@ function migrateToV9(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_task_tags_tag_id ON task_tags(tag_id)');
+}
+
+function migrateToV10(db: Database.Database): void {
+  if (!columnExists(db, 'tasks', 'description')) {
+    db.exec("ALTER TABLE tasks ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+  }
 }
 
 export function applyUserDataSchema(db: Database.Database): void {
@@ -234,6 +241,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 9) {
     migrateToV9(db);
     version = 9;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 10) {
+    migrateToV10(db);
+    version = 10;
     setSchemaVersion(db, version);
   }
 }
