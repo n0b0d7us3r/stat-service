@@ -114,9 +114,8 @@ aside nav {
   border-left: 3px solid transparent;
   white-space: nowrap;
   font-weight: 500;
-  font-weight: 700; /* Увеличиваем жирность */
-  text-transform: uppercase; /* Делаем заглавными */
-  letter-spacing: 0.025em; /* Добавляем межбуквенный интервал */
+  font-weight: 700;
+  letter-spacing: 0.025em;
 }
 
 @media (hover: hover) {
@@ -167,7 +166,6 @@ aside nav {
   gap: 12px;
   color: var(--muted);
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.025em;
   cursor: pointer;
   margin-top: 0px;

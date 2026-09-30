@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Plus, Tag as TagIcon } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
@@ -44,7 +44,7 @@ export function TasksPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [sort, setSort] = useState<TaskSortMode>('priority');
+  const [sort, setSort] = useState<TaskSortMode>('created');
   const [tagFilter, setTagFilter] = useState('all');
   const [showCompleted, setShowCompleted] = useState(false);
   const [editorTask, setEditorTask] = useState<Task | null>(null);
@@ -166,8 +166,7 @@ export function TasksPage() {
           />
           <div className="tasks-controls">
             <button type="button" className="tasks-create-btn" onClick={openCreate}>
-              <Plus size={20} strokeWidth={2.5} />
-              <span>Новая задача</span>
+              <span>Создать задачу</span>
             </button>
 
             <button type="button" className="tasks-tag-create-btn" onClick={() => setTagCreateOpen(true)}>
@@ -175,33 +174,33 @@ export function TasksPage() {
               <span>Создать тег</span>
             </button>
 
-            <SortSelect
-              value={sort}
-              options={[
-                { value: 'priority', label: 'По приоритету' },
-                { value: 'created', label: 'По дате' },
-              ]}
-              onChange={setSort}
-            />
-
-            <SortSelect
-              label="По тегам"
-              value={tagFilter}
-              options={[
-                { value: 'all', label: 'Все' },
-                ...tags.map((tag) => ({ value: String(tag.id), label: formatTagName(tag.name) })),
-              ]}
-              onChange={setTagFilter}
-            />
-
-            <label className="tasks-completed-field">
-              <span>Выполненные:</span>
-              <input
-                type="checkbox"
-                checked={showCompleted}
-                onChange={(event) => setShowCompleted(event.target.checked)}
+            <div className="tasks-sorts">
+              <SortSelect
+                value={sort}
+                options={[
+                  { value: 'created', label: 'По дням' },
+                  { value: 'priority', label: 'По приоритету' },
+                ]}
+                onChange={setSort}
               />
-            </label>
+
+              <SortSelect
+                label="По тегам"
+                value={tagFilter}
+                options={[
+                  { value: 'all', label: 'Все теги' },
+                  ...tags.map((tag) => ({ value: String(tag.id), label: formatTagName(tag.name) })),
+                ]}
+                onChange={setTagFilter}
+              />
+            </div>
+
+            <Checkbox
+              className="tasks-completed-toggle"
+              checked={showCompleted}
+              onChange={setShowCompleted}
+              label="Выполненные"
+            />
           </div>
         </div>
 
@@ -373,14 +372,16 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
         />
 
         <div className="task-card-body">
-          <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
-            {task.tags[0] && (
-              <span className="task-title-tag" style={{ color: task.tags[0].color }}>
-                [ {formatTagName(task.tags[0].name)} ]{' '}
-              </span>
-            )}
-            <span className="task-title-text">{task.title}</span>
-          </button>
+          <div className="task-card-title-slot">
+            <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
+              {task.tags[0] && (
+                <span className="task-title-tag" style={{ color: task.tags[0].color }}>
+                  [ {formatTagName(task.tags[0].name)} ]{' '}
+                </span>
+              )}
+              <span className="task-title-text">{task.title}</span>
+            </button>
+          </div>
           <p className="task-card-due">
             <PriorityIcon priority={task.priority} />
             {!task.completed && (

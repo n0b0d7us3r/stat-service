@@ -89,7 +89,7 @@ export function TaskEditorModal({
                 aria-label={detailsEditable ? 'Отменить редактирование' : 'Редактировать задачу'}
                 onClick={handleEditClick}
               >
-                <Pencil size={16} />
+                <Pencil size={20} />
               </button>
             )}
           </span>
@@ -169,7 +169,12 @@ export function TaskEditorModal({
         </label>
 
         {task && (
-          <button type="button" className="task-editor-delete" onClick={() => onDelete(task)}>
+          <button
+            type="button"
+            className="task-editor-delete"
+            disabled={locked}
+            onClick={() => onDelete(task)}
+          >
             Удалить задачу
           </button>
         )}

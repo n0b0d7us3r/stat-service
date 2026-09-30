@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, FolderKanban, Plus } from 'lucide-react';
+import { ChevronRight, FolderKanban } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { CreateProjectModal } from '../components/CreateProjectModal';
@@ -47,8 +47,7 @@ export function ProjectsPage() {
         <div className="projects-page-intro">
           <PageTitle title="Проекты" subtitle="Создавайте проекты и отмечайте дни в календаре" />
           <button type="button" className="projects-create-open-btn" onClick={() => setIsModalOpen(true)}>
-            <Plus size={20} strokeWidth={2.5} />
-            <span>Новый проект</span>
+            <span>Создать проект</span>
           </button>
         </div>
 

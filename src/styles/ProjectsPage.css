@@ -23,7 +23,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: none;
+  box-sizing: border-box;
+  border: 2px solid var(--create-border);
   background: var(--primary);
   color: #fff;
   padding: 0.75rem 1.25rem;
@@ -31,7 +32,6 @@
   font-size: 1rem;
   font-weight: 800;
   line-height: 1;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
   white-space: nowrap;

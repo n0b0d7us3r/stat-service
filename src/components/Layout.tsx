@@ -67,23 +67,23 @@ export function Layout({ children }: LayoutProps) {
           )}
           <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <FolderKanban size={20} />
-            <span>ПРОЕКТЫ</span>
+            <span>Проекты</span>
           </NavLink>
           <NavLink to="/tasks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <ListTodo size={20} />
-            <span>ЗАДАЧИ</span>
+            <span>Задачи</span>
           </NavLink>
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <BarChart3 size={20} />
-            <span>СТАТИСТИКА</span>
+            <span>Статистика</span>
           </NavLink>
           <NavLink to="/notes" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <StickyNote size={20} />
-            <span>ЗАМЕТКИ</span>
+            <span>Заметки</span>
           </NavLink>
           <NavLink to="/achievements" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Trophy size={20} />
-            <span>ДОСТИЖЕНИЯ</span>
+            <span>Достижения</span>
           </NavLink>
 
           <button
@@ -91,7 +91,7 @@ export function Layout({ children }: LayoutProps) {
             onClick={handleLogout}
           >
             <LogOut size={20} />
-            <span>ВЫХОД</span>
+            <span>Выход</span>
           </button>
         </nav>
       </aside>
