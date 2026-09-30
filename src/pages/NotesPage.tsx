@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, StickyNote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
+import { SortSelect } from '../components/SortSelect';
 import { APP_NAME } from '../config/app';
 import { getNotes, NOTES_PAGE_SIZE } from '../api/notes';
 import type { DayNoteListItem, NotesListResult, NotesSortMode } from '../types';
@@ -66,22 +67,14 @@ export function NotesPage() {
             subtitle={loading ? 'Загрузка...' : `Всего ${total}`}
           />
 
-          <div className="notes-sort-toggle" role="group" aria-label="Сортировка заметок">
-            <button
-              type="button"
-              className={`notes-sort-btn ${sort === 'date' ? 'notes-sort-btn-active' : ''}`}
-              onClick={() => handleSortChange('date')}
-            >
-              По дням
-            </button>
-            <button
-              type="button"
-              className={`notes-sort-btn ${sort === 'project' ? 'notes-sort-btn-active' : ''}`}
-              onClick={() => handleSortChange('project')}
-            >
-              По проектам
-            </button>
-          </div>
+          <SortSelect
+            value={sort}
+            options={[
+              { value: 'date', label: 'По дням' },
+              { value: 'project', label: 'По проектам' },
+            ]}
+            onChange={handleSortChange}
+          />
         </div>
 
         {loading && notes.length === 0 ? (

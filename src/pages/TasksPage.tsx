@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ListTodo, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Layout } from '../components/Layout';
+import { Modal } from '../components/Modal';
+import { ModalActions } from '../components/ModalActions';
 import { PageTitle } from '../components/PageTitle';
+import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
 import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
-import type { Tag, Task, TaskSortMode } from '../types';
-import { compareTasks, priorityLabel, tagChipStyle } from '../utils/taskUi';
+import type { Tag, Task, TaskPriority, TaskSortMode } from '../types';
+import { compareTasks, formatTagName, priorityLabel, tagChipStyle } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
 function errorText(error: unknown, fallback: string): string {
@@ -38,6 +41,7 @@ export function TasksPage() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [editorTask, setEditorTask] = useState<Task | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
 
   const loadBoard = useCallback(async () => {
@@ -119,14 +123,16 @@ export function TasksPage() {
     }
   };
 
-  const handleDeleteTask = async (task: Task) => {
-    if (pendingTaskId === task.id) return;
-    setPendingTaskId(task.id);
+  const handleDeleteTask = async () => {
+    if (!taskToDelete || pendingTaskId === taskToDelete.id) return;
+    const taskId = taskToDelete.id;
+    setPendingTaskId(taskId);
     setError('');
 
     try {
-      await deleteTask(task.id);
-      setTasks((current) => current.filter((item) => item.id !== task.id));
+      await deleteTask(taskId);
+      setTasks((current) => current.filter((item) => item.id !== taskId));
+      setTaskToDelete(null);
     } catch (err) {
       setError(errorText(err, 'Не удалось удалить задачу'));
     } finally {
@@ -163,18 +169,14 @@ export function TasksPage() {
               <span>Новая задача</span>
             </button>
 
-            <label className="tasks-sort-field">
-              <span>Сортировка</span>
-              <select
-                className="tasks-sort-select"
-                value={sort}
-                aria-label="Сортировка"
-                onChange={(event) => setSort(event.target.value as TaskSortMode)}
-              >
-                <option value="priority">По приоритету</option>
-                <option value="created">По дате</option>
-              </select>
-            </label>
+            <SortSelect
+              value={sort}
+              options={[
+                { value: 'priority', label: 'По приоритету' },
+                { value: 'created', label: 'По дате' },
+              ]}
+              onChange={setSort}
+            />
 
             <label className="tasks-completed-field">
               <span>Выполненные:</span>
@@ -214,7 +216,7 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onDelete={handleDeleteTask}
+                    onDelete={setTaskToDelete}
                   />
                 ))}
               </section>
@@ -230,7 +232,7 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onDelete={handleDeleteTask}
+                    onDelete={setTaskToDelete}
                   />
                 ))}
               </section>
@@ -238,6 +240,36 @@ export function TasksPage() {
           </div>
         )}
       </div>
+
+      {taskToDelete && (
+        <Modal
+          title="Удалить задачу"
+          isOpen
+          onClose={() => {
+            if (pendingTaskId === taskToDelete.id) return;
+            setTaskToDelete(null);
+          }}
+        >
+          <form
+            className="task-delete-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleDeleteTask();
+            }}
+          >
+            <p>Удалить «{taskToDelete.title}»?</p>
+            <ModalActions
+              onCancel={() => {
+                if (pendingTaskId === taskToDelete.id) return;
+                setTaskToDelete(null);
+              }}
+              submitLabel="Удалить"
+              pending={pendingTaskId === taskToDelete.id}
+              pendingLabel="Удаление..."
+            />
+          </form>
+        </Modal>
+      )}
 
       {editorOpen && (
         <TaskEditorModal
@@ -265,6 +297,24 @@ interface TaskCardProps {
   onDelete: (task: Task) => void;
 }
 
+const PRIORITY_ICONS = {
+  1: ArrowDown,
+  2: Minus,
+  3: ArrowUp,
+  4: ChevronsUp,
+} as const;
+
+function PriorityIcon({ priority }: { priority: TaskPriority }) {
+  const Icon = PRIORITY_ICONS[priority];
+  const label = priorityLabel(priority);
+
+  return (
+    <span className={`task-priority-icon task-priority-icon-${priority}`} title={label} aria-label={label}>
+      <Icon size={18} strokeWidth={2.5} />
+    </span>
+  );
+}
+
 function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) {
   return (
     <article className={`task-card app-border-card task-card-priority-${task.priority} ${task.completed ? 'task-card-completed' : ''}`}>
@@ -282,7 +332,12 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
         <div className="task-card-top">
           <div className="task-card-heading">
             <button type="button" className="task-card-title" onClick={() => onEdit(task)}>
-              {task.title}
+              {task.tags.map((tag) => (
+                <span key={tag.id} className="task-title-tag" style={{ color: tag.color }}>
+                  [ {formatTagName(tag.name)} ]{' '}
+                </span>
+              ))}
+              <span className="task-title-text">{task.title}</span>
             </button>
             {task.completed && task.completed_at && (
               <time className="task-card-completed-at" dateTime={task.completed_at}>
@@ -290,33 +345,29 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
               </time>
             )}
           </div>
-          <span className={`task-priority-badge task-priority-badge-${task.priority}`}>
-            {priorityLabel(task.priority)}
-          </span>
-          <div className="task-card-actions">
-            <button
-              type="button"
-              className="task-icon-btn"
-              aria-label={`Изменить «${task.title}»`}
-              onClick={() => onEdit(task)}
-            >
-              <Pencil size={16} />
-            </button>
-            <button
-              type="button"
-              className="task-icon-btn task-icon-btn-danger"
-              aria-label={`Удалить «${task.title}»`}
-              disabled={pending}
-              onClick={() => onDelete(task)}
-            >
-              <Trash2 size={16} />
-            </button>
+          <div className="task-card-side">
+            <PriorityIcon priority={task.priority} />
+            <div className="task-card-actions">
+              <button
+                type="button"
+                className="task-icon-btn"
+                aria-label={`Изменить «${task.title}»`}
+                onClick={() => onEdit(task)}
+              >
+                <Pencil size={16} />
+              </button>
+              <button
+                type="button"
+                className="task-icon-btn task-icon-btn-danger"
+                aria-label={`Удалить «${task.title}»`}
+                disabled={pending}
+                onClick={() => onDelete(task)}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         </div>
-
-        {task.description && (
-          <p className="task-card-description">{task.description}</p>
-        )}
 
         {task.tags.length > 0 && (
           <div className="task-card-tags">
@@ -326,7 +377,7 @@ function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) 
                 className="task-tag"
                 style={tagChipStyle(tag.color)}
               >
-                #{tag.name}
+                #{formatTagName(tag.name)}
               </span>
             ))}
           </div>

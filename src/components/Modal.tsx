@@ -32,13 +32,12 @@ export function Modal({ title, isOpen, onClose, children }: ModalProps) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div
         className="modal-window app-border-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
           <h2 id="modal-title" className="modal-title">{title}</h2>

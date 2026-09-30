@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Pencil, X } from 'lucide-react';
 import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
 import { createTag, createTask, deleteTag, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority } from '../types';
-import { TAG_COLOR_PRESETS, TASK_PRIORITIES, tagChipStyle } from '../utils/taskUi';
+import { TAG_COLOR_PRESETS, TASK_PRIORITIES, formatTagName, tagChipStyle } from '../utils/taskUi';
 
 interface TaskEditorModalProps {
   task: Task | null;
@@ -26,6 +26,8 @@ export function TaskEditorModal({
 }: TaskEditorModalProps) {
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
+  const [detailsEditable, setDetailsEditable] = useState(task === null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 2);
   const [tagIds, setTagIds] = useState<number[]>(task?.tags.map((item) => item.id) ?? []);
   const [tagName, setTagName] = useState('');
@@ -105,15 +107,32 @@ export function TaskEditorModal({
         {error && <p className="task-editor-error">{error}</p>}
 
         <label className="task-editor-field">
-          <span>Название</span>
+          <span className="task-editor-field-head">
+            <span>Название</span>
+            {task && !detailsEditable && (
+              <button
+                type="button"
+                className="task-icon-btn"
+                aria-label="Редактировать название и описание"
+                onClick={() => {
+                  setDetailsEditable(true);
+                  requestAnimationFrame(() => titleInputRef.current?.focus());
+                }}
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+          </span>
           <input
+            ref={titleInputRef}
             type="text"
             className="task-editor-input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             maxLength={200}
             required
-            autoFocus
+            readOnly={!detailsEditable}
+            autoFocus={detailsEditable}
           />
         </label>
 
@@ -125,6 +144,7 @@ export function TaskEditorModal({
             onChange={(event) => setDescription(event.target.value)}
             maxLength={2000}
             rows={4}
+            readOnly={!detailsEditable}
           />
         </label>
 
@@ -161,12 +181,12 @@ export function TaskEditorModal({
                       aria-pressed={selected}
                       onClick={() => toggleTag(tag.id)}
                     >
-                      #{tag.name}
+                      #{formatTagName(tag.name)}
                     </button>
                     <button
                       type="button"
                       className="task-tag-remove"
-                      aria-label={`Удалить тег ${tag.name}`}
+                      aria-label={`Удалить тег ${formatTagName(tag.name)}`}
                       onClick={() => void handleDeleteTag(tag)}
                     >
                       <X size={14} />

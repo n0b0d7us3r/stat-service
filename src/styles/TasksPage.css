@@ -40,7 +40,6 @@
   white-space: nowrap;
 }
 
-.tasks-sort-field,
 .tasks-completed-field {
   display: inline-flex;
   align-items: center;
@@ -48,27 +47,6 @@
   color: var(--foreground);
   font-size: 0.9375rem;
   font-weight: 700;
-}
-
-.tasks-sort-select {
-  border: 1px solid var(--border);
-  background-color: var(--background);
-  color: var(--foreground);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.55rem 2.25rem 0.55rem 0.75rem;
-  min-height: 2.5rem;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.65rem center;
-  background-size: 1rem;
-}
-
-.theme-light .tasks-sort-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 .tasks-completed-field input {
@@ -206,6 +184,7 @@
   border: none;
   background: transparent;
   padding: 0.7rem 0.75rem 0.7rem 0.35rem;
+  text-transform: uppercase;
 }
 
 .tasks-color-picker {
@@ -323,7 +302,7 @@
   opacity: 0.72;
 }
 
-.task-card-completed .task-card-title {
+.task-card-completed .task-title-text {
   text-decoration: line-through;
 }
 
@@ -389,8 +368,45 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex: 1 1 100%;
+  flex: 1 1 auto;
   min-width: 0;
+}
+
+.task-card-side {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.task-priority-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+.task-priority-icon-1 {
+  color: var(--muted);
+}
+
+.task-priority-icon-2 {
+  color: #3b82f6;
+}
+
+.task-priority-icon-3 {
+  color: var(--primary);
+}
+
+.task-priority-icon-4 {
+  color: #ef4444;
+}
+
+.task-title-tag {
+  margin-right: 0.35rem;
+  font-weight: 800;
 }
 
 .task-card-title {
@@ -406,28 +422,6 @@
   text-align: left;
   cursor: pointer;
   overflow-wrap: break-word;
-}
-
-.task-priority-badge {
-  flex-shrink: 0;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-
-.task-priority-badge-3 {
-  color: var(--primary-dark);
-  border-color: var(--primary);
-}
-
-.task-priority-badge-4 {
-  color: #fff;
-  background: #ef4444;
-  border-color: #ef4444;
 }
 
 .task-card-actions {
@@ -485,6 +479,22 @@
   border: none;
 }
 
+.task-editor-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.task-editor-input[readonly] {
+  cursor: default;
+}
+
+.task-delete-form p {
+  margin: 0;
+  line-height: 1.45;
+}
+
 .task-editor-field span,
 .task-editor-fieldset legend {
   font-size: 0.8125rem;
@@ -513,15 +523,6 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
-.task-card-description {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 .task-editor-error {
   margin: 0;
   color: #f87171;
@@ -539,14 +540,8 @@
   }
 
   .tasks-create-btn,
-  .tasks-sort-field,
   .tasks-completed-field,
   .tasks-tag-submit {
     width: 100%;
-  }
-
-  .tasks-sort-select {
-    flex: 1;
-    min-width: 0;
   }
 }

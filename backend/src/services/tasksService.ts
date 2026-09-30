@@ -77,7 +77,7 @@ function normalizeTagName(raw: string): string {
   if (/[\s#]/u.test(name)) {
     throw new DbError('Тег — одно слово без пробелов');
   }
-  return name;
+  return name.toLocaleUpperCase('ru');
 }
 
 function normalizeColor(raw: string): string {
@@ -169,7 +169,7 @@ function tagsForTaskIds(db: Database.Database, taskIds: number[]): Map<number, T
     const list = map.get(row.task_id) ?? [];
     list.push({
       id: row.id,
-      name: row.name,
+      name: row.name.toLocaleUpperCase('ru'),
       color: row.color,
       created_at: row.created_at,
     });
@@ -225,7 +225,7 @@ export function listTaskBoard(userId: number): { tasks: Task[]; tags: Tag[] } {
   const byTask = tagsForTaskIds(db, rows.map((row) => row.id));
 
   return {
-    tags,
+    tags: tags.map((tag) => ({ ...tag, name: tag.name.toLocaleUpperCase('ru') })),
     tasks: rows.map((row) => mapTask(row, byTask.get(row.id) ?? [])),
   };
 }

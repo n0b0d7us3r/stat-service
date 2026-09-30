@@ -22,6 +22,10 @@ export function priorityLabel(priority: TaskPriority): string {
   return TASK_PRIORITIES.find((item) => item.value === priority)?.label ?? 'Обычный';
 }
 
+export function formatTagName(name: string): string {
+  return name.toLocaleUpperCase('ru');
+}
+
 function tagChannels(color: string): [number, number, number] | null {
   const hex = color.replace('#', '');
   if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
