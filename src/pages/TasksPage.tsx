@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Plus, Trash2 }
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
+import { Checkbox } from '../components/Checkbox';
 import { PageTitle } from '../components/PageTitle';
 import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
@@ -146,6 +147,15 @@ export function TasksPage() {
 
   const handleTagCreated = (tag: Tag) => {
     setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
+  };
+
+  const handleTagDeleted = (tagId: number) => {
+    setTags((current) => current.filter((tag) => tag.id !== tagId));
+    setTasks((current) => current.map((task) => ({
+      ...task,
+      tags: task.tags.filter((tag) => tag.id !== tagId),
+    })));
+    setTagFilter((current) => (current === String(tagId) ? 'all' : current));
   };
 
   return (
@@ -292,6 +302,7 @@ export function TasksPage() {
           }}
           onSaved={handleSaved}
           onTagCreated={handleTagCreated}
+          onTagDeleted={handleTagDeleted}
         />
       )}
     </Layout>
@@ -327,15 +338,13 @@ function PriorityIcon({ priority }: { priority: TaskPriority }) {
 function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) {
   return (
     <article className={`task-card app-border-card task-card-priority-${task.priority} ${task.completed ? 'task-card-completed' : ''}`}>
-      <label className="task-check">
-        <input
-          type="checkbox"
-          checked={task.completed}
-          disabled={pending}
-          aria-label={task.completed ? `Вернуть «${task.title}» в активные` : `Отметить «${task.title}» выполненной`}
-          onChange={() => onToggle(task)}
-        />
-      </label>
+      <Checkbox
+        className="task-check"
+        checked={task.completed}
+        disabled={pending}
+        ariaLabel={task.completed ? `Вернуть «${task.title}» в активные` : `Отметить «${task.title}» выполненной`}
+        onChange={() => onToggle(task)}
+      />
 
       <div className="task-card-body">
         <div className="task-card-top">

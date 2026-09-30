@@ -12,10 +12,8 @@ export const TAG_COLOR_PRESETS: Array<{ value: string; label: string }> = [
   { value: '#f97316', label: 'Оранжевый' },
   { value: '#eab308', label: 'Жёлтый' },
   { value: '#22c55e', label: 'Зелёный' },
-  { value: '#14b8a6', label: 'Бирюзовый' },
   { value: '#3b82f6', label: 'Синий' },
   { value: '#8b5cf6', label: 'Фиолетовый' },
-  { value: '#ec4899', label: 'Розовый' },
 ];
 
 export function priorityLabel(priority: TaskPriority): string {

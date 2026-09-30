@@ -61,14 +61,14 @@
   margin: 0;
   padding: 1rem;
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   color: var(--muted);
   font-size: 0.9375rem;
 }
 
 .dashboard-month-table-wrapper {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   overflow-x: auto;
 }
 

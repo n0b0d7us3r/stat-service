@@ -99,7 +99,7 @@ export function NotesPage() {
 
                     <button
                       type="button"
-                      className="note-card app-border-card app-border-card-accent"
+                      className="note-card app-border-card"
                       onClick={() => handleOpenNote(note)}
                     >
                       <div className="note-card-header">

@@ -3,7 +3,7 @@ import { Pencil, X } from 'lucide-react';
 import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
-import { createTag, createTask, updateTask } from '../api/tasks';
+import { createTag, createTask, deleteTag, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority } from '../types';
 import { TAG_COLOR_PRESETS, TASK_PRIORITIES, formatTagName, tagChipStyle } from '../utils/taskUi';
 
@@ -13,6 +13,7 @@ interface TaskEditorModalProps {
   onClose: () => void;
   onSaved: (task: Task) => void;
   onTagCreated: (tag: Tag) => void;
+  onTagDeleted: (tagId: number) => void;
 }
 
 export function TaskEditorModal({
@@ -21,6 +22,7 @@ export function TaskEditorModal({
   onClose,
   onSaved,
   onTagCreated,
+  onTagDeleted,
 }: TaskEditorModalProps) {
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
@@ -30,13 +32,29 @@ export function TaskEditorModal({
   const [dueDate, setDueDate] = useState(task?.due_date ?? '');
   const [tagIds, setTagIds] = useState<number[]>(task?.tags[0] ? [task.tags[0].id] : []);
   const [tagName, setTagName] = useState('');
-  const [tagColor, setTagColor] = useState(TAG_COLOR_PRESETS[5].value);
+  const [tagColor, setTagColor] = useState(TAG_COLOR_PRESETS[4].value);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [tagSaving, setTagSaving] = useState(false);
+  const [deletingTagId, setDeletingTagId] = useState<number | null>(null);
 
   const toggleTag = (tagId: number) => {
     setTagIds((current) => (current[0] === tagId ? [] : [tagId]));
+  };
+
+  const handleDeleteTag = async (tagId: number) => {
+    setError('');
+    setDeletingTagId(tagId);
+
+    try {
+      await deleteTag(tagId);
+      setTagIds((current) => current.filter((id) => id !== tagId));
+      onTagDeleted(tagId);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Не удалось удалить тег');
+    } finally {
+      setDeletingTagId(null);
+    }
   };
 
   const handleCreateTag = async () => {
@@ -170,16 +188,15 @@ export function TaskEditorModal({
                     >
                       #{formatTagName(tag.name)}
                     </button>
-                    {selected && (
-                      <button
-                        type="button"
-                        className="task-tag-remove"
-                        aria-label={`Удалить тег ${formatTagName(tag.name)}`}
-                        onClick={() => toggleTag(tag.id)}
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="task-tag-remove"
+                      aria-label={`Удалить тег ${formatTagName(tag.name)}`}
+                      disabled={deletingTagId === tag.id}
+                      onClick={() => void handleDeleteTag(tag.id)}
+                    >
+                      <X size={14} />
+                    </button>
                   </span>
                 );
               })}

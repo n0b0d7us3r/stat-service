@@ -52,10 +52,6 @@
   color: var(--primary-dark);
 }
 
-.achievement-card-earned {
-  border-left: 6px solid var(--primary);
-}
-
 .achievement-card-earned .achievement-card-icon {
   border-color: var(--primary);
   color: var(--primary-dark);

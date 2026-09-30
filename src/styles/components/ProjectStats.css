@@ -10,7 +10,7 @@
 
 .project-stat-card {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   padding: 0.875rem;
   display: flex;
   flex-direction: column;

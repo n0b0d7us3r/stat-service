@@ -15,7 +15,7 @@
 .dashboard-stat-card {
   background-color: var(--card);
   color: var(--foreground);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   padding: 0.875rem 1.125rem;
   display: flex;
   flex-direction: column;
@@ -89,7 +89,7 @@
 
 .dashboard-projects-table-wrapper {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   overflow-x: auto;
 }
 
@@ -136,7 +136,7 @@
 
 .dashboard-placeholder {
   background-color: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -313,7 +313,7 @@
 
 .dashboard-achievements-empty {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -351,8 +351,7 @@
   gap: 0.875rem;
   padding: 0.875rem 1rem;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--primary);
+  border: 3px solid var(--border);
 }
 
 .dashboard-achievement-icon {
@@ -439,7 +438,7 @@
   .dashboard-project-row {
     display: block;
     background: var(--card);
-    border: 1px solid var(--border);
+    border: 3px solid var(--border);
   }
 
   .dashboard-project-row td {

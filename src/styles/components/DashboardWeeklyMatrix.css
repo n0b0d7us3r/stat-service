@@ -1,6 +1,6 @@
 .dashboard-week-matrix-wrapper {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   overflow-x: auto;
 }
 
@@ -173,7 +173,7 @@
 
 .dashboard-week-matrix-mobile-card {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 3px solid var(--border);
   overflow: hidden;
 }
 
