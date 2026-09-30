@@ -33,8 +33,8 @@ export function DashboardTaskList({ tasks, emptyText }: DashboardTaskListProps) 
           >
             <span className="dashboard-task-list-title">
               {task.tags[0] && (
-                <span className="dashboard-task-list-tag" style={{ color: task.tags[0].color }}>
-                  [ {formatTagName(task.tags[0].name)} ]
+                <span className="dashboard-task-list-tag">
+                  [ {formatTagName(task.tags[0].name)} ]{' '}
                 </span>
               )}
               <span>{task.title}</span>

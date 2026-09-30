@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Plus, Tag as TagIcon } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
@@ -7,6 +7,8 @@ import { Checkbox } from '../components/Checkbox';
 import { PageTitle } from '../components/PageTitle';
 import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
+import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
+import { TagCreateModal } from '../components/TagCreateModal';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
 import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
@@ -18,19 +20,23 @@ function errorText(error: unknown, fallback: string): string {
   return error instanceof ApiError ? error.message : fallback;
 }
 
-function formatCompletedAt(value: string): string {
+function formatTaskDate(value: string): string {
   const datePart = value.slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
     return value;
   }
 
   const [year, month, day] = datePart.split('-').map(Number);
-  const label = new Date(year, month - 1, day).toLocaleDateString('ru-RU', {
+  return new Date(year, month - 1, day).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
-  return `Выполнено ${label}`;
+}
+
+function formatCompletedAt(value: string): string {
+  const label = formatTaskDate(value);
+  return label === value ? value : `Выполнено ${label}`;
 }
 
 export function TasksPage() {
@@ -43,6 +49,7 @@ export function TasksPage() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [editorTask, setEditorTask] = useState<Task | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [tagCreateOpen, setTagCreateOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
 
@@ -149,15 +156,6 @@ export function TasksPage() {
     setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
   };
 
-  const handleTagDeleted = (tagId: number) => {
-    setTags((current) => current.filter((tag) => tag.id !== tagId));
-    setTasks((current) => current.map((task) => ({
-      ...task,
-      tags: task.tags.filter((tag) => tag.id !== tagId),
-    })));
-    setTagFilter((current) => (current === String(tagId) ? 'all' : current));
-  };
-
   return (
     <Layout>
       <div className="tasks-page">
@@ -170,6 +168,11 @@ export function TasksPage() {
             <button type="button" className="tasks-create-btn" onClick={openCreate}>
               <Plus size={20} strokeWidth={2.5} />
               <span>Новая задача</span>
+            </button>
+
+            <button type="button" className="tasks-tag-create-btn" onClick={() => setTagCreateOpen(true)}>
+              <TagIcon size={18} strokeWidth={2.25} />
+              <span>Создать тег</span>
             </button>
 
             <SortSelect
@@ -236,7 +239,6 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onDelete={setTaskToDelete}
                   />
                 ))}
               </section>
@@ -252,7 +254,6 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onDelete={setTaskToDelete}
                   />
                 ))}
               </section>
@@ -301,8 +302,18 @@ export function TasksPage() {
             setEditorTask(null);
           }}
           onSaved={handleSaved}
-          onTagCreated={handleTagCreated}
-          onTagDeleted={handleTagDeleted}
+          onDelete={(task) => {
+            setEditorOpen(false);
+            setEditorTask(null);
+            setTaskToDelete(task);
+          }}
+        />
+      )}
+
+      {tagCreateOpen && (
+        <TagCreateModal
+          onClose={() => setTagCreateOpen(false)}
+          onCreated={handleTagCreated}
         />
       )}
     </Layout>
@@ -314,7 +325,6 @@ interface TaskCardProps {
   pending: boolean;
   onToggle: (task: Task) => void;
   onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
 }
 
 const PRIORITY_ICONS = {
@@ -330,63 +340,71 @@ function PriorityIcon({ priority }: { priority: TaskPriority }) {
 
   return (
     <span className={`task-priority-icon task-priority-icon-${priority}`} title={label} aria-label={label}>
-      <Icon size={18} strokeWidth={2.5} />
+      <Icon size={12} strokeWidth={2.25} />
     </span>
   );
 }
 
-function TaskCard({ task, pending, onToggle, onEdit, onDelete }: TaskCardProps) {
-  return (
-    <article className={`task-card app-border-card task-card-priority-${task.priority} ${task.completed ? 'task-card-completed' : ''}`}>
-      <Checkbox
-        className="task-check"
-        checked={task.completed}
-        disabled={pending}
-        ariaLabel={task.completed ? `Вернуть «${task.title}» в активные` : `Отметить «${task.title}» выполненной`}
-        onChange={() => onToggle(task)}
-      />
+function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
+  const vaporRef = useRef<VaporizeHandle>(null);
+  const leavingRef = useRef(false);
+  const [leaving, setLeaving] = useState(false);
 
-      <div className="task-card-body">
-        <div className="task-card-top">
-          <div className="task-card-heading">
-            <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
-              {task.tags[0] && (
-                <span className="task-title-tag" style={{ color: task.tags[0].color }}>
-                  [ {formatTagName(task.tags[0].name)} ]{' '}
-                </span>
-              )}
-              <span className="task-title-text">{task.title}</span>
-            </button>
+  const handleCheck = () => {
+    if (pending || leavingRef.current) return;
+    if (!task.completed) {
+      leavingRef.current = true;
+      setLeaving(true);
+      void vaporRef.current?.play().finally(() => onToggle(task));
+      return;
+    }
+    onToggle(task);
+  };
+
+  return (
+    <Vaporize ref={vaporRef}>
+      <article className={`task-card app-border-card task-card-priority-${task.priority} ${task.completed ? 'task-card-completed' : ''}`}>
+        <Checkbox
+          className="task-check"
+          checked={task.completed}
+          disabled={pending || leaving}
+          ariaLabel={task.completed ? `Вернуть «${task.title}» в активные` : `Отметить «${task.title}» выполненной`}
+          onChange={handleCheck}
+        />
+
+        <div className="task-card-body">
+          <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
+            {task.tags[0] && (
+              <span className="task-title-tag">
+                [ {formatTagName(task.tags[0].name)} ]{' '}
+              </span>
+            )}
+            <span className="task-title-text">{task.title}</span>
+          </button>
+          <p className="task-card-due">
+            <PriorityIcon priority={task.priority} />
+            {!task.completed && (
+              task.due_date
+                ? <time dateTime={task.due_date}>{formatTaskDate(task.due_date)}</time>
+                : <span>-- / -- / 20--</span>
+            )}
             {task.completed && task.completed_at && (
               <time className="task-card-completed-at" dateTime={task.completed_at}>
                 {formatCompletedAt(task.completed_at)}
               </time>
             )}
-          </div>
-          <div className="task-card-side">
-            <PriorityIcon priority={task.priority} />
-            <div className="task-card-actions">
-              <button
-                type="button"
-                className="task-icon-btn"
-                aria-label={`Изменить «${task.title}»`}
-                onClick={() => onEdit(task)}
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                type="button"
-                className="task-icon-btn task-icon-btn-danger"
-                aria-label={`Удалить «${task.title}»`}
-                disabled={pending}
-                onClick={() => onDelete(task)}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
+          </p>
         </div>
-      </div>
-    </article>
+
+        <button
+          type="button"
+          className="task-icon-btn task-card-edit"
+          aria-label={`Изменить «${task.title}»`}
+          onClick={() => onEdit(task)}
+        >
+          <Pencil size={20} />
+        </button>
+      </article>
+    </Vaporize>
   );
 }

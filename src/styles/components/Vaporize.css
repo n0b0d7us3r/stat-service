@@ -1,0 +1,5 @@
+.vaporize-layer {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+}

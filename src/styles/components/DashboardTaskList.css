@@ -49,7 +49,10 @@
 }
 
 .dashboard-task-list-tag {
-  margin-right: 0.35rem;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-decoration: none;
 }
 
 .dashboard-task-list-status {

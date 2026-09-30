@@ -94,7 +94,7 @@ aside.collapsed .sidebar-toggle-btn svg {
 }
 
 /* Навигация */
-nav {
+aside nav {
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
@@ -253,7 +253,7 @@ aside.collapsed .nav-item {
     box-shadow: none;
   }
 
-  nav {
+  aside nav {
     position: fixed;
     top: 73px;
     left: 0;

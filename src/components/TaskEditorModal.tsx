@@ -1,19 +1,18 @@
 import { useRef, useState } from 'react';
-import { Pencil, X } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
-import { createTag, createTask, deleteTag, updateTask } from '../api/tasks';
+import { createTask, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority } from '../types';
-import { TAG_COLOR_PRESETS, TASK_PRIORITIES, formatTagName, tagChipStyle } from '../utils/taskUi';
+import { TASK_PRIORITIES, formatTagName } from '../utils/taskUi';
 
 interface TaskEditorModalProps {
   task: Task | null;
   tags: Tag[];
   onClose: () => void;
   onSaved: (task: Task) => void;
-  onTagCreated: (tag: Tag) => void;
-  onTagDeleted: (tagId: number) => void;
+  onDelete: (task: Task) => void;
 }
 
 export function TaskEditorModal({
@@ -21,8 +20,7 @@ export function TaskEditorModal({
   tags,
   onClose,
   onSaved,
-  onTagCreated,
-  onTagDeleted,
+  onDelete,
 }: TaskEditorModalProps) {
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
@@ -31,56 +29,35 @@ export function TaskEditorModal({
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 2);
   const [dueDate, setDueDate] = useState(task?.due_date ?? '');
   const [tagIds, setTagIds] = useState<number[]>(task?.tags[0] ? [task.tags[0].id] : []);
-  const [tagName, setTagName] = useState('');
-  const [tagColor, setTagColor] = useState(TAG_COLOR_PRESETS[4].value);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tagSaving, setTagSaving] = useState(false);
-  const [deletingTagId, setDeletingTagId] = useState<number | null>(null);
+  const locked = !detailsEditable;
 
-  const toggleTag = (tagId: number) => {
-    setTagIds((current) => (current[0] === tagId ? [] : [tagId]));
-  };
-
-  const handleDeleteTag = async (tagId: number) => {
+  const cancelEditing = () => {
+    setTitle(task?.title ?? '');
+    setDescription(task?.description ?? '');
+    setPriority(task?.priority ?? 2);
+    setDueDate(task?.due_date ?? '');
+    setTagIds(task?.tags[0] ? [task.tags[0].id] : []);
     setError('');
-    setDeletingTagId(tagId);
-
-    try {
-      await deleteTag(tagId);
-      setTagIds((current) => current.filter((id) => id !== tagId));
-      onTagDeleted(tagId);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось удалить тег');
-    } finally {
-      setDeletingTagId(null);
-    }
+    setDetailsEditable(false);
   };
 
-  const handleCreateTag = async () => {
-    const name = tagName.trim();
-    if (!name) {
-      setError('Укажите название тега');
+  const handleEditClick = () => {
+    if (!task) return;
+    if (detailsEditable) {
+      cancelEditing();
       return;
     }
 
-    setError('');
-    setTagSaving(true);
-
-    try {
-      const created = await createTag(name, tagColor);
-      onTagCreated(created);
-      setTagIds([created.id]);
-      setTagName('');
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось создать тег');
-    } finally {
-      setTagSaving(false);
-    }
+    setDetailsEditable(true);
+    requestAnimationFrame(() => titleInputRef.current?.focus());
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (task && !detailsEditable) return;
+
     setError('');
     setSaving(true);
 
@@ -101,24 +78,23 @@ export function TaskEditorModal({
       <form className="task-editor-form" onSubmit={handleSubmit}>
         {error && <p className="task-editor-error">{error}</p>}
 
-        <label className="task-editor-field">
+        <div className="task-editor-field">
           <span className="task-editor-field-head">
-            <span>Название</span>
-            {task && !detailsEditable && (
+            <label htmlFor="task-title">Название</label>
+            {task && (
               <button
                 type="button"
-                className="task-icon-btn"
-                aria-label="Редактировать название и описание"
-                onClick={() => {
-                  setDetailsEditable(true);
-                  requestAnimationFrame(() => titleInputRef.current?.focus());
-                }}
+                className="task-icon-btn task-editor-edit"
+                aria-pressed={detailsEditable}
+                aria-label={detailsEditable ? 'Отменить редактирование' : 'Редактировать задачу'}
+                onClick={handleEditClick}
               >
                 <Pencil size={16} />
               </button>
             )}
           </span>
           <input
+            id="task-title"
             ref={titleInputRef}
             type="text"
             className="task-editor-input"
@@ -126,10 +102,10 @@ export function TaskEditorModal({
             onChange={(event) => setTitle(event.target.value)}
             maxLength={200}
             required
-            readOnly={!detailsEditable}
+            disabled={locked}
             autoFocus={detailsEditable}
           />
-        </label>
+        </div>
 
         <label className="task-editor-field">
           <span>Описание</span>
@@ -139,24 +115,47 @@ export function TaskEditorModal({
             onChange={(event) => setDescription(event.target.value)}
             maxLength={2000}
             rows={4}
-            readOnly={!detailsEditable}
+            disabled={locked}
           />
         </label>
 
-        <label className="task-editor-field">
-          <span>Приоритет</span>
-          <select
-            className="task-editor-select"
-            value={priority}
-            onChange={(event) => setPriority(Number(event.target.value) as TaskPriority)}
-          >
-            {TASK_PRIORITIES.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="task-editor-split">
+          <label className="task-editor-field">
+            <span>Приоритет</span>
+            <select
+              className="task-editor-select"
+              value={priority}
+              disabled={locked}
+              onChange={(event) => setPriority(Number(event.target.value) as TaskPriority)}
+            >
+              {TASK_PRIORITIES.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="task-editor-field">
+            <span>Тег</span>
+            <select
+              className="task-editor-select"
+              value={tagIds[0] ? String(tagIds[0]) : ''}
+              disabled={locked}
+              onChange={(event) => {
+                const value = event.target.value;
+                setTagIds(value ? [Number(value)] : []);
+              }}
+            >
+              <option value="">Без тега</option>
+              {tags.map((tag) => (
+                <option key={tag.id} value={tag.id}>
+                  {formatTagName(tag.name)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <label className="task-editor-field">
           <span>Дата выполнения</span>
@@ -164,90 +163,22 @@ export function TaskEditorModal({
             type="date"
             className="task-editor-input task-editor-date"
             value={dueDate}
+            disabled={locked}
             onChange={(event) => setDueDate(event.target.value)}
           />
         </label>
 
-        <fieldset className="task-editor-fieldset">
-          <legend>Теги</legend>
-          {tags.length > 0 && (
-            <div className="task-tag-picker">
-              {tags.map((tag) => {
-                const selected = tagIds.includes(tag.id);
-                return (
-                  <span
-                    key={tag.id}
-                    className={`task-tag ${selected ? 'task-tag-selected' : ''}`}
-                    style={tagChipStyle(tag.color)}
-                  >
-                    <button
-                      type="button"
-                      className="task-tag-pick"
-                      aria-pressed={selected}
-                      onClick={() => toggleTag(tag.id)}
-                    >
-                      #{formatTagName(tag.name)}
-                    </button>
-                    <button
-                      type="button"
-                      className="task-tag-remove"
-                      aria-label={`Удалить тег ${formatTagName(tag.name)}`}
-                      disabled={deletingTagId === tag.id}
-                      onClick={() => void handleDeleteTag(tag.id)}
-                    >
-                      <X size={14} />
-                    </button>
-                  </span>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="tasks-tag-form">
-            <label className="tasks-tag-name">
-              <span className="tasks-tag-hash" aria-hidden="true">#</span>
-              <input
-                type="text"
-                value={tagName}
-                onChange={(event) => setTagName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    void handleCreateTag();
-                  }
-                }}
-                placeholder="название"
-                maxLength={32}
-                aria-label="Название тега"
-              />
-            </label>
-
-            <div className="tasks-color-picker" role="radiogroup" aria-label="Цвет тега">
-              {TAG_COLOR_PRESETS.map((preset) => (
-                <label key={preset.value} className="tasks-color-option" title={preset.label}>
-                  <input
-                    type="radio"
-                    name="tagColor"
-                    value={preset.value}
-                    checked={tagColor === preset.value}
-                    onChange={() => setTagColor(preset.value)}
-                  />
-                  <span style={{ backgroundColor: preset.value }} />
-                  <span className="visually-hidden">{preset.label}</span>
-                </label>
-              ))}
-            </div>
-
-            <button type="button" className="tasks-tag-submit" disabled={tagSaving} onClick={() => void handleCreateTag()}>
-              {tagSaving ? '...' : 'Добавить'}
-            </button>
-          </div>
-        </fieldset>
+        {task && (
+          <button type="button" className="task-editor-delete" onClick={() => onDelete(task)}>
+            Удалить задачу
+          </button>
+        )}
 
         <ModalActions
           onCancel={onClose}
           submitLabel={task ? 'Сохранить' : 'Создать'}
           pending={saving}
+          submitDisabled={Boolean(task) && !detailsEditable}
         />
       </form>
     </Modal>

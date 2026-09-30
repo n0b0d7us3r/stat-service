@@ -80,8 +80,21 @@ export function tagChipStyle(color: string): {
   };
 }
 
+function taskDueDate(task: Task): string | null {
+  const value = task.due_date?.trim();
+  return value ? value : null;
+}
+
 export function compareTasks(a: Task, b: Task, sort: TaskSortMode): number {
-  if (sort === 'priority' && a.priority !== b.priority) {
+  if (sort === 'created') {
+    const dueA = taskDueDate(a);
+    const dueB = taskDueDate(b);
+    if (dueA !== dueB) {
+      if (!dueA) return 1;
+      if (!dueB) return -1;
+      return dueA < dueB ? -1 : 1;
+    }
+  } else if (a.priority !== b.priority) {
     return b.priority - a.priority;
   }
 

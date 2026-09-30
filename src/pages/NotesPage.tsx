@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, StickyNote } from 'lucide-react';
+import { StickyNote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
+import { Pagination } from '../components/Pagination';
 import { SortSelect } from '../components/SortSelect';
 import { APP_NAME } from '../config/app';
 import { getNotes, NOTES_PAGE_SIZE } from '../api/notes';
@@ -121,33 +122,12 @@ export function NotesPage() {
             </div>
 
             {showPagination && (
-              <nav className="notes-pagination" aria-label="Страницы заметок">
-                <button
-                  type="button"
-                  className="notes-pagination-btn"
-                  onClick={() => setPage((value) => Math.max(1, value - 1))}
-                  disabled={page <= 1}
-                  aria-label="Предыдущая страница"
-                >
-                  <ChevronLeft size={18} />
-                  <span>Назад</span>
-                </button>
-
-                <span className="notes-pagination-info">
-                  Страница {page} из {totalPages}
-                </span>
-
-                <button
-                  type="button"
-                  className="notes-pagination-btn"
-                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                  disabled={page >= totalPages}
-                  aria-label="Следующая страница"
-                >
-                  <span>Вперёд</span>
-                  <ChevronRight size={18} />
-                </button>
-              </nav>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                label="Страницы заметок"
+              />
             )}
           </>
         )}
