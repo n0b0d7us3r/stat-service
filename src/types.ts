@@ -143,6 +143,27 @@ export interface UserAchievementView extends Achievement {
   earned_at: string | null;
 }
 
+export type TaskPriority = 1 | 2 | 3 | 4;
+
+export type TaskSortMode = 'priority' | 'created';
+
+export interface Tag {
+  id: number;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  priority: TaskPriority;
+  completed: boolean;
+  created_at: string;
+  completed_at: string | null;
+  tags: Tag[];
+}
+
 export class AuthError extends Error {
   constructor(message: string) {
     super(message);

@@ -26,6 +26,14 @@ import {
 } from './services/goalsService.js';
 import { getNote, getNoteDatesForMonth, listUserNotes, saveNote } from './services/notesService.js';
 import { DbError, createProject, deleteProject, getProjectById, getProjectsByUser } from './services/projectsService.js';
+import {
+  createTag,
+  createTask,
+  deleteTag,
+  deleteTask,
+  listTaskBoard,
+  updateTask,
+} from './services/tasksService.js';
 
 const app = express();
 
@@ -294,6 +302,108 @@ app.post('/api/achievements/sync', requireAuth, (req: AuthRequest, res) => {
 
 app.get('/api/meta/today', (_req, res) => {
   res.json({ today: getTodayKey() });
+});
+
+app.get('/api/tasks', requireAuth, (req: AuthRequest, res) => {
+  res.json(listTaskBoard(req.user!.id));
+});
+
+app.post('/api/tasks', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { title, priority, tagIds } = req.body as {
+      title?: string;
+      priority?: number;
+      tagIds?: number[];
+    };
+    const task = createTask(req.user!.id, {
+      title: title ?? '',
+      priority,
+      tagIds,
+    });
+    res.status(201).json({ task });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const taskId = Number(req.params.taskId);
+    if (!Number.isInteger(taskId) || taskId <= 0) {
+      res.status(400).json({ message: 'Некорректный идентификатор задачи' });
+      return;
+    }
+
+    const { title, priority, completed, tagIds } = req.body as {
+      title?: string;
+      priority?: number;
+      completed?: boolean;
+      tagIds?: number[];
+    };
+    const task = updateTask(req.user!.id, taskId, { title, priority, completed, tagIds });
+    if (!task) {
+      res.status(404).json({ message: 'Задача не найдена' });
+      return;
+    }
+
+    res.json({ task });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
+  const taskId = Number(req.params.taskId);
+  if (!Number.isInteger(taskId) || taskId <= 0) {
+    res.status(400).json({ message: 'Некорректный идентификатор задачи' });
+    return;
+  }
+
+  const deleted = deleteTask(req.user!.id, taskId);
+  if (!deleted) {
+    res.status(404).json({ message: 'Задача не найдена' });
+    return;
+  }
+
+  res.status(204).end();
+});
+
+app.post('/api/tags', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { name, color } = req.body as { name?: string; color?: string };
+    const tag = createTag(req.user!.id, name ?? '', color ?? '');
+    res.status(201).json({ tag });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/tags/:tagId', requireAuth, (req: AuthRequest, res) => {
+  const tagId = Number(req.params.tagId);
+  if (!Number.isInteger(tagId) || tagId <= 0) {
+    res.status(400).json({ message: 'Некорректный идентификатор тега' });
+    return;
+  }
+
+  const deleted = deleteTag(req.user!.id, tagId);
+  if (!deleted) {
+    res.status(404).json({ message: 'Тег не найден' });
+    return;
+  }
+
+  res.status(204).end();
 });
 
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

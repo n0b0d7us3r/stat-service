@@ -144,6 +144,42 @@ function migrateToV8(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_goal_days_date ON goal_days(date)');
 }
 
+function migrateToV9(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      color TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      priority INTEGER NOT NULL DEFAULT 2 CHECK (priority BETWEEN 1 AND 4),
+      completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      completed_at TEXT
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS task_tags (
+      task_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      PRIMARY KEY (task_id, tag_id),
+      FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_task_tags_tag_id ON task_tags(tag_id)');
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -192,6 +228,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 8) {
     migrateToV8(db);
     version = 8;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 9) {
+    migrateToV9(db);
+    version = 9;
     setSchemaVersion(db, version);
   }
 }

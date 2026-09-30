@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, BarChart3, FolderKanban, StickyNote, Trophy } from 'lucide-react';
+import { LogOut, BarChart3, FolderKanban, ListTodo, StickyNote, Trophy } from 'lucide-react';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { SidebarToggle } from './SidebarToggle';
@@ -68,6 +68,10 @@ export function Layout({ children }: LayoutProps) {
           <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <FolderKanban size={20} />
             <span>ПРОЕКТЫ</span>
+          </NavLink>
+          <NavLink to="/tasks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <ListTodo size={20} />
+            <span>ЗАДАЧИ</span>
           </NavLink>
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <BarChart3 size={20} />
