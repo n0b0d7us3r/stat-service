@@ -67,9 +67,10 @@ aside.collapsed {
   flex-shrink: 0;
   width: 40px;
   height: 40px;
+  box-sizing: border-box;
   background: var(--primary-gradient);
   color: var(--foreground);
-  border: none;
+  border: 2px solid var(--create-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,8 +128,10 @@ aside nav {
 }
 
 .nav-item.active {
+  box-sizing: border-box;
   background: var(--primary-gradient);
   color: var(--foreground);
+  border: 2px solid var(--create-border);
   border-left: 6px solid var(--primary-dark) !important;
 }
 

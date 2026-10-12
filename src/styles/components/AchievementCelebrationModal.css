@@ -42,7 +42,8 @@
 
 .achievement-celebration-btn {
   width: 100%;
-  border: none;
+  box-sizing: border-box;
+  border: 2px solid var(--create-border);
   background: var(--primary-gradient);
   color: #fff;
   padding: 0.95rem 1rem;

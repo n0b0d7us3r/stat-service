@@ -124,10 +124,11 @@
 
 .login-submit-btn {
   width: 100%;
+  box-sizing: border-box;
   padding: 1rem;
   background: var(--primary-gradient);
   color: var(--foreground);
-  border: none;
+  border: 2px solid var(--create-border);
   border-radius: 0;
   font-family: var(--font-mono);
   font-size: 1.1rem;
