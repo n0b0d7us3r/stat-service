@@ -9,11 +9,13 @@ import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
 import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
 import { TagCreateModal } from '../components/TagCreateModal';
+import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
 import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority, TaskSortMode } from '../types';
-import { compareTasks, formatTagName, priorityLabel } from '../utils/taskUi';
+import { formatLocalDate } from '../utils/date';
+import { compareTasks, formatTagName, isTaskOverdue, priorityLabel } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
 function errorText(error: unknown, fallback: string): string {
@@ -214,6 +216,8 @@ export function TasksPage() {
             <p>Задач пока нет. Создайте первую и отметьте её тегами.</p>
           </div>
         ) : (
+          <div className="tasks-workspace">
+            <div className="tasks-workspace-main">
           <div className="tasks-groups">
             {activeTasks.length === 0 && completedTasks.length === 0 && (
               <div className="tasks-empty app-border-card">
@@ -257,6 +261,9 @@ export function TasksPage() {
                 ))}
               </section>
             )}
+          </div>
+            </div>
+            <TaskActivityCalendar tasks={tasks} />
           </div>
         )}
       </div>
@@ -348,6 +355,8 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
   const vaporRef = useRef<VaporizeHandle>(null);
   const leavingRef = useRef(false);
   const [leaving, setLeaving] = useState(false);
+  const todayKey = formatLocalDate(new Date());
+  const isOverdue = isTaskOverdue(task, todayKey);
 
   const handleCheck = () => {
     if (pending || leavingRef.current) return;
@@ -389,7 +398,14 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
             <PriorityIcon priority={task.priority} />
             {!task.completed && (
               task.due_date
-                ? <time dateTime={task.due_date}>{formatTaskDate(task.due_date)}</time>
+                ? (
+                  <time
+                    dateTime={task.due_date}
+                    className={isOverdue ? 'task-card-due-overdue' : undefined}
+                  >
+                    {formatTaskDate(task.due_date)}
+                  </time>
+                )
                 : <span>-- / -- / 20--</span>
             )}
             {task.completed && task.completed_at && (

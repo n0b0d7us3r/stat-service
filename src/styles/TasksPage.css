@@ -217,6 +217,32 @@
   line-height: 1.5;
 }
 
+.tasks-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tasks-workspace-main {
+  min-width: 0;
+}
+
+@media (min-width: 1101px) {
+  .tasks-workspace {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .tasks-workspace-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .tasks-workspace-main .task-card {
+    width: 100%;
+  }
+}
+
 .tasks-groups,
 .tasks-list {
   display: flex;
@@ -292,6 +318,15 @@
   font-size: inherit;
   font-weight: inherit;
   line-height: inherit;
+}
+
+.task-card-due-overdue {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.theme-light .task-card-due-overdue {
+  color: #991b1b;
 }
 
 .task-priority-icon {

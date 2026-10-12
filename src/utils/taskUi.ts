@@ -80,15 +80,33 @@ export function tagChipStyle(color: string): {
   };
 }
 
-function taskDueDate(task: Task): string | null {
+export function taskDueDateKey(task: Task): string | null {
   const value = task.due_date?.trim();
-  return value ? value : null;
+  if (!value) {
+    return null;
+  }
+
+  const datePart = value.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
+}
+
+export function isTaskOverdue(task: Task, todayKey: string): boolean {
+  if (task.completed) {
+    return false;
+  }
+
+  const due = taskDueDateKey(task);
+  if (!due) {
+    return false;
+  }
+
+  return due < todayKey;
 }
 
 export function compareTasks(a: Task, b: Task, sort: TaskSortMode): number {
   if (sort === 'created') {
-    const dueA = taskDueDate(a);
-    const dueB = taskDueDate(b);
+    const dueA = taskDueDateKey(a);
+    const dueB = taskDueDateKey(b);
     if (dueA !== dueB) {
       if (!dueA) return 1;
       if (!dueB) return -1;
