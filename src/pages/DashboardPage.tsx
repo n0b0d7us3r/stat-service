@@ -70,8 +70,9 @@ export function DashboardPage() {
   const tomorrowKey = todayKey
     ? formatLocalDate(addDays(parseLocalDate(todayKey), 1))
     : '';
-  const tasksToday = tasks.filter((task) => task.due_date === todayKey);
-  const tasksTomorrow = tasks.filter((task) => task.due_date === tomorrowKey);
+  const activeTasks = tasks.filter((task) => !task.archived);
+  const tasksToday = activeTasks.filter((task) => !task.completed && task.due_date === todayKey);
+  const tasksTomorrow = activeTasks.filter((task) => !task.completed && task.due_date === tomorrowKey);
 
   return (
     <Layout>

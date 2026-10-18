@@ -1,6 +1,28 @@
 import { ApiDataError, AuthError } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+export const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+
+/** URL для GET ресурсов API — тот же принцип, что у apiFetch (path без дублирования /api). */
+export function resolveApiResourceUrl(resourcePath: string): string {
+  if (
+    resourcePath.startsWith('http://')
+    || resourcePath.startsWith('https://')
+    || resourcePath.startsWith('blob:')
+    || resourcePath.startsWith('data:')
+  ) {
+    return resourcePath;
+  }
+
+  let path = resourcePath.trim();
+  if (path.startsWith('/api/')) {
+    path = path.slice(4);
+  } else if (!path.startsWith('/')) {
+    path = `/${path}`;
+  }
+
+  const base = API_BASE.replace(/\/$/, '');
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 export class ApiError extends Error {
   status: number;

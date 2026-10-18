@@ -1,0 +1,162 @@
+.task-archive-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.task-archive-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.task-archive-empty p {
+  margin: 0;
+}
+
+.task-archive-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  max-height: min(60vh, 28rem);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.task-archive-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+.task-archive-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.task-archive-item-title {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.task-archive-item-tag {
+  font-size: 0.875em;
+}
+
+.task-archive-item-description {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.task-archive-item-description .task-description-content {
+  font-size: inherit;
+}
+
+.task-archive-item-description .task-description-image {
+  max-width: 100%;
+}
+
+.task-archive-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.task-archive-restore-btn,
+.task-archive-delete-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  padding: 0.5rem 0.875rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.task-archive-delete-btn {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.task-archive-restore-btn:disabled,
+.task-archive-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .task-archive-restore-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary-dark);
+  }
+
+  .task-archive-delete-btn:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.08);
+  }
+}
+
+.tag-manage-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tag-manage-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.tag-manage-create {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tag-manage-delete-hint {
+  margin: -0.35rem 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.tag-manage-delete-btn {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.75rem;
+  border: 1px solid #f87171;
+  background: transparent;
+  color: #f87171;
+  padding: 0.625rem 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tag-manage-delete-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .tag-manage-delete-btn:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.08);
+  }
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
@@ -8,7 +8,8 @@ import { PageTitle } from '../components/PageTitle';
 import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
 import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
-import { TagCreateModal } from '../components/TagCreateModal';
+import { TagManageModal } from '../components/TagManageModal';
+import { TaskArchiveModal } from '../components/TaskArchiveModal';
 import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
@@ -51,7 +52,8 @@ export function TasksPage() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [editorTask, setEditorTask] = useState<Task | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [tagCreateOpen, setTagCreateOpen] = useState(false);
+  const [tagManageOpen, setTagManageOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
 
@@ -85,9 +87,11 @@ export function TasksPage() {
     };
   }, [loadBoard]);
 
+  const boardTasks = tasks.filter((task) => !task.archived);
+  const archivedCount = tasks.filter((task) => task.archived).length;
   const visibleTasks = tagFilter === 'all'
-    ? tasks
-    : tasks.filter((task) => task.tags.some((tag) => String(tag.id) === tagFilter));
+    ? boardTasks
+    : boardTasks.filter((task) => task.tags.some((tag) => String(tag.id) === tagFilter));
   const activeTasks = visibleTasks
     .filter((task) => !task.completed)
     .sort((a, b) => compareTasks(a, b, sort));
@@ -158,22 +162,58 @@ export function TasksPage() {
     setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
   };
 
+  const handleTagDeleted = (tagId: number) => {
+    setTags((current) => current.filter((tag) => tag.id !== tagId));
+    setTasks((current) => current.map((task) => (
+      task.tags.some((tag) => tag.id === tagId)
+        ? { ...task, tags: task.tags.filter((tag) => tag.id !== tagId) }
+        : task
+    )));
+    if (tagFilter === String(tagId)) {
+      setTagFilter('all');
+    }
+  };
+
+  const handleArchiveTask = async (task: Task) => {
+    if (pendingTaskId === task.id) return;
+    setPendingTaskId(task.id);
+    setError('');
+
+    try {
+      const updated = await updateTask(task.id, { archived: true });
+      setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setEditorOpen(false);
+      setEditorTask(null);
+    } catch (err) {
+      setError(errorText(err, 'Не удалось перенести задачу в архив'));
+    } finally {
+      setPendingTaskId(null);
+    }
+  };
+
   return (
     <Layout>
       <div className="tasks-page">
         <div className="tasks-page-intro">
           <PageTitle
             title="Задачи"
-            subtitle={loading ? 'Загрузка...' : `Активных: ${activeTasks.length} · Выполненных: ${completedTasks.length}`}
+            subtitle={loading
+              ? 'Загрузка...'
+              : `Активных: ${activeTasks.length} · Выполненных: ${completedTasks.length}${archivedCount > 0 ? ` · В архиве: ${archivedCount}` : ''}`}
           />
           <div className="tasks-controls">
             <button type="button" className="tasks-create-btn" onClick={openCreate}>
               <span>Создать задачу</span>
             </button>
 
-            <button type="button" className="tasks-tag-create-btn" onClick={() => setTagCreateOpen(true)}>
+            <button type="button" className="tasks-tag-create-btn" onClick={() => setTagManageOpen(true)}>
               <TagIcon size={18} strokeWidth={2.25} />
-              <span>Создать тег</span>
+              <span>Теги</span>
+            </button>
+
+            <button type="button" className="tasks-archive-btn" onClick={() => setArchiveOpen(true)}>
+              <Archive size={18} strokeWidth={2.25} />
+              <span>Архив{archivedCount > 0 ? ` (${archivedCount})` : ''}</span>
             </button>
 
             <div className="tasks-sorts">
@@ -263,7 +303,7 @@ export function TasksPage() {
             )}
           </div>
             </div>
-            <TaskActivityCalendar tasks={tasks} />
+            <TaskActivityCalendar tasks={boardTasks} />
           </div>
         )}
       </div>
@@ -313,13 +353,29 @@ export function TasksPage() {
             setEditorTask(null);
             setTaskToDelete(task);
           }}
+          onArchive={(task) => void handleArchiveTask(task)}
         />
       )}
 
-      {tagCreateOpen && (
-        <TagCreateModal
-          onClose={() => setTagCreateOpen(false)}
+      {tagManageOpen && (
+        <TagManageModal
+          tags={tags}
+          onClose={() => setTagManageOpen(false)}
           onCreated={handleTagCreated}
+          onDeleted={handleTagDeleted}
+        />
+      )}
+
+      {archiveOpen && (
+        <TaskArchiveModal
+          tasks={tasks}
+          onClose={() => setArchiveOpen(false)}
+          onTaskUpdated={(task) => {
+            setTasks((current) => current.map((item) => (item.id === task.id ? task : item)));
+          }}
+          onTaskDeleted={(taskId) => {
+            setTasks((current) => current.filter((item) => item.id !== taskId));
+          }}
         />
       )}
     </Layout>

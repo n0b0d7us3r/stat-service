@@ -34,11 +34,12 @@ import {
   listTaskBoard,
   updateTask,
 } from './services/tasksService.js';
+import { readTaskDescriptionImage, saveTaskDescriptionImage } from './services/taskImagesService.js';
 
 const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 app.use(cookieParser());
 
 app.get('/api/health', (_req, res) => {
@@ -342,12 +343,13 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       return;
     }
 
-    const { title, description, priority, dueDate, completed, tagIds } = req.body as {
+    const { title, description, priority, dueDate, completed, archived, tagIds } = req.body as {
       title?: string;
       description?: string;
       priority?: number;
       dueDate?: string | null;
       completed?: boolean;
+      archived?: boolean;
       tagIds?: number[];
     };
     const task = updateTask(req.user!.id, taskId, {
@@ -356,6 +358,7 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       priority,
       dueDate: Object.prototype.hasOwnProperty.call(req.body, 'dueDate') ? dueDate : undefined,
       completed,
+      archived,
       tagIds,
     });
     if (!task) {
@@ -401,6 +404,39 @@ app.post('/api/tags', requireAuth, (req: AuthRequest, res) => {
     }
     throw error;
   }
+});
+
+app.post('/api/tasks/description-images', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { contentType, data } = req.body as { contentType?: string; data?: string };
+    if (!contentType || typeof data !== 'string' || !data.trim()) {
+      res.status(400).json({ message: 'Некорректные данные изображения' });
+      return;
+    }
+
+    const buffer = Buffer.from(data, 'base64');
+    const saved = saveTaskDescriptionImage(req.user!.id, contentType, buffer);
+    res.status(201).json(saved);
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.get('/api/tasks/description-images/:filename', requireAuth, (req: AuthRequest, res) => {
+  const filename = String(req.params.filename ?? '');
+  const file = readTaskDescriptionImage(req.user!.id, filename);
+  if (!file) {
+    res.status(404).end();
+    return;
+  }
+
+  res.setHeader('Content-Type', file.contentType);
+  res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+  res.send(file.buffer);
 });
 
 app.delete('/api/tags/:tagId', requireAuth, (req: AuthRequest, res) => {

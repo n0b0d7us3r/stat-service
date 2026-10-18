@@ -194,6 +194,13 @@ function migrateToV11(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)');
 }
 
+function migrateToV12(db: Database.Database): void {
+  if (!columnExists(db, 'tasks', 'archived')) {
+    db.exec('ALTER TABLE tasks ADD COLUMN archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_archived ON tasks(archived)');
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -260,6 +267,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 11) {
     migrateToV11(db);
     version = 11;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 12) {
+    migrateToV12(db);
+    version = 12;
     setSchemaVersion(db, version);
   }
 }

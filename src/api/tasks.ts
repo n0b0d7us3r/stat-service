@@ -1,4 +1,5 @@
 import type { Tag, Task, TaskPriority } from '../types';
+import { fileToBase64 } from '../utils/taskDescription';
 import { apiFetch } from './client';
 
 export interface TaskBoard {
@@ -44,6 +45,7 @@ export async function updateTask(
     priority?: TaskPriority;
     dueDate?: string | null;
     completed?: boolean;
+    archived?: boolean;
     tagIds?: number[];
   },
 ): Promise<Task> {
@@ -56,4 +58,12 @@ export async function updateTask(
 
 export async function deleteTask(taskId: number): Promise<void> {
   await apiFetch(`/tasks/${taskId}`, { method: 'DELETE' });
+}
+
+export async function uploadTaskDescriptionImage(file: File): Promise<{ url: string; filename: string }> {
+  const data = await fileToBase64(file);
+  return apiFetch<{ url: string; filename: string }>('/tasks/description-images', {
+    method: 'POST',
+    body: JSON.stringify({ contentType: file.type, data }),
+  });
 }

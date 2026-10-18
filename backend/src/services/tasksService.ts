@@ -18,6 +18,7 @@ export interface Task {
   description: string;
   priority: TaskPriority;
   completed: boolean;
+  archived: boolean;
   created_at: string;
   completed_at: string | null;
   due_date: string | null;
@@ -25,10 +26,10 @@ export interface Task {
 }
 
 const MAX_TITLE_LENGTH = 200;
-const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_DESCRIPTION_LENGTH = 50_000;
 const MAX_TAG_NAME_LENGTH = 32;
 const MAX_TAGS_PER_TASK = 1;
-const TASK_COLUMNS = 'id, title, description, priority, completed, created_at, completed_at, due_date';
+const TASK_COLUMNS = 'id, title, description, priority, completed, archived, created_at, completed_at, due_date';
 
 interface TaskRow {
   id: number;
@@ -36,6 +37,7 @@ interface TaskRow {
   description: string;
   priority: number;
   completed: number;
+  archived: number;
   created_at: string;
   completed_at: string | null;
   due_date: string | null;
@@ -234,6 +236,7 @@ function mapTask(row: TaskRow, tags: Tag[]): Task {
     description: row.description ?? '',
     priority: readPriority(row.priority),
     completed: row.completed === 1,
+    archived: row.archived === 1,
     created_at: row.created_at,
     completed_at: row.completed_at,
     due_date: row.due_date,
@@ -355,7 +358,15 @@ export function createTask(
 export function updateTask(
   userId: number,
   taskId: number,
-  input: { title?: string; description?: unknown; priority?: unknown; dueDate?: unknown; completed?: boolean; tagIds?: unknown },
+  input: {
+    title?: string;
+    description?: unknown;
+    priority?: unknown;
+    dueDate?: unknown;
+    completed?: boolean;
+    archived?: boolean;
+    tagIds?: unknown;
+  },
 ): Task | null {
   const db = getUserDb(userId);
   const existing = readTask(db, taskId);
@@ -368,12 +379,14 @@ export function updateTask(
   const priority = input.priority === undefined ? existing.priority : normalizePriority(input.priority);
   const dueDate = input.dueDate === undefined ? existing.due_date : normalizeDueDate(input.dueDate);
   const completed = input.completed === undefined ? existing.completed : Boolean(input.completed);
+  const archived = input.archived === undefined ? existing.archived : Boolean(input.archived);
   const tagIds = input.tagIds === undefined ? null : normalizeTagIds(input.tagIds);
   if (tagIds !== null) {
     assertTagsExist(db, tagIds);
   }
 
   const completedFlag = completed ? 1 : 0;
+  const archivedFlag = archived ? 1 : 0;
 
   db.transaction(() => {
     runStatement(
@@ -386,6 +399,7 @@ export function updateTask(
           priority = ?,
           due_date = ?,
           completed = ?,
+          archived = ?,
           completed_at = CASE
             WHEN ? = 0 THEN NULL
             WHEN completed = 0 THEN datetime('now')
@@ -393,7 +407,7 @@ export function updateTask(
           END
         WHERE id = ?
       `,
-      [title, description, priority, dueDate, completedFlag, completedFlag, taskId],
+      [title, description, priority, dueDate, completedFlag, archivedFlag, completedFlag, taskId],
     );
 
     if (tagIds !== null) {
