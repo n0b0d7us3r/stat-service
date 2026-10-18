@@ -563,7 +563,8 @@
   line-height: 1.45;
 }
 
-.task-editor-field span,
+.task-editor-field > span:not(.task-editor-field-head):not(.task-description-preview-label),
+.task-editor-field > label > span,
 .task-editor-field-head label,
 .task-editor-fieldset legend {
   font-size: 0.8125rem;
@@ -576,6 +577,11 @@
 .task-editor-textarea {
   resize: vertical;
   min-height: 120px;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.55;
 }
 
 .task-description-view {
@@ -583,19 +589,40 @@
   background: var(--background);
   border: 1px solid var(--border);
   overflow-x: auto;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .task-description-content {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 400;
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--foreground);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .task-description-text {
   white-space: pre-wrap;
+  font-weight: inherit;
+  text-transform: none;
+}
+
+.task-description-strong {
+  font-weight: 600;
+}
+
+.task-description-em {
+  font-style: italic;
+}
+
+.task-description-upper {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .task-description-figure {
@@ -625,8 +652,10 @@
 .task-description-empty {
   margin: 0;
   color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  text-transform: none;
 }
 
 .task-description-upload-hint {

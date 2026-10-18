@@ -1,5 +1,6 @@
 import { parseTaskDescriptionBlocks } from '../utils/taskDescription';
 import { TaskDescriptionImage } from './TaskDescriptionImage';
+import { TaskDescriptionText } from './TaskDescriptionText';
 
 interface TaskDescriptionContentProps {
   value: string;
@@ -34,11 +35,7 @@ export function TaskDescriptionContent({
           );
         }
 
-        return (
-          <span key={`text-${index}`} className="task-description-text">
-            {block.value}
-          </span>
-        );
+        return <TaskDescriptionText key={`text-${index}`} value={block.value} />;
       })}
     </div>
   );

@@ -178,7 +178,7 @@ export function TaskEditorModal({
                 onPaste={handleDescriptionPaste}
                 maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                 rows={6}
-                placeholder="Текст и изображения (Ctrl+V для вставки картинки из буфера)"
+                placeholder="Текст, **жирный**, *курсив*, ^^заглавные^^, Ctrl+V — картинка"
               />
               {imageUploading && (
                 <p className="task-description-upload-hint">Загрузка изображения...</p>
