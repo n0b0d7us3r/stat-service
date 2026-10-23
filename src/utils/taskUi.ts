@@ -91,6 +91,27 @@ export function taskDueDateKey(task: Task): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
 }
 
+export function dueThroughTodayScore(
+  tasks: Task[],
+  todayKey: string,
+): { completed: number; total: number } {
+  const eligible = tasks.filter((task) => {
+    if (task.archived) {
+      return false;
+    }
+    const due = taskDueDateKey(task);
+    if (!due) {
+      return false;
+    }
+    return due <= todayKey;
+  });
+
+  return {
+    total: eligible.length,
+    completed: eligible.filter((task) => task.completed).length,
+  };
+}
+
 export function isTaskOverdue(task: Task, todayKey: string): boolean {
   if (task.completed) {
     return false;

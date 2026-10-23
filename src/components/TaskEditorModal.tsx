@@ -18,7 +18,7 @@ interface TaskEditorModalProps {
   task: Task | null;
   tags: Tag[];
   onClose: () => void;
-  onSaved: (task: Task) => void;
+  onSaved: (task: Task, options?: { keepOpen?: boolean }) => void;
   onDelete: (task: Task) => void;
   onArchive?: (task: Task) => void;
 }
@@ -44,20 +44,32 @@ export function TaskEditorModal({
   const [saving, setSaving] = useState(false);
   const locked = !detailsEditable;
 
-  const cancelEditing = () => {
-    setTitle(task?.title ?? '');
-    setDescription(task?.description ?? '');
-    setPriority(task?.priority ?? 2);
-    setDueDate(task?.due_date ?? '');
-    setTagIds(task?.tags[0] ? [task.tags[0].id] : []);
+  const persistTask = async (options?: { keepOpen?: boolean }): Promise<Task | null> => {
+    if (task && !detailsEditable) return null;
+
     setError('');
-    setDetailsEditable(false);
+    setSaving(true);
+
+    try {
+      const saved = task
+        ? await updateTask(task.id, { title, description, priority, dueDate: dueDate || null, tagIds })
+        : await createTask({ title, description, priority, dueDate: dueDate || null, tagIds });
+      onSaved(saved, options);
+      return saved;
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t('saveTaskFailed'));
+      return null;
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEditClick = () => {
     if (!task) return;
     if (detailsEditable) {
-      cancelEditing();
+      void persistTask({ keepOpen: true }).then((saved) => {
+        if (saved) setDetailsEditable(false);
+      });
       return;
     }
 
@@ -116,21 +128,7 @@ export function TaskEditorModal({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (task && !detailsEditable) return;
-
-    setError('');
-    setSaving(true);
-
-    try {
-      const saved = task
-        ? await updateTask(task.id, { title, description, priority, dueDate: dueDate || null, tagIds })
-        : await createTask({ title, description, priority, dueDate: dueDate || null, tagIds });
-      onSaved(saved);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : t('saveTaskFailed'));
-    } finally {
-      setSaving(false);
-    }
+    await persistTask();
   };
 
   return (

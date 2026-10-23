@@ -1,6 +1,6 @@
 @import './components/BorderCard.css';
 @import './components/PageTitle.css';
-@import './components/ThemeToggle.css';
+/* @import './components/ThemeToggle.css'; */
 
 /* Theme Variables */
   :root {
@@ -26,9 +26,9 @@
 
     --primary: #4c46c4;
     --primary-dark: #c4c0ff;
-    --create-border: #221a48;
+    --create-border: #0c0a18;
     --primary-glow: rgba(76, 70, 196, 0.42);
-    --primary-gradient: linear-gradient(90deg, #16122e 0%, #221c4a 24%, #2e2668 50%, #3a3288 76%, #4338a8 100%);
+    --primary-gradient: linear-gradient(90deg, #524c9c 0%, #4a4494 14%, #423e8a 28%, #3a3880 42%, #343474 56%, #302e6c 70%, #2c2a64 84%, #282660 100%);
     --primary-soft: rgba(76, 70, 196, 0.2);
     
     --border: #313c50;
@@ -62,7 +62,7 @@
 
     --primary: #322e86;
     --primary-dark: #5b54c9;
-    --create-border: #8b84e0;
+    --create-border: #12102a;
     --primary-glow: rgba(50, 46, 134, 0.2);
     --primary-gradient: linear-gradient(90deg, #8d87e8 0%, #6e66d4 28%, #524aa8 56%, #3a327c 80%, #2a2468 100%);
     --primary-soft: rgba(50, 46, 134, 0.1);
@@ -79,7 +79,7 @@
   :root[data-accent='orange'] {
     --primary: #b45309;
     --primary-dark: #f59e0b;
-    --create-border: #92400e;
+    --create-border: #451a03;
     --primary-glow: rgba(180, 83, 9, 0.3);
     --primary-gradient: linear-gradient(90deg, #78350f 0%, #d97706 100%);
     --primary-soft: rgba(180, 83, 9, 0.1);
@@ -88,7 +88,7 @@
   .theme-light[data-accent='orange'] {
     --primary: #b45309;
     --primary-dark: #f59e0b;
-    --create-border: #d97706;
+    --create-border: #78350f;
     --primary-glow: rgba(180, 83, 9, 0.1);
     --primary-gradient: linear-gradient(90deg, #f59e0b 0%, #b45309 100%);
     --primary-soft: rgba(180, 83, 9, 0.05);
@@ -147,4 +147,12 @@ body {
 .api-error-screen p {
   color: var(--muted);
   margin: 0;
+}
+
+@media (min-width: 769px) {
+  .tasks-create-btn,
+  .projects-create-open-btn {
+    min-width: 12.5rem;
+    justify-content: center;
+  }
 }

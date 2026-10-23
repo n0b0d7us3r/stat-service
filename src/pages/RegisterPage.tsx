@@ -4,7 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { AuthError, useAuth } from '../context/AuthContext';
 import { APP_NAME } from '../config/app';
 import { t } from '../i18n';
-import { ThemeToggle } from '../components/ThemeToggle';
+// import { ThemeToggle } from '../components/ThemeToggle';
 import '../styles/LoginPage.css';
 
 export function RegisterPage() {
@@ -18,8 +18,6 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-
   useEffect(() => {
     document.title = `${t('registerTitle')} | ${APP_NAME}`;
   }, []);
@@ -31,15 +29,9 @@ export function RegisterPage() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('theme-light');
-    } else {
-      document.documentElement.classList.remove('theme-light');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    document.documentElement.classList.remove('theme-light');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,9 +129,9 @@ export function RegisterPage() {
               </button>
             </div>
 
-            <div className="login-remember-row">
+            {/* <div className="login-remember-row">
               <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-            </div>
+            </div> */}
 
             <button
               type="submit"

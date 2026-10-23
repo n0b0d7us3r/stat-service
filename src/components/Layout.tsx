@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, BarChart3, FolderKanban, ListTodo, StickyNote, Trophy } from 'lucide-react';
-import { getDashboardStats } from '../api/dashboard';
 import { getTaskBoard } from '../api/tasks';
 import { APP_NAME } from '../config/app';
 import { t } from '../i18n';
 import { useAuth } from '../context/AuthContext';
+import { formatLocalDate } from '../utils/date';
+import { dueThroughTodayScore } from '../utils/taskUi';
+import { TASK_BOARD_CHANGED } from '../utils/taskBoardEvents';
 import { SidebarToggle } from './SidebarToggle';
-import { ThemeToggle } from './ThemeToggle';
+// import { ThemeToggle } from './ThemeToggle';
 import '../styles/components/Layout.css';
 
 interface LayoutProps {
@@ -20,8 +22,7 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-  const [todayScore, setTodayScore] = useState<{ tasks: number; goals: number } | null>(null);
+  const [todayScore, setTodayScore] = useState<{ completed: number; total: number } | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -30,34 +31,29 @@ export function Layout({ children }: LayoutProps) {
     }
 
     let cancelled = false;
-    void Promise.all([
-      getTaskBoard(),
-      getDashboardStats(user.id),
-    ]).then(([board, stats]) => {
-      if (cancelled) return;
-      setTodayScore({
-        tasks: board.tasks.filter((task) => !task.archived && !task.completed).length,
-        goals: stats.todayGoals.goals.length,
+    const refreshScore = () => {
+      const todayKey = formatLocalDate(new Date());
+      void getTaskBoard().then((board) => {
+        if (cancelled) return;
+        setTodayScore(dueThroughTodayScore(board.tasks, todayKey));
+      }).catch(() => {
+        if (!cancelled) setTodayScore(null);
       });
-    }).catch(() => {
-      if (!cancelled) setTodayScore(null);
-    });
+    };
+
+    refreshScore();
+    window.addEventListener(TASK_BOARD_CHANGED, refreshScore);
 
     return () => {
       cancelled = true;
+      window.removeEventListener(TASK_BOARD_CHANGED, refreshScore);
     };
   }, [user, location.pathname]);
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('theme-light');
-    } else {
-      document.documentElement.classList.remove('theme-light');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    document.documentElement.classList.remove('theme-light');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   const displayedAppName = APP_NAME.length > 19 ? `${APP_NAME.substring(0, 19)}...` : APP_NAME;
 
@@ -83,14 +79,14 @@ export function Layout({ children }: LayoutProps) {
             <div
               className="logo-sub"
               aria-label={todayScore
-                ? t('todayScoreLabel', { tasks: todayScore.tasks, goals: todayScore.goals })
+                ? t('todayScoreLabel', { completed: todayScore.completed, total: todayScore.total })
                 : undefined}
             >
-              {todayScore ? `[ ${todayScore.tasks} / ${todayScore.goals} ]` : '[ – / – ]'}
+              {todayScore ? `[ ${todayScore.completed} / ${todayScore.total} ]` : '[ – / – ]'}
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+            {/* <ThemeToggle theme={theme} toggleTheme={toggleTheme} /> */}
             <SidebarToggle isCollapsed={isCollapsed} onClick={toggleSidebar} />
           </div>
         </div>

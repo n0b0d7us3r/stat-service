@@ -1,6 +1,6 @@
 {
   "loginTitle": "Авторизация",
-  "todayScoreLabel": "{tasks} активных задач, {goals} целей на сегодня",
+  "todayScoreLabel": "{completed} выполнено из {total} задач с датой до сегодня",
   "loginPending": "Вход...",
   "loginSubmit": "Вход",
   "loginFailed": "Не удалось выполнить вход",

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { AuthError, useAuth } from '../context/AuthContext';
 import { Checkbox } from '../components/Checkbox';
-import { ThemeToggle } from '../components/ThemeToggle';
+// import { ThemeToggle } from '../components/ThemeToggle';
 import { APP_NAME } from '../config/app';
 import { t } from '../i18n';
 import { isPublicRegisterAllowed } from '../config/features';
@@ -19,8 +19,6 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-
   useEffect(() => {
     document.title = `${t('loginTitle')} | ${APP_NAME}`;
   }, []);
@@ -32,15 +30,9 @@ export function LoginPage() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('theme-light');
-    } else {
-      document.documentElement.classList.remove('theme-light');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    document.documentElement.classList.remove('theme-light');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +109,7 @@ export function LoginPage() {
                 checked={rememberMe}
                 onChange={setRememberMe}
               />
-              <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+              {/* <ThemeToggle theme={theme} toggleTheme={toggleTheme} /> */}
             </div>
 
             <button

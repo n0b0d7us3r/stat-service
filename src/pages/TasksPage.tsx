@@ -17,6 +17,7 @@ import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority, TaskSortMode } from '../types';
 import { formatLocalDate } from '../utils/date';
 import { dateLocaleTag, t } from '../i18n';
+import { notifyTaskBoardChanged } from '../utils/taskBoardEvents';
 import { compareTasks, formatTagName, isTaskOverdue, priorityLabel } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
@@ -110,7 +111,7 @@ export function TasksPage() {
     setEditorOpen(true);
   };
 
-  const handleSaved = (task: Task) => {
+  const handleSaved = (task: Task, options?: { keepOpen?: boolean }) => {
     setTasks((current) => {
       const exists = current.some((item) => item.id === task.id);
       if (!exists) {
@@ -118,8 +119,14 @@ export function TasksPage() {
       }
       return current.map((item) => (item.id === task.id ? task : item));
     });
+    if (options?.keepOpen) {
+      setEditorTask(task);
+      notifyTaskBoardChanged();
+      return;
+    }
     setEditorOpen(false);
     setEditorTask(null);
+    notifyTaskBoardChanged();
   };
 
   const handleToggle = async (task: Task) => {
@@ -134,6 +141,7 @@ export function TasksPage() {
     try {
       const updated = await updateTask(task.id, { completed: nextCompleted });
       setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      notifyTaskBoardChanged();
     } catch (err) {
       setTasks((current) => current.map((item) => (item.id === task.id ? task : item)));
       setError(errorText(err, t('updateTaskFailed')));
@@ -152,6 +160,7 @@ export function TasksPage() {
       await deleteTask(taskId);
       setTasks((current) => current.filter((item) => item.id !== taskId));
       setTaskToDelete(null);
+      notifyTaskBoardChanged();
     } catch (err) {
       setError(errorText(err, t('deleteTaskFailed')));
     } finally {
@@ -185,6 +194,7 @@ export function TasksPage() {
       setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       setEditorOpen(false);
       setEditorTask(null);
+      notifyTaskBoardChanged();
     } catch (err) {
       setError(errorText(err, t('archiveTaskFailed')));
     } finally {
@@ -375,9 +385,11 @@ export function TasksPage() {
           onClose={() => setArchiveOpen(false)}
           onTaskUpdated={(task) => {
             setTasks((current) => current.map((item) => (item.id === task.id ? task : item)));
+            notifyTaskBoardChanged();
           }}
           onTaskDeleted={(taskId) => {
             setTasks((current) => current.filter((item) => item.id !== taskId));
+            notifyTaskBoardChanged();
           }}
         />
       )}
