@@ -1,5 +1,6 @@
 import { Trophy } from 'lucide-react';
 import type { Achievement } from '../types';
+import { achievementDescription, achievementName, t } from '../i18n';
 import { Modal } from './Modal';
 import '../styles/components/AchievementCelebrationModal.css';
 
@@ -15,18 +16,18 @@ export function AchievementCelebrationModal({
   onClose,
 }: AchievementCelebrationModalProps) {
   return (
-    <Modal title="Достижение получено!" isOpen={isOpen && achievement !== null} onClose={onClose}>
+    <Modal title={t('achievementUnlocked')} isOpen={isOpen && achievement !== null} onClose={onClose}>
       {achievement && (
         <div className="achievement-celebration-content">
           <div className="achievement-celebration-icon" aria-hidden="true">
             <Trophy size={32} className="achievement-celebration-icon-svg" />
           </div>
 
-          <h2 className="achievement-celebration-title">{achievement.name}</h2>
-          <p className="achievement-celebration-description">{achievement.description}</p>
+          <h2 className="achievement-celebration-title">{achievementName(achievement.code, achievement.name)}</h2>
+          <p className="achievement-celebration-description">{achievementDescription(achievement.code, achievement.description)}</p>
 
           <button type="button" className="achievement-celebration-btn" onClick={onClose}>
-            Продолжить
+            {t('continue')}
           </button>
         </div>
       )}

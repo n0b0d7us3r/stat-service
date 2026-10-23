@@ -5,6 +5,7 @@ import { ApiError } from '../api/client';
 import { createTag, deleteTag } from '../api/tasks';
 import type { Tag } from '../types';
 import { TAG_COLOR_PRESETS, formatTagName } from '../utils/taskUi';
+import { t } from '../i18n';
 
 interface TagManageModalProps {
   tags: Tag[];
@@ -25,7 +26,7 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
     event.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Укажите название тега');
+      setError(t('tagNameRequired'));
       return;
     }
 
@@ -37,7 +38,7 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
       onCreated(created);
       setName('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось создать тег');
+      setError(err instanceof ApiError ? err.message : t('createTagFailed'));
     } finally {
       setSaving(false);
     }
@@ -45,7 +46,7 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
 
   const handleDelete = async () => {
     if (!deleteTagId) {
-      setError('Выберите тег для удаления');
+      setError(t('chooseTagToDelete'));
       return;
     }
 
@@ -58,37 +59,37 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
       onDeleted(tagId);
       setDeleteTagId('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось удалить тег');
+      setError(err instanceof ApiError ? err.message : t('deleteTagFailed'));
     } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <Modal title="Управление тегами" isOpen onClose={onClose}>
+    <Modal title={t('tagManageTitle')} isOpen onClose={onClose}>
       <div className="tag-manage-modal">
         {error && <p className="task-editor-error">{error}</p>}
 
         <form className="task-editor-form tag-manage-create" onSubmit={handleCreate}>
-          <h3 className="tag-manage-section-title">Создать тег</h3>
+          <h3 className="tag-manage-section-title">{t('createTag')}</h3>
 
           <label className="task-editor-field">
-            <span>Название</span>
+            <span>{t('name')}</span>
             <span className="tasks-tag-name tag-create-name">
               <span className="tasks-tag-hash" aria-hidden="true">#</span>
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="название"
+                placeholder={t('tagNamePlaceholder')}
                 maxLength={32}
-                aria-label="Название тега"
+                aria-label={t('tagNameAria')}
               />
             </span>
           </label>
 
           <div className="task-editor-field">
-            <span id="tag-color-label">Цвет</span>
+            <span id="tag-color-label">{t('color')}</span>
             <div className="tasks-color-picker" role="radiogroup" aria-labelledby="tag-color-label">
               {TAG_COLOR_PRESETS.map((preset) => (
                 <label key={preset.value} className="tasks-color-option" title={preset.label}>
@@ -108,27 +109,27 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
 
           <ModalActions
             onCancel={onClose}
-            submitLabel="Создать"
+            submitLabel={t('create')}
             pending={saving}
-            pendingLabel="Создание..."
+            pendingLabel={t('creating')}
           />
         </form>
 
         <section className="tag-manage-delete" aria-labelledby="tag-delete-heading">
-          <h3 className="tag-manage-section-title" id="tag-delete-heading">Удалить тег</h3>
+          <h3 className="tag-manage-section-title" id="tag-delete-heading">{t('deleteTag')}</h3>
           <p className="tag-manage-delete-hint">
-            Задачи с этим тегом останутся без тега.
+            {t('tagDeleteHint')}
           </p>
 
           <label className="task-editor-field">
-            <span>Тег</span>
+            <span>{t('tag')}</span>
             <select
               className="task-editor-select"
               value={deleteTagId}
               disabled={tags.length === 0 || deleting}
               onChange={(event) => setDeleteTagId(event.target.value)}
             >
-              <option value="">Выберите тег</option>
+              <option value="">{t('chooseTag')}</option>
               {tags.map((tag) => (
                 <option key={tag.id} value={tag.id}>
                   {formatTagName(tag.name)}
@@ -143,7 +144,7 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
             disabled={!deleteTagId || deleting}
             onClick={() => void handleDelete()}
           >
-            {deleting ? 'Удаление...' : 'Удалить тег'}
+            {deleting ? t('deleting') : t('deleteTag')}
           </button>
         </section>
       </div>

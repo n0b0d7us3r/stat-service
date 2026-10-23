@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { t } from '../i18n';
 import '../styles/components/ThemeToggle.css';
 
 interface ThemeToggleProps {
@@ -13,7 +14,7 @@ export function ThemeToggle({ theme, toggleTheme }: ThemeToggleProps) {
       type="button"
       className="theme-toggle-btn" 
       onClick={toggleTheme}
-      title={theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+      title={theme === 'dark' ? t('lightTheme') : t('darkTheme')}
     >
       {theme === 'dark' ? (
         <Sun size={20} className="theme-icon sun" />

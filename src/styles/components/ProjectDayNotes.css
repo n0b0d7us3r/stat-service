@@ -96,8 +96,8 @@
 }
 
 .project-day-notes-save-btn {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--primary-gradient);
+  border: 2px solid var(--create-border);
   color: #fff;
 }
 

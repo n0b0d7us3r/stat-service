@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { resolveApiResourceUrl } from '../api/client';
+import { t } from '../i18n';
 
 interface TaskDescriptionImageProps {
   url: string;
@@ -48,7 +49,7 @@ export function TaskDescriptionImage({ url, alt }: TaskDescriptionImageProps) {
   if (failed) {
     return (
       <p className="task-description-image-error" role="status">
-        Не удалось загрузить изображение
+        {t('imageUploadFailed')}
       </p>
     );
   }
@@ -56,7 +57,7 @@ export function TaskDescriptionImage({ url, alt }: TaskDescriptionImageProps) {
   if (!blobUrl) {
     return (
       <p className="task-description-image-loading" aria-hidden="true">
-        Загрузка изображения…
+        {t('imageUploading')}
       </p>
     );
   }

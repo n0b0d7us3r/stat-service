@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { DashboardWeekDayCell, DashboardWeeklyMatrix as DashboardWeeklyMatrixData, ProjectType } from '../types';
 import { parseLocalDate } from '../utils/date';
+import { dateLocaleTag, t } from '../i18n';
 import '../styles/components/DashboardWeeklyMatrix.css';
 
 interface DashboardWeeklyMatrixProps {
@@ -10,18 +11,18 @@ interface DashboardWeeklyMatrixProps {
 }
 
 const CELL_LABELS = {
-  empty: 'Нет отметки',
-  marked: 'Отмечено',
-  'goal-success': 'Цель выполнена',
-  'goal-missed': 'Цель пропущена',
-  'goal-pending': 'Цель без отметки',
+  empty: t('noMark'),
+  marked: t('marked'),
+  'goal-success': t('goalDone'),
+  'goal-missed': t('goalMissed'),
+  'goal-pending': t('goalPending'),
 } as const;
 
 const WEEK_DIVIDER_INDICES = new Set([6, 13]);
 const WEEK_START_INDICES = new Set([7, 14]);
 
 function formatWeekdayHeader(dateKey: string): string {
-  return parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
+  return parseLocalDate(dateKey).toLocaleDateString(dateLocaleTag, {
     weekday: 'short',
     day: 'numeric',
   });
@@ -82,7 +83,7 @@ export function DashboardWeeklyMatrix({ matrix, onProjectClick }: DashboardWeekl
         <table className="dashboard-week-matrix">
           <thead>
             <tr>
-              <th className="dashboard-week-matrix-project-header align-left">Проект</th>
+              <th className="dashboard-week-matrix-project-header align-left">{t('project')}</th>
               {matrix.dates.map((date, index) => (
                 <th key={date} className={dayCellClassName(index)}>
                   {formatWeekdayHeader(date)}

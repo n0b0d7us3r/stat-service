@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { t } from '../i18n';
 import '../styles/components/Pagination.css';
 
 interface PaginationProps {
@@ -12,7 +13,7 @@ export function Pagination({
   page,
   totalPages,
   onPageChange,
-  label = 'Страницы',
+  label = t('pages'),
 }: PaginationProps) {
   if (totalPages <= 1) {
     return null;
@@ -25,14 +26,14 @@ export function Pagination({
         className="app-pagination-btn"
         onClick={() => onPageChange(Math.max(1, page - 1))}
         disabled={page <= 1}
-        aria-label="Предыдущая страница"
+        aria-label={t('prevPage')}
       >
         <ChevronLeft size={18} />
-        <span>Назад</span>
+        <span>{t('back')}</span>
       </button>
 
       <span className="app-pagination-info">
-        Страница {page} из {totalPages}
+        {t('pageOf', { page, total: totalPages })}
       </span>
 
       <button
@@ -40,9 +41,9 @@ export function Pagination({
         className="app-pagination-btn"
         onClick={() => onPageChange(Math.min(totalPages, page + 1))}
         disabled={page >= totalPages}
-        aria-label="Следующая страница"
+        aria-label={t('nextPage')}
       >
-        <span>Вперёд</span>
+        <span>{t('forward')}</span>
         <ChevronRight size={18} />
       </button>
     </nav>

@@ -9,13 +9,8 @@ import { useAuth } from '../context/AuthContext';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
 import { getProjectsByUser } from '../api/projects';
 import type { Project } from '../types';
+import { projectTypeLabel, t } from '../i18n';
 import '../styles/ProjectsPage.css';
-
-const PROJECT_TYPE_LABELS: Record<Project['project_type'], string> = {
-  calendar: 'Календарь',
-  day: 'День',
-  goals: 'Цели',
-};
 
 export function ProjectsPage() {
   const navigate = useNavigate();
@@ -30,7 +25,7 @@ export function ProjectsPage() {
   }, [user]);
 
   useEffect(() => {
-    document.title = `Проекты | ${APP_NAME}`;
+    document.title = `${t('projectsTitle')} | ${APP_NAME}`;
     reloadProjects();
   }, [reloadProjects]);
 
@@ -45,21 +40,21 @@ export function ProjectsPage() {
     <Layout>
       <div className="projects-page">
         <div className="projects-page-intro">
-          <PageTitle title="Проекты" subtitle="Создавайте проекты и отмечайте дни в календаре" />
+          <PageTitle title={t('projectsTitle')} subtitle={t('projectsSubtitle')} />
           <button type="button" className="projects-create-open-btn" onClick={() => setIsModalOpen(true)}>
-            <span>Создать проект</span>
+            <span>{t('createProject')}</span>
           </button>
         </div>
 
         <section className="projects-list-section">
           <h2 className="projects-section-title">
-            Проектов: {projects.length}
+            {t('projectsCount', { count: projects.length })}
           </h2>
 
           {projects.length === 0 ? (
             <div className="projects-empty app-border-card">
               <FolderKanban size={32} />
-              <p>Пока нет проектов. Создайте первый, чтобы начать отмечать дни.</p>
+              <p>{t('projectsEmpty')}</p>
             </div>
           ) : (
             <div className="projects-list">
@@ -73,14 +68,14 @@ export function ProjectsPage() {
                     <div className="project-card-content">
                       <h3>{project.name}</h3>
                       <div className="project-card-meta-row">
-                        <span className="project-card-type">{PROJECT_TYPE_LABELS[project.project_type]}</span>
+                        <span className="project-card-type">{projectTypeLabel(project.project_type)}</span>
                         <span
                           className={`project-card-mutable ${project.is_mutable ? 'project-card-mutable-yes' : 'project-card-mutable-no'}`}
                         >
-                          {project.is_mutable ? 'Изменяемый' : 'Неизменяемый'}
+                          {project.is_mutable ? t('mutable') : t('immutable')}
                         </span>
                       </div>
-                      <span className="project-card-meta">Отмечено дней: {project.marked_count}</span>
+                      <span className="project-card-meta">{t('markedDays', { count: project.marked_count })}</span>
                     </div>
                     <span className="project-card-chevron" aria-hidden="true">
                       <ChevronRight size={20} />

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { apiFetch } from '../api/client';
+import { t } from '../i18n';
 
 interface ApiContextValue {
   ready: boolean;
@@ -26,7 +27,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Не удалось подключиться к серверу');
+          setError(err instanceof Error ? err.message : t('connectionFailed'));
         }
       });
 
@@ -38,7 +39,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   if (error) {
     return (
       <div className="api-error-screen">
-        <h1>Ошибка подключения</h1>
+        <h1>{t('connectionError')}</h1>
         <p>{error}</p>
       </div>
     );
@@ -47,7 +48,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   if (!ready) {
     return (
       <div className="api-loading-screen">
-        <p>Подключение к серверу...</p>
+        <p>{t('connecting')}</p>
       </div>
     );
   }

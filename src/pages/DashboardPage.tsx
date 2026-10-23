@@ -16,10 +16,11 @@ import { getTodayKey } from '../api/marks';
 import { getTaskBoard } from '../api/tasks';
 import type { DashboardStats, Task, UserAchievementView } from '../types';
 import { addDays, formatLocalDate, parseLocalDate } from '../utils/date';
+import { achievementDescription, achievementName, dateLocaleTag, t } from '../i18n';
 import '../styles/DashboardPage.css';
 
 function formatEarnedDate(value: string): string {
-  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString('ru-RU', {
+  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString(dateLocaleTag, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -50,7 +51,7 @@ export function DashboardPage() {
   }, [user]);
 
   useEffect(() => {
-    document.title = `Статистика | ${APP_NAME}`;
+    document.title = `${t('dashboardTitle')} | ${APP_NAME}`;
     reload();
   }, [reload]);
 
@@ -58,7 +59,7 @@ export function DashboardPage() {
     return (
       <Layout>
         <div className="dashboard-page">
-          <p className="dashboard-placeholder-note">Загрузка статистики...</p>
+          <p className="dashboard-placeholder-note">{t('dashboardLoading')}</p>
         </div>
       </Layout>
     );
@@ -77,35 +78,35 @@ export function DashboardPage() {
   return (
     <Layout>
       <div className="dashboard-page">
-        <PageTitle title="Статистика" />
+        <PageTitle title={t('dashboardTitle')} />
 
         <div className="dashboard-stats-sections">
-          <DashboardCollapsibleSection title="Цели на сегодня" defaultExpandedOnMobile>
+          <DashboardCollapsibleSection title={t('goalsToday')} defaultExpandedOnMobile>
             <DashboardTodayGoals
               data={stats.todayGoals}
               onProjectClick={(projectId) => navigate(`/projects/${projectId}`, { state: { selectedDate: stats.todayGoals.date } })}
             />
           </DashboardCollapsibleSection>
 
-          <DashboardCollapsibleSection title="Список задач на сегодня" defaultExpandedOnMobile>
-            <DashboardTaskList tasks={tasksToday} emptyText="На сегодня задач нет." />
+          <DashboardCollapsibleSection title={t('tasksToday')} defaultExpandedOnMobile>
+            <DashboardTaskList tasks={tasksToday} emptyText={t('noTasksToday')} />
           </DashboardCollapsibleSection>
 
-          <DashboardCollapsibleSection title="Список задач на завтра" defaultExpandedOnMobile>
-            <DashboardTaskList tasks={tasksTomorrow} emptyText="На завтра задач нет." />
+          <DashboardCollapsibleSection title={t('tasksTomorrow')} defaultExpandedOnMobile>
+            <DashboardTaskList tasks={tasksTomorrow} emptyText={t('noTasksTomorrow')} />
           </DashboardCollapsibleSection>
 
           {stats.projects.length === 0 ? (
             <div className="dashboard-placeholder">
-              <p>Нет проектов. Создайте первый на странице «Проекты».</p>
+              <p>{t('noProjectsDash')}</p>
             </div>
           ) : (
             <>
-              <DashboardCollapsibleSection title="По месяцам">
+              <DashboardCollapsibleSection title={t('byMonth')}>
                 <DashboardMonthTable onProjectClick={(projectId) => navigate(`/projects/${projectId}`)} />
               </DashboardCollapsibleSection>
 
-              <DashboardCollapsibleSection title="По неделям">
+              <DashboardCollapsibleSection title={t('byWeek')}>
                 <DashboardWeeklyMatrix
                   matrix={stats.weeklyMatrix}
                   onProjectClick={(projectId) => navigate(`/projects/${projectId}`)}
@@ -114,12 +115,12 @@ export function DashboardPage() {
             </>
           )}
 
-          <DashboardCollapsibleSection title="Последние полученные достижения">
+          <DashboardCollapsibleSection title={t('recentAchievements')}>
             {recentAchievements.length === 0 ? (
               <div className="dashboard-achievements-empty">
-                <p>Пока нет полученных достижений.</p>
+                <p>{t('noAchievementsYet')}</p>
                 <Link to="/achievements" className="dashboard-achievements-link">
-                  Посмотреть все достижения
+                  {t('viewAllAchievements')}
                 </Link>
               </div>
             ) : (
@@ -130,11 +131,11 @@ export function DashboardPage() {
                       <Trophy size={20} />
                     </div>
                     <div className="dashboard-achievement-body">
-                      <h3 className="dashboard-achievement-title">{achievement.name}</h3>
-                      <p className="dashboard-achievement-description">{achievement.description}</p>
+                      <h3 className="dashboard-achievement-title">{achievementName(achievement.code, achievement.name)}</h3>
+                      <p className="dashboard-achievement-description">{achievementDescription(achievement.code, achievement.description)}</p>
                       {achievement.earned_at && (
                         <p className="dashboard-achievement-date">
-                          Получено: {formatEarnedDate(achievement.earned_at)}
+                          {t('earnedOn', { date: formatEarnedDate(achievement.earned_at) })}
                         </p>
                       )}
                     </div>

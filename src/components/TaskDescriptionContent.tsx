@@ -1,4 +1,5 @@
 import { parseTaskDescriptionBlocks } from '../utils/taskDescription';
+import { t } from '../i18n';
 import { TaskDescriptionImage } from './TaskDescriptionImage';
 import { TaskDescriptionText } from './TaskDescriptionText';
 
@@ -11,7 +12,7 @@ interface TaskDescriptionContentProps {
 export function TaskDescriptionContent({
   value,
   className = '',
-  emptyPlaceholder = 'Описание не добавлено.',
+  emptyPlaceholder = t('descriptionEmpty'),
 }: TaskDescriptionContentProps) {
   const trimmed = value.trim();
 
@@ -29,7 +30,7 @@ export function TaskDescriptionContent({
             <figure key={`img-${index}-${block.url}`} className="task-description-figure">
               <TaskDescriptionImage
                 url={block.url}
-                alt={block.alt || 'Изображение в описании задачи'}
+                alt={block.alt || t('descriptionImageAlt')}
               />
             </figure>
           );

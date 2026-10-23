@@ -5,6 +5,7 @@ import { AuthError, useAuth } from '../context/AuthContext';
 import { Checkbox } from '../components/Checkbox';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { APP_NAME } from '../config/app';
+import { t } from '../i18n';
 import { isPublicRegisterAllowed } from '../config/features';
 import '../styles/LoginPage.css';
 
@@ -21,7 +22,7 @@ export function LoginPage() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
-    document.title = `Авторизация | ${APP_NAME}`;
+    document.title = `${t('loginTitle')} | ${APP_NAME}`;
   }, []);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export function LoginPage() {
       if (err instanceof AuthError) {
         setError(err.message);
       } else {
-        setError('Не удалось выполнить вход');
+        setError(t('loginFailed'));
       }
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="login-input"
-              placeholder="Email адрес"
+              placeholder={t('emailPlaceholder')}
             />
 
             <div className="form-group">
@@ -98,13 +99,13 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="login-input password-input"
-                placeholder="Пароль"
+                placeholder={t('passwordPlaceholder')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="password-toggle-btn"
-                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -112,7 +113,7 @@ export function LoginPage() {
 
             <div className="login-remember-row">
               <Checkbox
-                label="Запомнить меня"
+                label={t('rememberMe')}
                 checked={rememberMe}
                 onChange={setRememberMe}
               />
@@ -124,12 +125,12 @@ export function LoginPage() {
               className="login-submit-btn"
               disabled={loading}
             >
-              {loading ? 'Авторизация...' : 'Войти в систему'}
+              {loading ? t('loginPending') : t('loginSubmit')}
             </button>
 
             {isPublicRegisterAllowed && (
               <p className="login-switch-link">
-                Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+                {t('noAccount')} <Link to="/register">{t('registerLink')}</Link>
               </p>
             )}
           </form>

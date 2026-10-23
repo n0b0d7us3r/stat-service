@@ -16,6 +16,7 @@ import { ApiError } from '../api/client';
 import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
 import type { Tag, Task, TaskPriority, TaskSortMode } from '../types';
 import { formatLocalDate } from '../utils/date';
+import { dateLocaleTag, t } from '../i18n';
 import { compareTasks, formatTagName, isTaskOverdue, priorityLabel } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
@@ -30,7 +31,7 @@ function formatTaskDate(value: string): string {
   }
 
   const [year, month, day] = datePart.split('-').map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString('ru-RU', {
+  return new Date(year, month - 1, day).toLocaleDateString(dateLocaleTag, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -39,7 +40,7 @@ function formatTaskDate(value: string): string {
 
 function formatCompletedAt(value: string): string {
   const label = formatTaskDate(value);
-  return label === value ? value : `Выполнено ${label}`;
+  return label === value ? value : t('completedOn', { label });
 }
 
 export function TasksPage() {
@@ -64,7 +65,7 @@ export function TasksPage() {
   }, []);
 
   useEffect(() => {
-    document.title = `Задачи | ${APP_NAME}`;
+    document.title = `${t('tasksTitle')} | ${APP_NAME}`;
   }, []);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export function TasksPage() {
     void loadBoard()
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(errorText(err, 'Не удалось загрузить задачи'));
+          setError(errorText(err, t('loadTasksFailed')));
         }
       })
       .finally(() => {
@@ -135,7 +136,7 @@ export function TasksPage() {
       setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
     } catch (err) {
       setTasks((current) => current.map((item) => (item.id === task.id ? task : item)));
-      setError(errorText(err, 'Не удалось обновить задачу'));
+      setError(errorText(err, t('updateTaskFailed')));
     } finally {
       setPendingTaskId(null);
     }
@@ -152,14 +153,14 @@ export function TasksPage() {
       setTasks((current) => current.filter((item) => item.id !== taskId));
       setTaskToDelete(null);
     } catch (err) {
-      setError(errorText(err, 'Не удалось удалить задачу'));
+      setError(errorText(err, t('deleteTaskFailed')));
     } finally {
       setPendingTaskId(null);
     }
   };
 
   const handleTagCreated = (tag: Tag) => {
-    setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, 'ru')));
+    setTags((current) => [...current, tag].sort((a, b) => a.name.localeCompare(b.name, dateLocaleTag)));
   };
 
   const handleTagDeleted = (tagId: number) => {
@@ -185,7 +186,7 @@ export function TasksPage() {
       setEditorOpen(false);
       setEditorTask(null);
     } catch (err) {
-      setError(errorText(err, 'Не удалось перенести задачу в архив'));
+      setError(errorText(err, t('archiveTaskFailed')));
     } finally {
       setPendingTaskId(null);
     }
@@ -196,41 +197,43 @@ export function TasksPage() {
       <div className="tasks-page">
         <div className="tasks-page-intro">
           <PageTitle
-            title="Задачи"
+            title={t('tasksTitle')}
             subtitle={loading
-              ? 'Загрузка...'
-              : `Активных: ${activeTasks.length} · Выполненных: ${completedTasks.length}${archivedCount > 0 ? ` · В архиве: ${archivedCount}` : ''}`}
+              ? t('loading')
+              : archivedCount > 0
+                ? t('tasksSummaryArchive', { active: activeTasks.length, completed: completedTasks.length, archived: archivedCount })
+                : t('tasksSummary', { active: activeTasks.length, completed: completedTasks.length })}
           />
           <div className="tasks-controls">
             <button type="button" className="tasks-create-btn" onClick={openCreate}>
-              <span>Создать задачу</span>
+              <span>{t('createTask')}</span>
             </button>
 
             <button type="button" className="tasks-tag-create-btn" onClick={() => setTagManageOpen(true)}>
               <TagIcon size={18} strokeWidth={2.25} />
-              <span>Теги</span>
+              <span>{t('tags')}</span>
             </button>
 
             <button type="button" className="tasks-archive-btn" onClick={() => setArchiveOpen(true)}>
               <Archive size={18} strokeWidth={2.25} />
-              <span>Архив{archivedCount > 0 ? ` (${archivedCount})` : ''}</span>
+              <span>{t('archive')}{archivedCount > 0 ? ` (${archivedCount})` : ''}</span>
             </button>
 
             <div className="tasks-sorts">
-              <SortSelect
+              <SortSelect<TaskSortMode>
                 value={sort}
                 options={[
-                  { value: 'created', label: 'По дням' },
-                  { value: 'priority', label: 'По приоритету' },
+                  { value: 'created', label: t('byDay') },
+                  { value: 'priority', label: t('byPriority') },
                 ]}
                 onChange={setSort}
               />
 
               <SortSelect
-                label="По тегам"
+                label={t('byTag')}
                 value={tagFilter}
                 options={[
-                  { value: 'all', label: 'Все теги' },
+                  { value: 'all', label: t('allTags') },
                   ...tags.map((tag) => ({ value: String(tag.id), label: formatTagName(tag.name) })),
                 ]}
                 onChange={setTagFilter}
@@ -241,7 +244,7 @@ export function TasksPage() {
               className="tasks-completed-toggle"
               checked={showCompleted}
               onChange={setShowCompleted}
-              label="Выполненные"
+              label={t('completedToggle')}
             />
           </div>
         </div>
@@ -249,11 +252,11 @@ export function TasksPage() {
         {error && <p className="tasks-error">{error}</p>}
 
         {loading && tasks.length === 0 ? (
-          <p className="tasks-placeholder">Загрузка задач...</p>
+          <p className="tasks-placeholder">{t('tasksLoading')}</p>
         ) : tasks.length === 0 ? (
           <div className="tasks-empty app-border-card">
             <ListTodo size={40} aria-hidden="true" />
-            <p>Задач пока нет. Создайте первую и отметьте её тегами.</p>
+            <p>{t('tasksEmpty')}</p>
           </div>
         ) : (
           <div className="tasks-workspace">
@@ -262,19 +265,19 @@ export function TasksPage() {
             {activeTasks.length === 0 && completedTasks.length === 0 && (
               <div className="tasks-empty app-border-card">
                 <ListTodo size={40} aria-hidden="true" />
-                <p>Нет задач с этим тегом.</p>
+                <p>{t('tasksTagEmpty')}</p>
               </div>
             )}
 
             {activeTasks.length === 0 && completedTasks.length > 0 && !showCompleted && (
               <div className="tasks-empty app-border-card">
                 <ListTodo size={40} aria-hidden="true" />
-                <p>Активных задач нет. Отметьте «Выполненные», чтобы увидеть их.</p>
+                <p>{t('tasksActiveEmpty')}</p>
               </div>
             )}
 
             {activeTasks.length > 0 && (
-              <section className="tasks-list" aria-label="Активные задачи">
+              <section className="tasks-list" aria-label={t('activeTasks')}>
                 {activeTasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -288,8 +291,8 @@ export function TasksPage() {
             )}
 
             {showCompleted && completedTasks.length > 0 && (
-              <section className="tasks-list" aria-label="Выполненные задачи">
-                <h2 className="tasks-section-title">Выполненные</h2>
+              <section className="tasks-list" aria-label={t('completedTasks')}>
+                <h2 className="tasks-section-title">{t('completedSection')}</h2>
                 {completedTasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -310,7 +313,7 @@ export function TasksPage() {
 
       {taskToDelete && (
         <Modal
-          title="Удалить задачу"
+          title={t('deleteTaskTitle')}
           isOpen
           onClose={() => {
             if (pendingTaskId === taskToDelete.id) return;
@@ -324,15 +327,15 @@ export function TasksPage() {
               void handleDeleteTask();
             }}
           >
-            <p>Удалить «{taskToDelete.title}»?</p>
+            <p>{t('deleteTaskConfirm', { title: taskToDelete.title })}</p>
             <ModalActions
               onCancel={() => {
                 if (pendingTaskId === taskToDelete.id) return;
                 setTaskToDelete(null);
               }}
-              submitLabel="Удалить"
+              submitLabel={t('delete')}
               pending={pendingTaskId === taskToDelete.id}
-              pendingLabel="Удаление..."
+              pendingLabel={t('deleting')}
             />
           </form>
         </Modal>
@@ -432,7 +435,7 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
           className="task-check"
           checked={task.completed}
           disabled={pending || leaving}
-          ariaLabel={task.completed ? `Вернуть «${task.title}» в активные` : `Отметить «${task.title}» выполненной`}
+          ariaLabel={task.completed ? t('restoreTask', { title: task.title }) : t('completeTask', { title: task.title })}
           onChange={handleCheck}
         />
 
@@ -462,7 +465,7 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
                     {formatTaskDate(task.due_date)}
                   </time>
                 )
-                : <span>-- / -- / 20--</span>
+                : <span>{t('emptyDue')}</span>
             )}
             {task.completed && task.completed_at && (
               <time className="task-card-completed-at" dateTime={task.completed_at}>
@@ -475,7 +478,7 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
         <button
           type="button"
           className="task-icon-btn task-card-edit"
-          aria-label={`Изменить «${task.title}»`}
+          aria-label={t('editTaskAria', { title: task.title })}
           onClick={() => onEdit(task)}
         >
           <Pencil size={20} />

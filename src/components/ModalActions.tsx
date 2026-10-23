@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 interface ModalActionsProps {
   onCancel: () => void;
   submitLabel: string;
@@ -10,13 +12,13 @@ export function ModalActions({
   onCancel,
   submitLabel,
   pending = false,
-  pendingLabel = 'Сохранение...',
+  pendingLabel = t('saving'),
   submitDisabled = false,
 }: ModalActionsProps) {
   return (
     <div className="modal-actions">
       <button type="button" className="modal-action-cancel" onClick={onCancel}>
-        Отмена
+        {t('cancel')}
       </button>
       <button type="submit" className="modal-action-submit" disabled={pending || submitDisabled}>
         {pending ? pendingLabel : submitLabel}

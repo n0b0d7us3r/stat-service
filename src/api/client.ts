@@ -1,3 +1,4 @@
+import { localizeApiMessage } from '../i18n';
 import { ApiDataError, AuthError } from '../types';
 
 export const API_BASE = import.meta.env.VITE_API_BASE || '/api';
@@ -37,7 +38,7 @@ export class ApiError extends Error {
 async function parseError(response: Response): Promise<string> {
   try {
     const body = await response.json() as { message?: string };
-    return body.message ?? response.statusText;
+    return localizeApiMessage(body.message ?? response.statusText);
   } catch {
     return response.statusText;
   }

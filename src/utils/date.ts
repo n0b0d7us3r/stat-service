@@ -1,3 +1,5 @@
+import { dateLocaleTag } from '../i18n';
+
 export function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -17,7 +19,7 @@ export function addDays(date: Date, amount: number): Date {
 }
 
 export function getMonthLabel(year: number, month: number): string {
-  return new Date(year, month - 1, 1).toLocaleDateString('ru-RU', {
+  return new Date(year, month - 1, 1).toLocaleDateString(dateLocaleTag, {
     month: 'long',
     year: 'numeric',
   });

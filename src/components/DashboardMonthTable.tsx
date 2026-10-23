@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getDashboardMonthlyStats } from '../api/dashboard';
 import { useAuth } from '../context/AuthContext';
+import { dateLocaleTag, t } from '../i18n';
 import type { DashboardMonthlyStats } from '../types';
 import '../styles/components/DashboardMonthTable.css';
 
@@ -9,7 +10,7 @@ interface DashboardMonthTableProps {
 }
 
 function getMonthLabel(month: number): string {
-  const label = new Date(2000, month - 1, 1).toLocaleDateString('ru-RU', { month: 'long' });
+  const label = new Date(2000, month - 1, 1).toLocaleDateString(dateLocaleTag, { month: 'long' });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -85,7 +86,7 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
       <div className="dashboard-month-toolbar">
         <div className="dashboard-month-filters">
           <label className="dashboard-month-filter">
-            <span className="dashboard-month-filter-caption">Месяц</span>
+            <span className="dashboard-month-filter-caption">{t('month')}</span>
             <select
               className="dashboard-month-filter-select"
               value={month}
@@ -93,7 +94,7 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
                 ...current,
                 month: Number(event.target.value),
               }))}
-              aria-label="Выбор месяца"
+              aria-label={t('monthSelect')}
             >
               {monthOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -104,7 +105,7 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
           </label>
 
           <label className="dashboard-month-filter">
-            <span className="dashboard-month-filter-caption">Год</span>
+            <span className="dashboard-month-filter-caption">{t('year')}</span>
             <select
               className="dashboard-month-filter-select"
               value={year}
@@ -112,7 +113,7 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
                 ...current,
                 year: Number(event.target.value),
               }))}
-              aria-label="Выбор года"
+              aria-label={t('yearSelect')}
             >
               {yearOptions.map((optionYear) => (
                 <option key={optionYear} value={optionYear}>
@@ -125,16 +126,16 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
       </div>
 
       {loading || !stats ? (
-        <p className="dashboard-month-loading">Загрузка статистики за месяц...</p>
+        <p className="dashboard-month-loading">{t('monthStatsLoading')}</p>
       ) : (
         <div className="dashboard-month-table-wrapper">
           <table className="dashboard-month-table">
             <thead>
               <tr>
-                <th className="dashboard-month-project-header">Проект</th>
-                <th className="dashboard-month-data-col">Сделано</th>
-                <th className="dashboard-month-data-col">Всего</th>
-                <th className="dashboard-month-data-col dashboard-month-data-col-progress">Прогресс</th>
+                <th className="dashboard-month-project-header">{t('project')}</th>
+                <th className="dashboard-month-data-col">{t('doneCount')}</th>
+                <th className="dashboard-month-data-col">{t('total')}</th>
+                <th className="dashboard-month-data-col dashboard-month-data-col-progress">{t('progress')}</th>
               </tr>
             </thead>
             <tbody>
@@ -157,9 +158,9 @@ export function DashboardMonthTable({ onProjectClick }: DashboardMonthTableProps
                       progress={project.progress}
                     />
                   </td>
-                  <td className="dashboard-month-data-col" data-label="Сделано">{project.completed}</td>
-                  <td className="dashboard-month-data-col" data-label="Всего">{project.total}</td>
-                  <td className="dashboard-month-data-col dashboard-month-data-col-progress" data-label="Прогресс">{project.progress}%</td>
+                  <td className="dashboard-month-data-col" data-label={t('doneCount')}>{project.completed}</td>
+                  <td className="dashboard-month-data-col" data-label={t('total')}>{project.total}</td>
+                  <td className="dashboard-month-data-col dashboard-month-data-col-progress" data-label={t('progress')}>{project.progress}%</td>
                 </tr>
                 );
               })}

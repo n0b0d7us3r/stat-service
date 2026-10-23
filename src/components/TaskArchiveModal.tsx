@@ -6,6 +6,7 @@ import { deleteTask, updateTask } from '../api/tasks';
 import type { Task } from '../types';
 import { TaskDescriptionContent } from './TaskDescriptionContent';
 import { compareTasks, formatTagName } from '../utils/taskUi';
+import { t } from '../i18n';
 import '../styles/components/TaskArchiveModal.css';
 
 interface TaskArchiveModalProps {
@@ -37,7 +38,7 @@ export function TaskArchiveModal({
       const updated = await updateTask(task.id, { archived: false });
       onTaskUpdated(updated);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось вернуть задачу');
+      setError(err instanceof ApiError ? err.message : t('restoreFailed'));
     } finally {
       setPendingTaskId(null);
     }
@@ -52,21 +53,21 @@ export function TaskArchiveModal({
       await deleteTask(task.id);
       onTaskDeleted(task.id);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось удалить задачу');
+      setError(err instanceof ApiError ? err.message : t('deleteTaskFailed'));
     } finally {
       setPendingTaskId(null);
     }
   };
 
   return (
-    <Modal title="Архив задач" isOpen onClose={onClose}>
+    <Modal title={t('archiveTitle')} isOpen onClose={onClose}>
       <div className="task-archive-modal">
         {error && <p className="task-editor-error">{error}</p>}
 
         {archivedTasks.length === 0 ? (
           <div className="task-archive-empty">
             <Archive size={32} aria-hidden="true" />
-            <p>В архиве пока нет задач.</p>
+            <p>{t('archiveEmpty')}</p>
           </div>
         ) : (
           <ul className="task-archive-list">
@@ -94,7 +95,7 @@ export function TaskArchiveModal({
                     disabled={pendingTaskId === task.id}
                     onClick={() => void handleRestore(task)}
                   >
-                    Вернуть
+                    {t('restore')}
                   </button>
                   <button
                     type="button"
@@ -102,7 +103,7 @@ export function TaskArchiveModal({
                     disabled={pendingTaskId === task.id}
                     onClick={() => void handleDelete(task)}
                   >
-                    Удалить
+                    {t('delete')}
                   </button>
                 </div>
               </li>
@@ -111,7 +112,7 @@ export function TaskArchiveModal({
         )}
 
         <button type="button" className="task-archive-close-btn" onClick={onClose}>
-          Закрыть
+          {t('close')}
         </button>
       </div>
     </Modal>

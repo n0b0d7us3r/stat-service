@@ -13,6 +13,7 @@ import { getProjectStats } from '../api/marks';
 import { deleteProject, getProjectById } from '../api/projects';
 import type { Achievement, Project, ProjectStats as ProjectStatsData } from '../types';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
+import { t } from '../i18n';
 import { parseLocalDate } from '../utils/date';
 import '../styles/ProjectPage.css';
 
@@ -141,7 +142,7 @@ export function ProjectPage() {
     setDeleteError('');
 
     if (!deletePassword) {
-      setDeleteError('Введите пароль для подтверждения');
+      setDeleteError(t('enterPassword'));
       return;
     }
 
@@ -150,7 +151,7 @@ export function ProjectPage() {
     try {
       const isValid = await verifyUserPassword(user.id, deletePassword);
       if (!isValid) {
-        setDeleteError('Неверный пароль');
+        setDeleteError(t('wrongPassword'));
         return;
       }
 
@@ -165,7 +166,7 @@ export function ProjectPage() {
     return (
       <Layout>
         <div className="project-page">
-          <p className="project-page-loading">Загрузка проекта...</p>
+          <p className="project-page-loading">{t('projectLoading')}</p>
         </div>
       </Layout>
     );
@@ -177,11 +178,11 @@ export function ProjectPage() {
         <div className="project-page">
           <button type="button" className="project-toolbar-btn project-toolbar-back" onClick={() => navigate('/projects')}>
             <ChevronLeft size={18} />
-            <span className="project-toolbar-label">К проектам</span>
+            <span className="project-toolbar-label">{t('backToProjects')}</span>
           </button>
           <div className="project-page-empty">
-            <p>Проект не найден.</p>
-            <Link to="/projects">Вернуться к списку проектов</Link>
+            <p>{t('projectNotFound')}</p>
+            <Link to="/projects">{t('backToProjectList')}</Link>
           </div>
         </div>
       </Layout>
@@ -194,11 +195,11 @@ export function ProjectPage() {
         <div className="project-page-header">
           <button type="button" className="project-toolbar-btn project-toolbar-back" onClick={() => navigate('/projects')}>
             <ChevronLeft size={18} />
-            <span className="project-toolbar-label">К проектам</span>
+            <span className="project-toolbar-label">{t('backToProjects')}</span>
           </button>
         </div>
 
-        <PageTitle title={project.name} subtitle={project.description || 'Календарь проекта'} />
+        <PageTitle title={project.name} subtitle={project.description || t('projectCalendarFallback')} />
 
         <section className={`project-stats-section ${statsExpanded ? 'expanded' : 'collapsed'}`}>
           <button
@@ -207,7 +208,7 @@ export function ProjectPage() {
             onClick={() => setStatsExpanded((value) => !value)}
             aria-expanded={statsExpanded}
           >
-            <span>Статистика</span>
+            <span>{t('statistics')}</span>
             <ChevronDown size={18} className="project-stats-toggle-icon" />
           </button>
           <div className="project-stats-panel">
@@ -231,7 +232,7 @@ export function ProjectPage() {
                     onClick={cancelEditMode}
                   >
                     <X size={18} />
-                    <span className="project-toolbar-label">Отменить</span>
+                    <span className="project-toolbar-label">{t('cancel')}</span>
                   </button>
                   <button
                     type="button"
@@ -239,7 +240,7 @@ export function ProjectPage() {
                     onClick={applyEditMode}
                   >
                     <PencilOff size={18} />
-                    <span className="project-toolbar-label">Готово</span>
+                    <span className="project-toolbar-label">{t('done')}</span>
                   </button>
                 </div>
               ) : (
@@ -250,7 +251,7 @@ export function ProjectPage() {
                 >
                   <Pencil size={18} />
                   <span className="project-toolbar-label">
-                    {project.project_type === 'goals' ? 'Редактировать' : 'Добавить отметки'}
+                    {project.project_type === 'goals' ? t('editProject') : t('editMarks')}
                   </span>
                 </button>
               )}
@@ -283,24 +284,26 @@ export function ProjectPage() {
             onClick={() => setSettingsExpanded((value) => !value)}
             aria-expanded={settingsExpanded}
           >
-            <span>Настройки</span>
+            <span>{t('settings')}</span>
             <ChevronDown size={18} className="project-settings-toggle-icon" />
           </button>
 
           <div className="project-settings-panel app-border-card">
             <p className="project-settings-description">
-              Удаление проекта «{project.name}» необратимо. Все отметки{project.project_type === 'goals' ? ', цели' : ''} и заметки будут потеряны.
+              {project.project_type === 'goals'
+                ? t('deleteProjectWarningGoals', { name: project.name })
+                : t('deleteProjectWarning', { name: project.name })}
             </p>
 
             <form className="project-delete-form" onSubmit={handleDelete}>
               <label className="project-delete-field">
-                <span>Пароль для подтверждения</span>
+                <span>{t('confirmPasswordLabel')}</span>
                 <input
                   type="password"
                   className="project-delete-input"
                   value={deletePassword}
                   onChange={(event) => setDeletePassword(event.target.value)}
-                  placeholder="Введите ваш пароль"
+                  placeholder={t('passwordConfirmPlaceholder')}
                   autoComplete="current-password"
                 />
               </label>
@@ -309,7 +312,7 @@ export function ProjectPage() {
 
               <button type="submit" className="project-delete-submit-btn" disabled={deleting}>
                 <Trash2 size={18} />
-                <span>{deleting ? 'Удаление...' : 'Удалить проект'}</span>
+                <span>{deleting ? t('deleting') : t('deleteProject')}</span>
               </button>
             </form>
           </div>

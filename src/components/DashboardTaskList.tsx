@@ -2,6 +2,7 @@ import { ListTodo } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Task } from '../types';
 import { compareTasks, formatTagName } from '../utils/taskUi';
+import { t } from '../i18n';
 import '../styles/components/DashboardTaskList.css';
 
 interface DashboardTaskListProps {
@@ -40,7 +41,7 @@ export function DashboardTaskList({ tasks, emptyText }: DashboardTaskListProps) 
               <span>{task.title}</span>
             </span>
             <span className="dashboard-task-list-status">
-              {task.completed ? 'Выполнена' : 'Ожидает'}
+              {task.completed ? t('statusDone') : t('statusWaiting')}
             </span>
           </button>
         </li>

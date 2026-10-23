@@ -166,8 +166,9 @@
 }
 
 .modal-action-submit {
-  border-color: var(--primary);
-  background: var(--primary);
+  border-color: var(--create-border);
+  border-width: 2px;
+  background: var(--primary-gradient);
   color: #fff;
 }
 
@@ -178,7 +179,7 @@
 
 @media (hover: hover) {
   .modal-action-submit:hover:not(:disabled) {
-    background: var(--primary-dark);
+    filter: brightness(1.12);
   }
 }
 

@@ -12,6 +12,7 @@ import {
   insertTextAtCursor,
 } from '../utils/taskDescription';
 import { TASK_PRIORITIES, formatTagName } from '../utils/taskUi';
+import { t } from '../i18n';
 
 interface TaskEditorModalProps {
   task: Task | null;
@@ -99,7 +100,11 @@ export function TaskEditorModal({
           insertTextAtCursor(textarea, markdown, setDescription);
         })
         .catch((err: unknown) => {
-          setError(err instanceof ApiError ? err.message : 'Не удалось загрузить изображение');
+          setError(err instanceof Error && err.message === 'image-read-failed'
+            ? t('imageReadFailed')
+            : err instanceof ApiError
+              ? err.message
+              : t('imageUploadFailed'));
         })
         .finally(() => {
           setImageUploading(false);
@@ -122,26 +127,26 @@ export function TaskEditorModal({
         : await createTask({ title, description, priority, dueDate: dueDate || null, tagIds });
       onSaved(saved);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось сохранить задачу');
+      setError(err instanceof ApiError ? err.message : t('saveTaskFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal title={task ? 'Задача' : 'Новая задача'} isOpen onClose={onClose}>
+    <Modal title={task ? t('task') : t('newTask')} isOpen onClose={onClose}>
       <form className="task-editor-form" onSubmit={handleSubmit}>
         {error && <p className="task-editor-error">{error}</p>}
 
         <div className="task-editor-field">
           <span className="task-editor-field-head">
-            <label htmlFor="task-title">Название</label>
+            <label htmlFor="task-title">{t('name')}</label>
             {task && (
               <button
                 type="button"
                 className="task-icon-btn task-editor-edit"
                 aria-pressed={detailsEditable}
-                aria-label={detailsEditable ? 'Отменить редактирование' : 'Редактировать задачу'}
+                aria-label={detailsEditable ? t('stopEditing') : t('editTask')}
                 onClick={handleEditClick}
               >
                 <Pencil size={20} />
@@ -163,7 +168,7 @@ export function TaskEditorModal({
         </div>
 
         <div className="task-editor-field">
-          <span>Описание</span>
+          <span>{t('description')}</span>
           {locked ? (
             <div className="task-description-view">
               <TaskDescriptionContent value={description} />
@@ -178,14 +183,14 @@ export function TaskEditorModal({
                 onPaste={handleDescriptionPaste}
                 maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                 rows={6}
-                placeholder="Текст, **жирный**, *курсив*, ^^заглавные^^, Ctrl+V — картинка"
+                placeholder={t('descriptionPlaceholder')}
               />
               {imageUploading && (
-                <p className="task-description-upload-hint">Загрузка изображения...</p>
+                <p className="task-description-upload-hint">{t('imageUploading')}</p>
               )}
               {descriptionHasImages(description) && (
                 <div className="task-description-preview">
-                  <span className="task-description-preview-label">Предпросмотр</span>
+                  <span className="task-description-preview-label">{t('preview')}</span>
                   <div className="task-description-view">
                     <TaskDescriptionContent value={description} />
                   </div>
@@ -199,7 +204,7 @@ export function TaskEditorModal({
           <div className="task-editor-management">
             <div className="task-editor-split">
               <label className="task-editor-field">
-                <span>Приоритет</span>
+                <span>{t('priority')}</span>
                 <select
                   className="task-editor-select"
                   value={priority}
@@ -214,7 +219,7 @@ export function TaskEditorModal({
               </label>
 
               <label className="task-editor-field">
-                <span>Тег</span>
+                <span>{t('tag')}</span>
                 <select
                   className="task-editor-select"
                   value={tagIds[0] ? String(tagIds[0]) : ''}
@@ -223,7 +228,7 @@ export function TaskEditorModal({
                     setTagIds(value ? [Number(value)] : []);
                   }}
                 >
-                  <option value="">Без тега</option>
+                  <option value="">{t('noTag')}</option>
                   {tags.map((tag) => (
                     <option key={tag.id} value={tag.id}>
                       {formatTagName(tag.name)}
@@ -234,7 +239,7 @@ export function TaskEditorModal({
             </div>
 
             <label className="task-editor-field">
-              <span>Дата выполнения</span>
+              <span>{t('dueDate')}</span>
               <input
                 type="date"
                 className="task-editor-input task-editor-date"
@@ -249,7 +254,7 @@ export function TaskEditorModal({
                 className="task-editor-archive"
                 onClick={() => onArchive(task)}
               >
-                Перенести в архив
+                {t('archiveTask')}
               </button>
             )}
 
@@ -259,7 +264,7 @@ export function TaskEditorModal({
                 className="task-editor-delete"
                 onClick={() => onDelete(task)}
               >
-                Удалить задачу
+                {t('deleteTask')}
               </button>
             )}
           </div>
@@ -267,7 +272,7 @@ export function TaskEditorModal({
 
         <ModalActions
           onCancel={onClose}
-          submitLabel={task ? 'Сохранить' : 'Создать'}
+          submitLabel={task ? t('save') : t('create')}
           pending={saving}
           submitDisabled={Boolean(task) && !detailsEditable}
         />

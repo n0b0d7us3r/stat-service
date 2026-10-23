@@ -6,10 +6,11 @@ import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
 import type { UserAchievementView } from '../types';
+import { achievementDescription, achievementName, dateLocaleTag, t } from '../i18n';
 import '../styles/AchievementsPage.css';
 
 function formatEarnedDate(value: string): string {
-  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString('ru-RU', {
+  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString(dateLocaleTag, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -21,7 +22,7 @@ export function AchievementsPage() {
   const [achievements, setAchievements] = useState<UserAchievementView[]>([]);
 
   useEffect(() => {
-    document.title = `Достижения | ${APP_NAME}`;
+    document.title = `${t('achievementsTitle')} | ${APP_NAME}`;
 
     if (!user) {
       setAchievements([]);
@@ -37,8 +38,8 @@ export function AchievementsPage() {
     <Layout>
       <div className="achievements-page">
         <PageTitle
-          title="Достижения"
-          subtitle={`Получено ${earnedCount} из ${achievements.length}`}
+          title={t('achievementsTitle')}
+          subtitle={t('achievementsProgress', { earned: earnedCount, total: achievements.length })}
         />
 
         <div className="achievements-list">
@@ -52,12 +53,12 @@ export function AchievementsPage() {
               </div>
 
               <div className="achievement-card-body">
-                <h2 className="achievement-card-title">{achievement.name}</h2>
-                <p className="achievement-card-description">{achievement.description}</p>
+                <h2 className="achievement-card-title">{achievementName(achievement.code, achievement.name)}</h2>
+                <p className="achievement-card-description">{achievementDescription(achievement.code, achievement.description)}</p>
 
                 {achievement.earned && achievement.earned_at && (
                   <p className="achievement-card-earned-at">
-                    Получено: {formatEarnedDate(achievement.earned_at)}
+                    {t('earnedOn', { date: formatEarnedDate(achievement.earned_at) })}
                   </p>
                 )}
               </div>

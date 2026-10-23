@@ -1,4 +1,5 @@
 import type { Task } from '../types';
+import { dateLocaleTag, completedTasksLabel } from '../i18n';
 import { addDays, formatLocalDate, parseLocalDate } from './date';
 
 export const TASK_ACTIVITY_WEEKS = 52;
@@ -88,7 +89,7 @@ export function buildTaskActivityGrid(
       if (previousMonth === null || month !== previousMonth) {
         monthLabels.push({
           weekIndex,
-          label: parseLocalDate(anchor).toLocaleDateString('ru-RU', { month: 'short' }).replace('.', ''),
+          label: parseLocalDate(anchor).toLocaleDateString(dateLocaleTag, { month: 'short' }).replace('.', ''),
         });
         previousMonth = month;
       }
@@ -99,16 +100,11 @@ export function buildTaskActivityGrid(
 }
 
 export function formatActivityDayLabel(dateKey: string, count: number): string {
-  const dateLabel = parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
+  const dateLabel = parseLocalDate(dateKey).toLocaleDateString(dateLocaleTag, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 
-  if (count <= 0) {
-    return `0 задач завершено · ${dateLabel}`;
-  }
-
-  const taskWord = count === 1 ? 'задача' : count >= 2 && count <= 4 ? 'задачи' : 'задач';
-  return `${count} ${taskWord} завершено · ${dateLabel}`;
+  return completedTasksLabel(count, dateLabel);
 }

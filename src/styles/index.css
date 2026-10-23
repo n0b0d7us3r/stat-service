@@ -24,20 +24,20 @@
     /* --primary-gradient: linear-gradient(90deg, #78350f 0%, #d97706 100%); */
     /* --primary-soft: rgba(180, 83, 9, 0.1); */
 
-    --primary: #3f78a8;
-    --primary-dark: #8eb8dc;
-    --create-border: #2c587c;
-    --primary-glow: rgba(63, 120, 168, 0.35);
-    --primary-gradient: linear-gradient(90deg, #1a3550 0%, #4e86b5 100%);
-    --primary-soft: rgba(78, 134, 181, 0.16);
+    --primary: #4c46c4;
+    --primary-dark: #c4c0ff;
+    --create-border: #221a48;
+    --primary-glow: rgba(76, 70, 196, 0.42);
+    --primary-gradient: linear-gradient(90deg, #16122e 0%, #221c4a 24%, #2e2668 50%, #3a3288 76%, #4338a8 100%);
+    --primary-soft: rgba(76, 70, 196, 0.2);
     
     --border: #313c50;
     --muted: #a1a1aa;
     --bg-accent-amber: #221d18; /* Более мягкий темный оттенок, ближе к основному фону */
     --cell-today: var(--foreground);
 
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-sans: 'Courier New', Courier, 'Cousine', monospace;
+    --font-mono: 'Courier New', Courier, 'Cousine', monospace;
   }
 
   .theme-light {
@@ -60,12 +60,12 @@
     /* --primary-gradient: linear-gradient(90deg, #f59e0b 0%, #b45309 100%); */
     /* --primary-soft: rgba(180, 83, 9, 0.05); */
 
-    --primary: #2d6494;
-    --primary-dark: #5b97c6;
-    --create-border: #6aa3cc;
-    --primary-glow: rgba(45, 100, 148, 0.16);
-    --primary-gradient: linear-gradient(90deg, #6aaadb 0%, #2d6494 100%);
-    --primary-soft: rgba(45, 100, 148, 0.08);
+    --primary: #322e86;
+    --primary-dark: #5b54c9;
+    --create-border: #8b84e0;
+    --primary-glow: rgba(50, 46, 134, 0.2);
+    --primary-gradient: linear-gradient(90deg, #8d87e8 0%, #6e66d4 28%, #524aa8 56%, #3a327c 80%, #2a2468 100%);
+    --primary-soft: rgba(50, 46, 134, 0.1);
 
     --border: #e2e8f0;
     --muted: #64748b;
@@ -97,11 +97,6 @@
   .theme-light .nav-item.active,
   .theme-light .login-submit-btn {
     color: var(--on-gradient-text) !important;
-  }
-
-  /* Уточнение цвета границы для активных элементов навигации в светлой теме */
-  .theme-light .nav-item.active {
-    border-left-color: var(--primary) !important;
   }
 
   /* Цвет иконки бургера в светлой теме должен быть белым */

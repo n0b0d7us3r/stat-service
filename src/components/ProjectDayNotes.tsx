@@ -3,6 +3,7 @@ import { Pencil, PencilOff } from 'lucide-react';
 import { getNote, saveNote } from '../api/notes';
 import type { Achievement } from '../types';
 import { parseLocalDate } from '../utils/date';
+import { dateLocaleTag, t } from '../i18n';
 import '../styles/components/ProjectDayNotes.css';
 
 interface ProjectDayNotesProps {
@@ -12,7 +13,7 @@ interface ProjectDayNotesProps {
 }
 
 function formatSelectedDate(dateKey: string): string {
-  return parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
+  return parseLocalDate(dateKey).toLocaleDateString(dateLocaleTag, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -64,11 +65,11 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
   return (
     <section className={`project-day-notes app-border-card${selectedDate ? ' project-day-notes-has-date' : ''}`}>
       <div className="project-day-notes-header">
-        <h2 className="project-day-notes-title">Заметки</h2>
+        <h2 className="project-day-notes-title">{t('notes')}</h2>
       </div>
 
       {!selectedDate ? (
-        <p className="project-day-notes-empty">Выберите день в календаре, чтобы посмотреть или добавить заметку.</p>
+        <p className="project-day-notes-empty">{t('notesPickDay')}</p>
       ) : (
         <>
           <button
@@ -77,7 +78,7 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
             onClick={() => setEditMode((value) => !value)}
           >
             {editMode ? <PencilOff size={16} /> : <Pencil size={16} />}
-            <span>{editMode ? 'Просмотр' : 'Редактировать'}</span>
+            <span>{editMode ? t('view') : t('edit')}</span>
           </button>
 
           <p className="project-day-notes-date">{formatSelectedDate(selectedDate)}</p>
@@ -88,13 +89,13 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
                 className="project-day-notes-textarea"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Запишите заметку по этому дню..."
+                placeholder={t('notePlaceholder')}
                 rows={8}
                 autoFocus
               />
               <div className="project-day-notes-editor-actions">
                 <button type="button" className="project-day-notes-cancel-btn" onClick={handleCancel}>
-                  Отмена
+                  {t('cancel')}
                 </button>
                 <button
                   type="button"
@@ -102,13 +103,13 @@ export function ProjectDayNotes({ projectId, selectedDate, onNoteSaved }: Projec
                   onClick={handleSave}
                   disabled={saving}
                 >
-                  {saving ? 'Сохранение...' : 'Сохранить'}
+                  {saving ? t('saving') : t('save')}
                 </button>
               </div>
             </div>
           ) : (
             <div className="project-day-notes-content">
-              {content.trim() ? content : <span className="project-day-notes-placeholder">Заметок пока нет.</span>}
+              {content.trim() ? content : <span className="project-day-notes-placeholder">{t('notesDayEmpty')}</span>}
             </div>
           )}
         </>

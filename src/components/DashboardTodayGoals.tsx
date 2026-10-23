@@ -1,17 +1,12 @@
 import { Target } from 'lucide-react';
-import type { DashboardTodayGoals as DashboardTodayGoalsData, ProjectType } from '../types';
+import type { DashboardTodayGoals as DashboardTodayGoalsData } from '../types';
+import { projectTypeLabel, t } from '../i18n';
 import '../styles/components/DashboardTodayGoals.css';
 
 interface DashboardTodayGoalsProps {
   data: DashboardTodayGoalsData;
   onProjectClick: (projectId: number) => void;
 }
-
-const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
-  calendar: 'Календарь',
-  day: 'День',
-  goals: 'Цели',
-};
 
 export function DashboardTodayGoals({ data, onProjectClick }: DashboardTodayGoalsProps) {
   const completedCount = data.goals.filter((goal) => goal.completed).length;
@@ -21,12 +16,12 @@ export function DashboardTodayGoals({ data, onProjectClick }: DashboardTodayGoal
       {data.goals.length === 0 ? (
         <div className="dashboard-today-goals-empty app-border-card">
           <Target size={28} aria-hidden="true" />
-          <p>На сегодня нет активных целей в проектах «Календарь» и «Цели».</p>
+          <p>{t('noGoalsToday')}</p>
         </div>
       ) : (
         <>
           <p className="dashboard-today-goals-summary">
-            Выполнено {completedCount} из {data.goals.length}
+            {t('goalsDoneOf', { completed: completedCount, total: data.goals.length })}
           </p>
           <ul className="dashboard-today-goals-list">
             {data.goals.map((goal) => (
@@ -38,9 +33,9 @@ export function DashboardTodayGoals({ data, onProjectClick }: DashboardTodayGoal
                 >
                   <span className="dashboard-today-goals-project">{goal.projectName}</span>
                   <span className="dashboard-today-goals-meta">
-                    <span className="dashboard-today-goals-type">{PROJECT_TYPE_LABELS[goal.projectType]}</span>
+                    <span className="dashboard-today-goals-type">{projectTypeLabel(goal.projectType)}</span>
                     <span className="dashboard-today-goals-status">
-                      {goal.completed ? 'Выполнена' : 'Ожидает'}
+                      {goal.completed ? t('statusDone') : t('statusWaiting')}
                     </span>
                   </span>
                 </button>

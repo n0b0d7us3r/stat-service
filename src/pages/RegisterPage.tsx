@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { AuthError, useAuth } from '../context/AuthContext';
 import { APP_NAME } from '../config/app';
+import { t } from '../i18n';
 import { ThemeToggle } from '../components/ThemeToggle';
 import '../styles/LoginPage.css';
 
@@ -20,7 +21,7 @@ export function RegisterPage() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
-    document.title = `Регистрация | ${APP_NAME}`;
+    document.title = `${t('registerTitle')} | ${APP_NAME}`;
   }, []);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function RegisterPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setError(t('passwordsMismatch'));
       return;
     }
 
@@ -58,7 +59,7 @@ export function RegisterPage() {
       if (err instanceof AuthError) {
         setError(err.message);
       } else {
-        setError('Не удалось зарегистрироваться');
+        setError(t('registerFailed'));
       }
     } finally {
       setLoading(false);
@@ -72,7 +73,7 @@ export function RegisterPage() {
           <div className="login-header">
             <div className="login-logo-container">
               <div className="login-logo-brand">{APP_NAME}</div>
-              <div className="login-logo-sub">регистрация</div>
+              <div className="login-logo-sub">{t('registerTitle')}</div>
             </div>
           </div>
 
@@ -91,7 +92,7 @@ export function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="login-input"
-              placeholder="Email адрес"
+              placeholder={t('emailPlaceholder')}
             />
 
             <div className="form-group">
@@ -103,13 +104,13 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="login-input password-input"
-                placeholder="Пароль"
+                placeholder={t('passwordPlaceholder')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="password-toggle-btn"
-                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -124,13 +125,13 @@ export function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="login-input password-input"
-                placeholder="Подтвердите пароль"
+                placeholder={t('confirmPassword')}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
                 className="password-toggle-btn"
-                aria-label={showConfirmPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                aria-label={showConfirmPassword ? t('hidePassword') : t('showPassword')}
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -145,11 +146,11 @@ export function RegisterPage() {
               className="login-submit-btn"
               disabled={loading}
             >
-              {loading ? 'Регистрация...' : 'Создать аккаунт'}
+              {loading ? t('registerPending') : t('registerSubmit')}
             </button>
 
             <p className="login-switch-link">
-              Уже есть аккаунт? <Link to="/login">Войти</Link>
+              {t('hasAccount')} <Link to="/login">{t('signInLink')}</Link>
             </p>
           </form>
         </div>

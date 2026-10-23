@@ -43,7 +43,8 @@ aside.collapsed {
 
 .logo-brand {
   font-size: 1.45rem; /* Уменьшаем размер, чтобы длинные названия (как europay.online) не обрезались */
-  font-weight: 900;
+  font-weight: 700;
+  -webkit-text-stroke: 0.45px currentColor;
   color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
@@ -58,7 +59,7 @@ aside.collapsed {
 .logo-sub {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--primary);
+  color: var(--primary-dark);
   letter-spacing: 0.08em;
 }
 
@@ -111,9 +112,7 @@ aside nav {
   text-decoration: none;
   color: var(--muted);
   transition: all 0.2s;
-  border-left: 3px solid transparent;
   white-space: nowrap;
-  font-weight: 500;
   font-weight: 700;
   letter-spacing: 0.025em;
 }
@@ -131,7 +130,6 @@ aside nav {
   background: var(--primary-gradient);
   color: var(--foreground);
   border: 2px solid var(--create-border);
-  border-left: 6px solid var(--primary-dark) !important;
 }
 
 .sidebar-user-section {
@@ -171,7 +169,6 @@ aside nav {
   letter-spacing: 0.025em;
   cursor: pointer;
   margin-top: 0px;
-  border-left: 3px solid #0000;
   transition: all 0.2s;
 }
 
@@ -212,7 +209,6 @@ aside.collapsed .sidebar-header {
 aside.collapsed .nav-item {
   justify-content: center;
   padding: 7px 0;
-  border-left-width: 4px;
 }
 
 /* Оверлей для закрытия меню кликом по пустой области */

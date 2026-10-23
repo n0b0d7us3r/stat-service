@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import '../styles/components/SortSelect.css';
 
 export interface SortOption<T extends string> {
@@ -16,7 +17,7 @@ export function SortSelect<T extends string>({
   value,
   options,
   onChange,
-  label = 'Сортировка',
+  label = t('sort'),
 }: SortSelectProps<T>) {
   return (
     <label className="sort-select">

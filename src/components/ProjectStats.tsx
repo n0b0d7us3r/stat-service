@@ -1,4 +1,5 @@
 import type { ProjectStats as ProjectStatsData, ProjectType } from '../types';
+import { t } from '../i18n';
 import { getMonthLabel } from '../utils/date';
 import { CircularChart } from './CircularChart';
 import '../styles/components/ProjectStats.css';
@@ -25,11 +26,11 @@ export function ProjectStats({
     <div className={`project-stats ${isGoalsProject ? 'project-stats-goals' : ''}`}>
       <article className="project-stat-card">
         <span className="project-stat-label">
-          {isGoalsProject ? 'Выполнено целей' : 'Отметок'}
+          {isGoalsProject ? t('goalsStat') : t('marksStat')}
         </span>
         <strong className="project-stat-value">{stats.totalMarked}</strong>
         <span className="project-stat-meta">
-          {isGoalsProject ? `из ${stats.daysInMonth} целей` : `из ${stats.daysInMonth} дней`}
+          {isGoalsProject ? t('ofGoals', { count: stats.daysInMonth }) : t('ofDays', { count: stats.daysInMonth })}
         </span>
       </article>
 
@@ -37,19 +38,19 @@ export function ProjectStats({
         <span className="project-stat-label">{monthLabel}</span>
         <strong className="project-stat-value">{stats.markedThisMonth}</strong>
         <span className="project-stat-meta">
-          {isGoalsProject ? 'выполнено за месяц' : 'отмечено за месяц'}
+          {isGoalsProject ? t('goalsThisMonth') : t('markedThisMonth')}
         </span>
       </article>
 
       <article className="project-stat-card project-stat-card-progress">
-        <span className="project-stat-label">Прогресс месяца</span>
+        <span className="project-stat-label">{t('monthProgress')}</span>
         <div className="project-stat-progress-row">
           <strong className="project-stat-value">{stats.monthProgress}%</strong>
           <CircularChart
             value={stats.monthProgress}
             size={44}
             strokeWidth={4}
-            aria-label={`Прогресс месяца ${stats.monthProgress}%`}
+            aria-label={t('monthProgressAria', { progress: stats.monthProgress })}
           />
         </div>
       </article>
@@ -57,17 +58,17 @@ export function ProjectStats({
       {!isGoalsProject && (
         <>
           <article className="project-stat-card">
-            <span className="project-stat-label">Серия в месяце</span>
-            <strong className="project-stat-value">{stats.currentStreak} дн.</strong>
+            <span className="project-stat-label">{t('streakInMonth')}</span>
+            <strong className="project-stat-value">{t('daysShort', { count: stats.currentStreak })}</strong>
             <span className="project-stat-meta">
-              {isCurrentMonth ? 'От сегодня' : 'На конец месяца'}
+              {isCurrentMonth ? t('fromToday') : t('monthEnd')}
             </span>
           </article>
 
           <article className="project-stat-card">
-            <span className="project-stat-label">Рекорд в месяце</span>
-            <strong className="project-stat-value">{stats.longestStreak} дн.</strong>
-            <span className="project-stat-meta">Лучшая подряд</span>
+            <span className="project-stat-label">{t('recordInMonth')}</span>
+            <strong className="project-stat-value">{t('daysShort', { count: stats.longestStreak })}</strong>
+            <span className="project-stat-meta">{t('bestRun')}</span>
           </article>
         </>
       )}

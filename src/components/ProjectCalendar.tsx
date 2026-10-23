@@ -10,6 +10,7 @@ import {
   getMonthLabel,
   getMonthPrefix,
 } from '../utils/date';
+import { t, weekdayLabels } from '../i18n';
 import '../styles/components/ProjectCalendar.css';
 
 export interface ProjectCalendarHandle {
@@ -30,7 +31,7 @@ interface ProjectCalendarProps {
   onMonthChange?: (year: number, month: number) => void;
 }
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const WEEKDAYS = weekdayLabels;
 
 function filterDatesForMonth(dates: Iterable<string>, year: number, month: number): string[] {
   const prefix = getMonthPrefix(year, month);
@@ -340,30 +341,30 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
     ? isGoalsProject
       ? editLayer === 'goals'
         ? canRemove
-          ? 'Режим «Цели»: добавляйте или снимайте цели на любые дни. Сохранение — «Готово».'
-          : 'Режим «Цели»: можно только добавлять цели. Сохранение — «Готово».'
+          ? t('goalsHintMutable')
+          : t('goalsHintLocked')
         : canRemove
-          ? 'Режим «Отметки»: отметки только на днях с целью, за сегодня и прошлые дни. Сохранение — «Готово».'
-          : 'Режим «Отметки»: можно ставить отметки только на днях с целью, за сегодня и прошлые дни.'
+          ? t('marksHintMutable')
+          : t('marksHintLocked')
       : canRemove
-        ? 'Отметки сохранятся после «Готово». «Отменить» сбросит изменения.'
-        : 'Можно только добавлять отметки. Сохранение — после «Готово», отмена — «Отменить».'
+        ? t('marksSaveHint')
+        : t('marksAddOnlyHint')
     : null;
 
   return (
     <div className={`project-calendar ${editMode ? 'project-calendar-editing' : 'project-calendar-readonly'} ${isGoalsProject ? 'project-calendar-goals' : ''} ${projectType === 'calendar' ? 'project-calendar-calendar' : ''}`}>
       <div className="project-calendar-header">
-        <button type="button" className="calendar-nav-btn" onClick={goToPreviousMonth} aria-label="Предыдущий месяц">
+        <button type="button" className="calendar-nav-btn" onClick={goToPreviousMonth} aria-label={t('prevMonth')}>
           <ChevronLeft size={18} />
         </button>
         <h2 className="project-calendar-title">{getMonthLabel(year, month)}</h2>
-        <button type="button" className="calendar-nav-btn" onClick={goToNextMonth} aria-label="Следующий месяц">
+        <button type="button" className="calendar-nav-btn" onClick={goToNextMonth} aria-label={t('nextMonth')}>
           <ChevronRight size={18} />
         </button>
       </div>
 
       {isGoalsProject && editMode && (
-        <div className="project-calendar-edit-layers" role="tablist" aria-label="Режим редактирования">
+        <div className="project-calendar-edit-layers" role="tablist" aria-label={t('editMode')}>
           <button
             type="button"
             role="tab"
@@ -371,7 +372,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
             className={`project-calendar-edit-layer ${editLayer === 'marks' ? 'active' : ''}`}
             onClick={() => setEditLayer('marks')}
           >
-            Отметки
+            {t('marks')}
           </button>
           <button
             type="button"
@@ -380,7 +381,7 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
             className={`project-calendar-edit-layer ${editLayer === 'goals' ? 'active' : ''}`}
             onClick={() => setEditLayer('goals')}
           >
-            Цели
+            {t('goalsMode')}
           </button>
         </div>
       )}
@@ -447,12 +448,12 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
         {editHint ?? (
           isGoalsProject ? (
             <>
-              Клик по дню открывает заметку. Зелёный — цель выполнена, красный — пропуск. Сегодня:{' '}
+              {t('calendarHintGoals')}{' '}
               <span className="project-calendar-hint-today">{todayKey}</span>.
             </>
           ) : (
             <>
-              Клик по дню открывает заметку. Сегодня:{' '}
+              {t('calendarHintMarks')}{' '}
               <span className="project-calendar-hint-today">{todayKey}</span>.
             </>
           )

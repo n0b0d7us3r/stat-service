@@ -4,6 +4,7 @@ import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { Checkbox } from './Checkbox';
 import { createProject } from '../api/projects';
+import { t } from '../i18n';
 import { ApiDataError, type ProjectType } from '../types';
 import type { Project } from '../types';
 
@@ -45,23 +46,23 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
       resetForm();
       onCreated(project);
     } catch (err) {
-      setError(err instanceof ApiDataError ? err.message : 'Не удалось создать проект');
+      setError(err instanceof ApiDataError ? err.message : t('createProjectFailed'));
     } finally {
       setCreating(false);
     }
   };
 
   return (
-    <Modal title="Новый проект" isOpen={isOpen} onClose={handleClose}>
+    <Modal title={t('newProject')} isOpen={isOpen} onClose={handleClose}>
       <form className="create-project-form" onSubmit={handleSubmit}>
         {error && <p className="create-project-error">{error}</p>}
 
         <label className="create-project-field">
-          <span>Название</span>
+          <span>{t('name')}</span>
           <input
             type="text"
             className="create-project-input"
-            placeholder="Название проекта"
+            placeholder={t('projectNamePlaceholder')}
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
@@ -70,10 +71,10 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
         </label>
 
         <label className="create-project-field">
-          <span>Описание</span>
+          <span>{t('description')}</span>
           <textarea
             className="create-project-textarea"
-            placeholder="Описание (необязательно)"
+            placeholder={t('projectDescriptionPlaceholder')}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
@@ -81,7 +82,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
         </label>
 
         <fieldset className="create-project-type-fieldset">
-          <legend>Тип проекта</legend>
+          <legend>{t('projectType')}</legend>
           <div className="create-project-type-options">
             <label className={`create-project-type-option ${projectType === 'calendar' ? 'active' : ''}`}>
               <input
@@ -92,7 +93,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
                 onChange={() => setProjectType('calendar')}
               />
               <CalendarDays size={18} />
-              <span>Календарь</span>
+              <span>{t('typeCalendar')}</span>
             </label>
 
             <label className={`create-project-type-option ${projectType === 'goals' ? 'active' : ''}`}>
@@ -104,7 +105,7 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
                 onChange={() => setProjectType('goals')}
               />
               <Target size={18} />
-              <span>Цели</span>
+              <span>{t('typeGoals')}</span>
             </label>
 
             {/* Временно скрыто: тип «День»
@@ -127,18 +128,18 @@ export function CreateProjectModal({ isOpen, userId, onClose, onCreated }: Creat
           <Checkbox
             checked={isMutable}
             onChange={setIsMutable}
-            label="Изменяемый"
+            label={t('mutableLabel')}
           />
           <p className="create-project-mutable-hint">
-            Если выключено, отметки{projectType === 'goals' ? ' и цели' : ''} можно только ставить — удалить их нельзя.
+            {projectType === 'goals' ? t('mutableHintGoals') : t('mutableHintMarks')}
           </p>
         </div>
 
         <ModalActions
           onCancel={handleClose}
-          submitLabel="Создать"
+          submitLabel={t('create')}
           pending={creating}
-          pendingLabel="Создание..."
+          pendingLabel={t('creating')}
         />
       </form>
     </Modal>

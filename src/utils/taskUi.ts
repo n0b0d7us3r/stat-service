@@ -1,27 +1,28 @@
+import { dateLocaleTag, t } from '../i18n';
 import type { Task, TaskPriority, TaskSortMode } from '../types';
 
 export const TASK_PRIORITIES: Array<{ value: TaskPriority; label: string }> = [
-  { value: 1, label: 'Низкий' },
-  { value: 2, label: 'Обычный' },
-  { value: 3, label: 'Высокий' },
-  { value: 4, label: 'Срочный' },
+  { value: 1, label: t('low') },
+  { value: 2, label: t('normal') },
+  { value: 3, label: t('high') },
+  { value: 4, label: t('urgent') },
 ];
 
 export const TAG_COLOR_PRESETS: Array<{ value: string; label: string }> = [
-  { value: 'rgb(147, 0, 0)', label: 'Красный' },
-  { value: '#f97316', label: 'Оранжевый' },
-  { value: '#6b7280', label: 'Серый' },
-  { value: 'rgba(134, 245, 29, 0.87)', label: 'Зелёный' },
-  { value: '#3b82f6', label: 'Синий' },
-  { value: '#8b5cf6', label: 'Фиолетовый' },
+  { value: 'rgb(147, 0, 0)', label: t('colorRed') },
+  { value: '#f97316', label: t('colorOrange') },
+  { value: '#6b7280', label: t('colorGray') },
+  { value: 'rgba(134, 245, 29, 0.87)', label: t('colorGreen') },
+  { value: '#3b82f6', label: t('colorBlue') },
+  { value: '#8b5cf6', label: t('colorPurple') },
 ];
 
 export function priorityLabel(priority: TaskPriority): string {
-  return TASK_PRIORITIES.find((item) => item.value === priority)?.label ?? 'Обычный';
+  return TASK_PRIORITIES.find((item) => item.value === priority)?.label ?? t('priorityNormalFallback');
 }
 
 export function formatTagName(name: string): string {
-  return name.toLocaleUpperCase('ru');
+  return name.toLocaleUpperCase(dateLocaleTag);
 }
 
 function tagChannels(color: string): [number, number, number] | null {

@@ -26,14 +26,14 @@ export function fileToBase64(file: File): Promise<string> {
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== 'string') {
-        reject(new Error('Не удалось прочитать изображение'));
+        reject(new Error('image-read-failed'));
         return;
       }
 
       const commaIndex = result.indexOf(',');
       resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
     };
-    reader.onerror = () => reject(new Error('Не удалось прочитать изображение'));
+    reader.onerror = () => reject(new Error('image-read-failed'));
     reader.readAsDataURL(file);
   });
 }

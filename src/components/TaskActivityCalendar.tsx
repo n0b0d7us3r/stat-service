@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Task } from '../types';
-import { parseLocalDate } from '../utils/date';
+import { activityWeekdayLabels, t } from '../i18n';
 import {
   activityLevel,
   buildTaskActivityGrid,
@@ -13,7 +13,7 @@ interface TaskActivityCalendarProps {
   tasks: Task[];
 }
 
-const WEEKDAY_LABELS = ['Пн', '', 'Ср', '', 'Пт', '', ''];
+const WEEKDAY_LABELS = activityWeekdayLabels;
 
 export function TaskActivityCalendar({ tasks }: TaskActivityCalendarProps) {
   const { columns, monthLabels, counts, totalCompleted } = useMemo(() => {
@@ -34,13 +34,13 @@ export function TaskActivityCalendar({ tasks }: TaskActivityCalendarProps) {
   }, [tasks]);
 
   return (
-    <aside className="task-activity-calendar" aria-label="Календарь завершённых задач">
+    <aside className="task-activity-calendar" aria-label={t('activityCalendar')}>
       <div className="task-activity-calendar-header">
-        <h2 className="task-activity-calendar-title">Активность</h2>
+        <h2 className="task-activity-calendar-title">{t('activity')}</h2>
         <p className="task-activity-calendar-summary">
           {totalCompleted > 0
-            ? `${totalCompleted} завершено за год`
-            : 'Пока нет завершённых задач'}
+            ? t('activityYear', { count: totalCompleted })
+            : t('activityEmpty')}
         </p>
       </div>
 
@@ -69,7 +69,7 @@ export function TaskActivityCalendar({ tasks }: TaskActivityCalendarProps) {
             ))}
           </div>
 
-          <div className="task-activity-calendar-grid" role="grid" aria-label="Завершённые задачи по дням">
+          <div className="task-activity-calendar-grid" role="grid" aria-label={t('activityGrid')}>
             {columns.map((column, weekIndex) => (
               <div key={`week-${weekIndex}`} className="task-activity-calendar-week" role="row">
                 {column.days.map((dateKey, dayIndex) => {
@@ -87,13 +87,7 @@ export function TaskActivityCalendar({ tasks }: TaskActivityCalendarProps) {
                   const count = counts.get(dateKey) ?? 0;
                   const level = activityLevel(count);
 
-                  const label = count > 0
-                    ? formatActivityDayLabel(dateKey, count)
-                    : `Нет завершённых задач · ${parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}`;
+                  const label = formatActivityDayLabel(dateKey, count);
 
                   return (
                     <span
@@ -112,13 +106,13 @@ export function TaskActivityCalendar({ tasks }: TaskActivityCalendarProps) {
       </div>
 
       <div className="task-activity-calendar-legend" aria-hidden="true">
-        <span>Меньше</span>
+        <span>{t('less')}</span>
         <span className="task-activity-calendar-cell task-activity-calendar-cell-level-0" />
         <span className="task-activity-calendar-cell task-activity-calendar-cell-level-1" />
         <span className="task-activity-calendar-cell task-activity-calendar-cell-level-2" />
         <span className="task-activity-calendar-cell task-activity-calendar-cell-level-3" />
         <span className="task-activity-calendar-cell task-activity-calendar-cell-level-4" />
-        <span>Больше</span>
+        <span>{t('more')}</span>
       </div>
     </aside>
   );

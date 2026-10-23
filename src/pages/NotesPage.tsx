@@ -9,10 +9,11 @@ import { APP_NAME } from '../config/app';
 import { getNotes, NOTES_PAGE_SIZE } from '../api/notes';
 import type { DayNoteListItem, NotesListResult, NotesSortMode } from '../types';
 import { parseLocalDate } from '../utils/date';
+import { dateLocaleTag, t } from '../i18n';
 import '../styles/NotesPage.css';
 
 function formatNoteDate(dateKey: string): string {
-  const label = parseLocalDate(dateKey).toLocaleDateString('ru-RU', {
+  const label = parseLocalDate(dateKey).toLocaleDateString(dateLocaleTag, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -37,7 +38,7 @@ export function NotesPage() {
   }, [sort, page]);
 
   useEffect(() => {
-    document.title = `Заметки | ${APP_NAME}`;
+    document.title = `${t('notesTitle')} | ${APP_NAME}`;
   }, []);
 
   useEffect(() => {
@@ -64,26 +65,26 @@ export function NotesPage() {
       <div className="notes-page">
         <div className="notes-page-header">
           <PageTitle
-            title="Заметки"
-            subtitle={loading ? 'Загрузка...' : `Всего ${total}`}
+            title={t('notesTitle')}
+            subtitle={loading ? t('loading') : t('notesTotal', { count: total })}
           />
 
           <SortSelect
             value={sort}
             options={[
-              { value: 'date', label: 'По дням' },
-              { value: 'project', label: 'По проектам' },
+              { value: 'date', label: t('byDay') },
+              { value: 'project', label: t('byProject') },
             ]}
             onChange={handleSortChange}
           />
         </div>
 
         {loading && notes.length === 0 ? (
-          <p className="notes-placeholder">Загрузка заметок...</p>
+          <p className="notes-placeholder">{t('notesLoading')}</p>
         ) : notes.length === 0 ? (
           <div className="notes-empty app-border-card">
             <StickyNote size={40} aria-hidden="true" />
-            <p>Заметок пока нет. Добавьте их на странице проекта, выбрав день в календаре.</p>
+            <p>{t('notesEmpty')}</p>
           </div>
         ) : (
           <>
@@ -126,7 +127,7 @@ export function NotesPage() {
                 page={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
-                label="Страницы заметок"
+                label={t('notesPages')}
               />
             )}
           </>

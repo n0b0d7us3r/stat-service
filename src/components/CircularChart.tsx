@@ -1,4 +1,5 @@
 import '../styles/components/CircularChart.css';
+import { t } from '../i18n';
 
 interface CircularChartProps {
   /** Значение от 0 до 100 */
@@ -30,7 +31,7 @@ export function CircularChart({
       className={`circular-chart${valueClassName} ${className}`.trim()}
       style={{ width: size, height: size }}
       role="img"
-      aria-label={ariaLabel ?? `Прогресс ${clamped}%`}
+      aria-label={ariaLabel ?? t('progressFallback', { value: clamped })}
     >
       <svg
         className="circular-chart-svg"
