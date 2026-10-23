@@ -9,27 +9,33 @@ import { ProjectPage } from './pages/ProjectPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { NotesPage } from './pages/NotesPage';
 import { TasksPage } from './pages/TasksPage';
+import { Starfield } from './components/Starfield';
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        {isPublicRegisterAllowed ? (
-          <Route path="/register" element={<RegisterPage />} />
-        ) : (
-          <Route path="/register" element={<Navigate to="/login" replace />} />
-        )}
+    <>
+      <Starfield />
+      <div className="app-content">
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            {isPublicRegisterAllowed ? (
+              <Route path="/register" element={<RegisterPage />} />
+            ) : (
+              <Route path="/register" element={<Navigate to="/login" replace />} />
+            )}
 
-        <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
-        <Route path="/projects/:id" element={<ProtectedRoute><ProjectPage /></ProtectedRoute>} />
-        <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
-        <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
-        <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+            <Route path="/projects/:id" element={<ProtectedRoute><ProjectPage /></ProtectedRoute>} />
+            <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
+            <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </div>
+    </>
   );
 }

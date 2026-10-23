@@ -1,0 +1,46 @@
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 95% 80% at 50% 58%, #1a2838 0%, #121a26 46%, #0c1018 100%);
+}
+
+.theme-light .starfield {
+  display: none;
+}
+
+.starfield-star {
+  position: absolute;
+  top: -4px;
+  border-radius: 50%;
+  background: #fff;
+  animation-name: star-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes star-fall {
+  from {
+    transform: translate3d(0, -8vh, 0);
+  }
+
+  to {
+    transform: translate3d(0, 112vh, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starfield-star {
+    top: var(--star-top);
+    animation: none;
+  }
+}
+
+.app-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}

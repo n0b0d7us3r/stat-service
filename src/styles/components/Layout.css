@@ -59,8 +59,7 @@ aside.collapsed {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.08em;
 }
 
 .sidebar-toggle-btn {
@@ -108,7 +107,7 @@ aside nav {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  padding: 7px 24px;
   text-decoration: none;
   color: var(--muted);
   transition: all 0.2s;
@@ -161,7 +160,7 @@ aside nav {
 .logout-btn {
   background: transparent;
   border: none;
-  padding: 12px 24px; /* Явно дублируем padding для сброса стилей кнопки */
+  padding: 7px 24px; /* Явно дублируем padding для сброса стилей кнопки */
   width: 100%;
   font: inherit;
   display: flex;
@@ -212,7 +211,7 @@ aside.collapsed .sidebar-header {
 
 aside.collapsed .nav-item {
   justify-content: center;
-  padding: 12px 0;
+  padding: 7px 0;
   border-left-width: 4px;
 }
 

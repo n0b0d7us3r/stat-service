@@ -446,15 +446,21 @@
 }
 
 .task-editor-archive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
   margin-top: 0.25rem;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--foreground);
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1rem;
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: normal;
+  text-align: center;
   cursor: pointer;
-  align-self: flex-start;
 }
 
 .task-editor-archive:disabled {

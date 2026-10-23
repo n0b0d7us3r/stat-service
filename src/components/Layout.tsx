@@ -51,7 +51,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="sidebar-header">
           <div className="sidebar-logo-container">
             <div className="logo-brand">{displayedAppName}</div>
-            <div className="logo-sub">планер</div>
+            <div className="logo-sub">stat</div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <ThemeToggle theme={theme} toggleTheme={toggleTheme} />

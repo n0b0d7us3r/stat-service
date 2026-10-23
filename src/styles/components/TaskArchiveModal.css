@@ -98,7 +98,25 @@
   cursor: not-allowed;
 }
 
+.task-archive-close-btn {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  line-height: normal;
+  text-align: center;
+  cursor: pointer;
+}
+
 @media (hover: hover) {
+  .task-archive-close-btn:hover {
+    border-color: var(--foreground);
+  }
+
   .task-archive-restore-btn:hover:not(:disabled) {
     border-color: var(--primary);
     color: var(--primary-dark);

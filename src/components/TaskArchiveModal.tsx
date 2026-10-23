@@ -109,6 +109,10 @@ export function TaskArchiveModal({
             ))}
           </ul>
         )}
+
+        <button type="button" className="task-archive-close-btn" onClick={onClose}>
+          Закрыть
+        </button>
       </div>
     </Modal>
   );

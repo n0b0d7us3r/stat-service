@@ -67,7 +67,7 @@ export function LoginPage() {
           <div className="login-header">
             <div className="login-logo-container">
               <div className="login-logo-brand">{APP_NAME}</div>
-              <div className="login-logo-sub">планер</div>
+              <div className="login-logo-sub">stat</div>
             </div>
           </div>
 
