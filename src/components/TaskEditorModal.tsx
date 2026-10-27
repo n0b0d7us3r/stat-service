@@ -268,12 +268,19 @@ export function TaskEditorModal({
           </div>
         )}
 
-        <ModalActions
-          onCancel={onClose}
-          submitLabel={task ? t('save') : t('create')}
-          pending={saving}
-          submitDisabled={Boolean(task) && !detailsEditable}
-        />
+        {task && !detailsEditable ? (
+          <div className="modal-actions">
+            <button type="button" className="modal-action-cancel" onClick={onClose}>
+              {t('close')}
+            </button>
+          </div>
+        ) : (
+          <ModalActions
+            onCancel={onClose}
+            submitLabel={task ? t('save') : t('create')}
+            pending={saving}
+          />
+        )}
       </form>
     </Modal>
   );

@@ -10,6 +10,31 @@
   gap: 1rem;
 }
 
+.tasks-page-title-toggle {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .tasks-page-title:not(.tasks-page-title--summary-open) .page-subtitle {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .tasks-page-title .page-subtitle {
+    display: block;
+  }
+}
+
 .tasks-create-btn {
   display: inline-flex;
   align-items: center;

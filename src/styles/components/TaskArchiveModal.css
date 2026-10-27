@@ -71,12 +71,17 @@
 
 .task-archive-item-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .task-archive-restore-btn,
 .task-archive-delete-btn {
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 50%;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--foreground);
@@ -84,6 +89,8 @@
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 700;
+  line-height: normal;
+  text-align: center;
   cursor: pointer;
 }
 

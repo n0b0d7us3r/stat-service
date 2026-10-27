@@ -91,25 +91,30 @@ export function taskDueDateKey(task: Task): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
 }
 
-export function dueThroughTodayScore(
+export function sidebarTaskScore(
   tasks: Task[],
   todayKey: string,
 ): { completed: number; total: number } {
-  const eligible = tasks.filter((task) => {
-    if (task.archived) {
-      return false;
-    }
-    const due = taskDueDateKey(task);
-    if (!due) {
-      return false;
-    }
-    return due <= todayKey;
-  });
+  let completed = 0;
+  let total = 0;
 
-  return {
-    total: eligible.length,
-    completed: eligible.filter((task) => task.completed).length,
-  };
+  for (const task of tasks) {
+    if (task.archived) {
+      continue;
+    }
+
+    const due = taskDueDateKey(task);
+    if (!due || due > todayKey) {
+      continue;
+    }
+
+    total += 1;
+    if (task.completed) {
+      completed += 1;
+    }
+  }
+
+  return { completed, total };
 }
 
 export function isTaskOverdue(task: Task, todayKey: string): boolean {

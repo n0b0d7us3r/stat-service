@@ -4,7 +4,6 @@ import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
 import { Checkbox } from '../components/Checkbox';
-import { PageTitle } from '../components/PageTitle';
 import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
 import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
@@ -58,6 +57,10 @@ export function TasksPage() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
+  const [mobileLayout, setMobileLayout] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+  ));
 
   const loadBoard = useCallback(async () => {
     const board = await getTaskBoard();
@@ -67,6 +70,19 @@ export function TasksPage() {
 
   useEffect(() => {
     document.title = `${t('tasksTitle')} | ${APP_NAME}`;
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px)');
+    const syncLayout = () => {
+      setMobileLayout(media.matches);
+      if (!media.matches) {
+        setMobileSummaryOpen(false);
+      }
+    };
+    syncLayout();
+    media.addEventListener('change', syncLayout);
+    return () => media.removeEventListener('change', syncLayout);
   }, []);
 
   useEffect(() => {
@@ -184,6 +200,16 @@ export function TasksPage() {
     }
   };
 
+  const taskSummaryText = loading
+    ? t('loading')
+    : archivedCount > 0
+      ? t('tasksSummaryArchive', {
+        active: activeTasks.length,
+        completed: completedTasks.length,
+        archived: archivedCount,
+      })
+      : t('tasksSummary', { active: activeTasks.length, completed: completedTasks.length });
+
   const handleArchiveTask = async (task: Task) => {
     if (pendingTaskId === task.id) return;
     setPendingTaskId(task.id);
@@ -206,14 +232,29 @@ export function TasksPage() {
     <Layout>
       <div className="tasks-page">
         <div className="tasks-page-intro">
-          <PageTitle
-            title={t('tasksTitle')}
-            subtitle={loading
-              ? t('loading')
-              : archivedCount > 0
-                ? t('tasksSummaryArchive', { active: activeTasks.length, completed: completedTasks.length, archived: archivedCount })
-                : t('tasksSummary', { active: activeTasks.length, completed: completedTasks.length })}
-          />
+          <div
+            className={`page-title-block tasks-page-title${
+              mobileSummaryOpen ? ' tasks-page-title--summary-open' : ''
+            }`}
+          >
+            <h1 className="page-title">
+              {mobileLayout ? (
+                <button
+                  type="button"
+                  className="tasks-page-title-toggle"
+                  aria-expanded={mobileSummaryOpen}
+                  onClick={() => setMobileSummaryOpen((open) => !open)}
+                >
+                  {t('tasksTitle')}
+                </button>
+              ) : (
+                t('tasksTitle')
+              )}
+            </h1>
+            {taskSummaryText && (
+              <p className="page-subtitle">{taskSummaryText}</p>
+            )}
+          </div>
           <div className="tasks-controls">
             <button type="button" className="tasks-create-btn" onClick={openCreate}>
               <span>{t('createTask')}</span>

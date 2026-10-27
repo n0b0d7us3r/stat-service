@@ -444,21 +444,9 @@ export const ProjectCalendar = forwardRef<ProjectCalendarHandle, ProjectCalendar
         })}
       </div>
 
-      <p className="project-calendar-hint">
-        {editHint ?? (
-          isGoalsProject ? (
-            <>
-              {t('calendarHintGoals')}{' '}
-              <span className="project-calendar-hint-today">{todayKey}</span>.
-            </>
-          ) : (
-            <>
-              {t('calendarHintMarks')}{' '}
-              <span className="project-calendar-hint-today">{todayKey}</span>.
-            </>
-          )
-        )}
-      </p>
+      {editHint && (
+        <p className="project-calendar-hint">{editHint}</p>
+      )}
     </div>
   );
 });

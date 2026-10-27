@@ -6,7 +6,7 @@ import { APP_NAME } from '../config/app';
 import { t } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { formatLocalDate } from '../utils/date';
-import { dueThroughTodayScore } from '../utils/taskUi';
+import { sidebarTaskScore } from '../utils/taskUi';
 import { TASK_BOARD_CHANGED } from '../utils/taskBoardEvents';
 import { SidebarToggle } from './SidebarToggle';
 // import { ThemeToggle } from './ThemeToggle';
@@ -35,7 +35,7 @@ export function Layout({ children }: LayoutProps) {
       const todayKey = formatLocalDate(new Date());
       void getTaskBoard().then((board) => {
         if (cancelled) return;
-        setTodayScore(dueThroughTodayScore(board.tasks, todayKey));
+        setTodayScore(sidebarTaskScore(board.tasks, todayKey));
       }).catch(() => {
         if (!cancelled) setTodayScore(null);
       });

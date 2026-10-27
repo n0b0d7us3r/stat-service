@@ -113,7 +113,7 @@
   display: grid;
   grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .project-settings-section {
