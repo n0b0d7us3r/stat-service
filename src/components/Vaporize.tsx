@@ -3,18 +3,40 @@ import '../styles/components/Vaporize.css';
 
 const DURATION_MS = 760;
 const MAX_PARTICLES = 5200;
-const VAPOR_COLORS: Array<[number, number, number]> = [
-  [176, 132, 96],
-  [154, 118, 92],
-  [196, 146, 102],
-  [138, 122, 112],
-  [168, 124, 84],
-  [122, 108, 102],
+const FALLBACK_VAPOR_COLORS: Array<[number, number, number]> = [
+  [70, 112, 150],
+  [63, 104, 138],
+  [53, 92, 128],
+  [45, 82, 116],
+  [142, 180, 220],
+  [26, 40, 64],
 ];
 
+function parseHexColor(input: string): [number, number, number] | null {
+  const hex = input.trim();
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!match) {
+    return null;
+  }
+  const value = Number.parseInt(match[1], 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+function themeVaporPalette(): Array<[number, number, number]> {
+  const root = getComputedStyle(document.documentElement);
+  const fromTheme = [
+    parseHexColor(root.getPropertyValue('--primary')),
+    parseHexColor(root.getPropertyValue('--primary-dark')),
+    parseHexColor(root.getPropertyValue('--create-border')),
+  ].filter((entry): entry is [number, number, number] => entry !== null);
+
+  return fromTheme.length > 0 ? fromTheme : FALLBACK_VAPOR_COLORS;
+}
+
 function vaporColor(): string {
-  const [red, green, blue] = VAPOR_COLORS[Math.floor(Math.random() * VAPOR_COLORS.length)];
-  const jitter = Math.round((Math.random() - 0.5) * 18);
+  const palette = themeVaporPalette();
+  const [red, green, blue] = palette[Math.floor(Math.random() * palette.length)];
+  const jitter = Math.round((Math.random() - 0.5) * 22);
   const channel = (value: number) => Math.max(0, Math.min(255, value + jitter));
   return `rgb(${channel(red)}, ${channel(green)}, ${channel(blue)})`;
 }
@@ -254,7 +276,7 @@ function sampleParticles(image: ImageData, dpr: number, width: number, height: n
         y: cssY,
         vx: (dx / distance) * speed * 1.05 + (Math.random() - 0.5) * 64,
         vy: (dy / distance) * speed * 0.48 - (56 + Math.random() * 130),
-        size: 2 + Math.random() * 1.15,
+        size: 4.5 + Math.random() * 3.5,
         seed: Math.random() * Math.PI * 2,
         color: vaporColor(),
         alpha: Math.min(1, bestAlpha / 255),
@@ -291,7 +313,7 @@ function runParticles(canvas: HTMLCanvasElement, particles: Particle[], snapshot
           const wobble = Math.sin(local * 10 + particle.seed) * 5 * local;
           ctx.globalAlpha = particle.alpha * fade;
           ctx.fillStyle = particle.color;
-          const size = particle.size * (1 - local * 0.55);
+          const size = particle.size * (1 - local * 0.4);
           ctx.fillRect(particle.x + particle.vx * travel + wobble, particle.y + particle.vy * travel, size, size);
         }
         ctx.globalAlpha = 1;
