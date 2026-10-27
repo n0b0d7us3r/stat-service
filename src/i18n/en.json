@@ -1,6 +1,6 @@
 {
   "loginTitle": "Sign in",
-  "todayScoreLabel": "{completed} completed of {total} tasks due through today",
+  "todayScoreLabel": "{completed} done today of {total} tasks due through today (incomplete or completed today)",
   "loginPending": "Signing in...",
   "loginSubmit": "Sign in",
   "loginFailed": "Could not sign in",

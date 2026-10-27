@@ -1,5 +1,6 @@
 import { dateLocaleTag, t } from '../i18n';
 import type { Task, TaskPriority, TaskSortMode } from '../types';
+import { completedTaskDateKey } from './taskActivity';
 
 export const TASK_PRIORITIES: Array<{ value: TaskPriority; label: string }> = [
   { value: 1, label: t('low') },
@@ -108,10 +109,17 @@ export function sidebarTaskScore(
       continue;
     }
 
-    total += 1;
     if (task.completed) {
+      const completedOn = task.completed_at ? completedTaskDateKey(task.completed_at) : null;
+      if (completedOn !== todayKey) {
+        continue;
+      }
       completed += 1;
+      total += 1;
+      continue;
     }
+
+    total += 1;
   }
 
   return { completed, total };
