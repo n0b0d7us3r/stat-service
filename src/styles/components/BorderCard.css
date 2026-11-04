@@ -8,4 +8,9 @@
     transition: background-color 0.2s ease;
   }
 
+  .task-card.app-border-card {
+    background-color: color-mix(in srgb, var(--card) 38%, transparent) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    backdrop-filter: blur(16px) saturate(1.2);
+  }
 }
