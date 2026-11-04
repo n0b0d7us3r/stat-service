@@ -286,9 +286,9 @@
   width: 30%;
   gap: 0.45rem;
   padding: 0.4rem 0.45rem 0.35rem 0.5rem;
-  background-color: color-mix(in srgb, var(--card) 58%, transparent) !important;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background-color: color-mix(in srgb, var(--card) 38%, transparent) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
   border-left-width: 6px !important;
   border-left-style: solid !important;
 }
