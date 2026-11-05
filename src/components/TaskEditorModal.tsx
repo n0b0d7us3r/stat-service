@@ -170,7 +170,7 @@ export function TaskEditorModal({
         )}
 
         <div className="task-editor-field">
-          <span>{t('description')}</span>
+          {!locked && <span>{t('description')}</span>}
           {locked ? (
             <div className="task-description-plain">
               <TaskDescriptionContent value={description} />
