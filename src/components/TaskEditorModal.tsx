@@ -132,43 +132,47 @@ export function TaskEditorModal({
   };
 
   return (
-    <Modal title={task ? t('task') : t('newTask')} isOpen onClose={onClose}>
+    <Modal
+      className="task-editor-modal"
+      title={title.trim() || (task ? t('task') : t('newTask'))}
+      isOpen
+      onClose={onClose}
+      headerExtra={task ? (
+        <button
+          type="button"
+          className="task-icon-btn task-editor-edit"
+          aria-pressed={detailsEditable}
+          aria-label={detailsEditable ? t('stopEditing') : t('editTask')}
+          onClick={handleEditClick}
+        >
+          <Pencil size={20} />
+        </button>
+      ) : undefined}
+    >
       <form className="task-editor-form" onSubmit={handleSubmit}>
         {error && <p className="task-editor-error">{error}</p>}
 
-        <div className="task-editor-field">
-          <span className="task-editor-field-head">
+        {!locked && (
+          <div className="task-editor-field">
             <label htmlFor="task-title">{t('name')}</label>
-            {task && (
-              <button
-                type="button"
-                className="task-icon-btn task-editor-edit"
-                aria-pressed={detailsEditable}
-                aria-label={detailsEditable ? t('stopEditing') : t('editTask')}
-                onClick={handleEditClick}
-              >
-                <Pencil size={20} />
-              </button>
-            )}
-          </span>
-          <input
-            id="task-title"
-            ref={titleInputRef}
-            type="text"
-            className="task-editor-input"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            maxLength={200}
-            required
-            disabled={locked}
-            autoFocus={detailsEditable}
-          />
-        </div>
+            <input
+              id="task-title"
+              ref={titleInputRef}
+              type="text"
+              className="task-editor-input"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              maxLength={200}
+              required
+              autoFocus={detailsEditable}
+            />
+          </div>
+        )}
 
         <div className="task-editor-field">
           <span>{t('description')}</span>
           {locked ? (
-            <div className="task-description-view">
+            <div className="task-description-plain">
               <TaskDescriptionContent value={description} />
             </div>
           ) : (

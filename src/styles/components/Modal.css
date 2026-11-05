@@ -20,6 +20,7 @@
 }
 
 .modal-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,11 +28,30 @@
   border-bottom: 1px solid var(--border);
 }
 
+.modal-header-extra {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .modal-title {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
   text-align: center;
+}
+
+.task-editor-modal .modal-header,
+.task-editor-modal .modal-body {
+  padding-left: 1.05rem;
+  padding-right: 1.05rem;
+}
+
+.task-editor-modal .modal-title {
+  max-width: 100%;
+  padding: 0 2.75rem;
+  overflow-wrap: anywhere;
 }
 
 .modal-body {

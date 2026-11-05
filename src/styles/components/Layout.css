@@ -8,8 +8,9 @@
 /* Сайдбар */
 aside {
   width: 300px;
+  box-sizing: border-box;
   background-color: var(--card);
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -229,6 +230,7 @@ aside.collapsed .nav-item {
   aside {
     width: 0;
     position: static;
+    border: none;
   }
 
   .sidebar-header {
@@ -259,7 +261,8 @@ aside.collapsed .nav-item {
     z-index: 100;
     transform: translateX(0);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-right: 1px solid var(--border);
+    box-sizing: border-box;
+    border: 1px solid var(--border);
     padding: 1rem 0;
   }
 

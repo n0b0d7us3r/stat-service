@@ -6,9 +6,11 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
+  headerExtra?: ReactNode;
 }
 
-export function Modal({ title, isOpen, onClose, children }: ModalProps) {
+export function Modal({ title, isOpen, onClose, children, className = '', headerExtra }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -34,13 +36,14 @@ export function Modal({ title, isOpen, onClose, children }: ModalProps) {
   return (
     <div className="modal-overlay">
       <div
-        className="modal-window app-border-card"
+        className={`modal-window app-border-card ${className}`.trim()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
         <div className="modal-header">
           <h2 id="modal-title" className="modal-title">{title}</h2>
+          {headerExtra && <div className="modal-header-extra">{headerExtra}</div>}
         </div>
         <div className="modal-body">
           {children}

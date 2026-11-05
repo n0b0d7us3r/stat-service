@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Archive, ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
@@ -495,14 +495,6 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
         <div className="task-card-body">
           <div className="task-card-title-slot">
             <button type="button" className="task-card-title" title={task.title} onClick={() => onEdit(task)}>
-              {task.tags[0] && (
-                <>
-                  <span className="task-title-tag" style={{ color: task.tags[0].color }}>
-                    [ {formatTagName(task.tags[0].name)} ]
-                  </span>
-                  <span className="task-title-sep"> / </span>
-                </>
-              )}
               <span className="task-title-text">{task.title}</span>
             </button>
           </div>
@@ -528,14 +520,25 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="task-icon-btn task-card-edit"
-          aria-label={t('editTaskAria', { title: task.title })}
-          onClick={() => onEdit(task)}
-        >
-          <Pencil size={20} />
-        </button>
+        <div className="task-card-side">
+          <button
+            type="button"
+            className="task-icon-btn task-card-edit"
+            aria-label={t('editTaskAria', { title: task.title })}
+            onClick={() => onEdit(task)}
+          >
+            <Pencil size={20} />
+          </button>
+          {task.tags[0] && (
+            <span
+              className="task-card-tag"
+              style={{ '--tag-color': task.tags[0].color } as CSSProperties}
+            >
+              <span className="task-card-tag-shadow" aria-hidden="true" />
+              <span className="task-card-tag-face">{formatTagName(task.tags[0].name)}</span>
+            </span>
+          )}
+        </div>
       </article>
     </Vaporize>
   );
