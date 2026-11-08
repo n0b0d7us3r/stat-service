@@ -22,14 +22,22 @@ export interface Task {
   created_at: string;
   completed_at: string | null;
   due_date: string | null;
+  folder_id: number | null;
   tags: Tag[];
+}
+
+export interface Folder {
+  id: number;
+  name: string;
+  created_at: string;
 }
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 50_000;
 const MAX_TAG_NAME_LENGTH = 32;
 const MAX_TAGS_PER_TASK = 1;
-const TASK_COLUMNS = 'id, title, description, priority, completed, archived, created_at, completed_at, due_date';
+const MAX_FOLDER_NAME_LENGTH = 40;
+const TASK_COLUMNS = 'id, title, description, priority, completed, archived, created_at, completed_at, due_date, folder_id';
 
 interface TaskRow {
   id: number;
@@ -41,6 +49,7 @@ interface TaskRow {
   created_at: string;
   completed_at: string | null;
   due_date: string | null;
+  folder_id: number | null;
 }
 
 function normalizeTitle(raw: string): string {
@@ -240,6 +249,7 @@ function mapTask(row: TaskRow, tags: Tag[]): Task {
     created_at: row.created_at,
     completed_at: row.completed_at,
     due_date: row.due_date,
+    folder_id: row.folder_id,
     tags: tags.slice(0, 1),
   };
 }
@@ -264,11 +274,15 @@ function insertTaskTags(db: Database.Database, taskId: number, tagIds: number[])
   }
 }
 
-export function listTaskBoard(userId: number): { tasks: Task[]; tags: Tag[] } {
+export function listTaskBoard(userId: number): { tasks: Task[]; tags: Tag[]; folders: Folder[] } {
   const db = getUserDb(userId);
   const tags = queryAll<Tag>(
     db,
     'SELECT id, name, color, created_at FROM tags ORDER BY name COLLATE NOCASE ASC',
+  );
+  const folders = queryAll<Folder>(
+    db,
+    'SELECT id, name, created_at FROM folders ORDER BY name COLLATE NOCASE ASC',
   );
   const rows = queryAll<TaskRow>(
     db,
@@ -278,6 +292,7 @@ export function listTaskBoard(userId: number): { tasks: Task[]; tags: Tag[] } {
 
   return {
     tags: tags.map((tag) => ({ ...tag, name: tag.name.toLocaleUpperCase('ru') })),
+    folders,
     tasks: rows.map((row) => mapTask(row, byTask.get(row.id) ?? [])),
   };
 }
@@ -330,7 +345,7 @@ export function deleteTag(userId: number, tagId: number): boolean {
 
 export function createTask(
   userId: number,
-  input: { title: string; description?: unknown; priority?: unknown; dueDate?: unknown; tagIds?: unknown },
+  input: { title: string; description?: unknown; priority?: unknown; dueDate?: unknown; tagIds?: unknown; folderId?: number | null },
 ): Task {
   const db = getUserDb(userId);
   const title = normalizeTitle(input.title);
@@ -339,9 +354,10 @@ export function createTask(
   const dueDate = normalizeDueDate(input.dueDate);
   const tagIds = normalizeTagIds(input.tagIds);
   assertTagsExist(db, tagIds);
+  const folderId = input.folderId == null ? null : normalizeFolderId(db, input.folderId);
 
   const taskId = db.transaction(() => {
-    const result = db.prepare('INSERT INTO tasks (title, description, priority, due_date) VALUES (?, ?, ?, ?)').run(title, description, priority, dueDate);
+    const result = db.prepare('INSERT INTO tasks (title, description, priority, due_date, folder_id) VALUES (?, ?, ?, ?, ?)').run(title, description, priority, dueDate, folderId);
     const id = Number(result.lastInsertRowid);
     insertTaskTags(db, id, tagIds);
     return id;
@@ -366,6 +382,7 @@ export function updateTask(
     completed?: boolean;
     archived?: boolean;
     tagIds?: unknown;
+    folderId?: number | null;
   },
 ): Task | null {
   const db = getUserDb(userId);
@@ -384,6 +401,7 @@ export function updateTask(
   if (tagIds !== null) {
     assertTagsExist(db, tagIds);
   }
+  const folderId = input.folderId === undefined ? existing.folder_id : normalizeFolderId(db, input.folderId);
 
   const completedFlag = completed ? 1 : 0;
   const archivedFlag = archived ? 1 : 0;
@@ -400,6 +418,7 @@ export function updateTask(
           due_date = ?,
           completed = ?,
           archived = ?,
+          folder_id = ?,
           completed_at = CASE
             WHEN ? = 0 THEN NULL
             WHEN completed = 0 THEN datetime('now')
@@ -407,7 +426,7 @@ export function updateTask(
           END
         WHERE id = ?
       `,
-      [title, description, priority, dueDate, completedFlag, archivedFlag, completedFlag, taskId],
+      [title, description, priority, dueDate, completedFlag, archivedFlag, folderId, completedFlag, taskId],
     );
 
     if (tagIds !== null) {
@@ -417,6 +436,57 @@ export function updateTask(
   })();
 
   return readTask(db, taskId);
+}
+
+function normalizeFolderName(name: string): string {
+  const trimmed = name.trim().replace(/\s+/g, ' ');
+  if (!trimmed) {
+    throw new DbError('Укажите название папки');
+  }
+  if (trimmed.length > MAX_FOLDER_NAME_LENGTH) {
+    throw new DbError('Название папки слишком длинное');
+  }
+  return trimmed;
+}
+
+function normalizeFolderId(db: Database.Database, folderId: number | null): number | null {
+  if (folderId === null) {
+    return null;
+  }
+  if (!Number.isInteger(folderId) || folderId <= 0) {
+    throw new DbError('Папка не найдена');
+  }
+  const folder = queryOne<{ id: number }>(db, 'SELECT id FROM folders WHERE id = ?', [folderId]);
+  if (!folder) {
+    throw new DbError('Папка не найдена');
+  }
+  return folderId;
+}
+
+export function createFolder(userId: number, nameRaw: string): Folder {
+  const db = getUserDb(userId);
+  const name = normalizeFolderName(nameRaw);
+  const result = db.prepare('INSERT INTO folders (name) VALUES (?)').run(name);
+  const folder = queryOne<Folder>(db, 'SELECT id, name, created_at FROM folders WHERE id = ?', [Number(result.lastInsertRowid)]);
+  if (!folder) {
+    throw new DbError('Не удалось создать папку');
+  }
+  return folder;
+}
+
+export function deleteFolder(userId: number, folderId: number): boolean {
+  const db = getUserDb(userId);
+  const existing = queryOne<{ id: number }>(db, 'SELECT id FROM folders WHERE id = ?', [folderId]);
+  if (!existing) {
+    return false;
+  }
+
+  db.transaction(() => {
+    runStatement(db, 'UPDATE tasks SET folder_id = NULL WHERE folder_id = ?', [folderId]);
+    runStatement(db, 'DELETE FROM folders WHERE id = ?', [folderId]);
+  })();
+
+  return true;
 }
 
 export function deleteTask(userId: number, taskId: number): boolean {

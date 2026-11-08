@@ -1,0 +1,230 @@
+.task-folders-panel {
+  display: none;
+}
+
+.task-folders-heading {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.task-folders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.task-folder-tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.task-folder-tile.is-active {
+  border-color: var(--create-border);
+  box-shadow: inset 0 0 0 1px var(--create-border);
+}
+
+.task-folder-open,
+.task-folder-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 6.5rem;
+  padding: 0.75rem 0.45rem 0.65rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.task-folder-add {
+  border: 1px dashed var(--border);
+}
+
+.task-folder-glyph {
+  width: 3.4rem;
+  height: 2.7rem;
+  display: block;
+}
+
+.task-folder-name {
+  max-width: 100%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.task-folder-delete {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.task-folder-create {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+}
+
+.task-folder-create input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+}
+
+.task-folder-create-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.task-folder-create-actions .modal-action-cancel,
+.task-folder-submit {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+}
+
+.task-folder-submit {
+  border: 2px solid var(--create-border);
+  background: var(--primary-gradient);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+}
+
+.task-folder-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.task-folder-error {
+  margin: 0;
+  color: #f87171;
+  font-size: 0.8125rem;
+}
+
+.tasks-folder-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+}
+
+.tasks-folder-bar-name {
+  min-width: 0;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.tasks-folder-close,
+.task-move-option,
+.task-folders-close {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tasks-folder-close,
+.task-folders-close {
+  padding: 0.45rem 0.8rem;
+}
+
+.task-folders-close {
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
+.task-move-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.task-move-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 6.5rem;
+  padding: 0.75rem 0.45rem;
+}
+
+.task-move-option.is-active {
+  border-color: var(--create-border);
+  box-shadow: inset 0 0 0 1px var(--create-border);
+}
+
+.tasks-card-move {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+@media (min-width: 1101px) {
+  .task-folders-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    width: 18.5rem;
+    flex: 0 0 18.5rem;
+    box-sizing: border-box;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+
+  .tasks-folders-open-btn {
+    display: none;
+  }
+}
+
+@media (hover: hover) {
+  .task-folder-open:hover,
+  .task-folder-add:hover,
+  .task-move-option:hover,
+  .tasks-folder-close:hover,
+  .task-folders-close:hover {
+    border-color: var(--foreground);
+  }
+
+  .task-folder-delete:hover {
+    border-color: var(--foreground);
+  }
+}

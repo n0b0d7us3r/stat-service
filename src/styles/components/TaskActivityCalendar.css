@@ -158,6 +158,13 @@
   }
 }
 
+.task-activity-calendar.task-activity-calendar--stats {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  flex: none;
+}
+
 @media (hover: hover) {
   .task-activity-calendar-cell:not(.task-activity-calendar-cell-empty):hover {
     outline: 1px solid var(--foreground);

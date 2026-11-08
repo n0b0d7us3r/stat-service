@@ -201,6 +201,21 @@ function migrateToV12(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_archived ON tasks(archived)');
 }
 
+function migrateToV13(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS folders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  if (!columnExists(db, 'tasks', 'folder_id')) {
+    db.exec('ALTER TABLE tasks ADD COLUMN folder_id INTEGER REFERENCES folders(id) ON DELETE SET NULL');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_folder_id ON tasks(folder_id)');
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -273,6 +288,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 12) {
     migrateToV12(db);
     version = 12;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 13) {
+    migrateToV13(db);
+    version = 13;
     setSchemaVersion(db, version);
   }
 }

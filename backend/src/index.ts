@@ -27,8 +27,10 @@ import {
 import { getNote, getNoteDatesForMonth, listUserNotes, saveNote } from './services/notesService.js';
 import { DbError, createProject, deleteProject, getProjectById, getProjectsByUser } from './services/projectsService.js';
 import {
+  createFolder,
   createTag,
   createTask,
+  deleteFolder,
   deleteTag,
   deleteTask,
   listTaskBoard,
@@ -311,12 +313,13 @@ app.get('/api/tasks', requireAuth, (req: AuthRequest, res) => {
 
 app.post('/api/tasks', requireAuth, (req: AuthRequest, res) => {
   try {
-    const { title, description, priority, dueDate, tagIds } = req.body as {
+    const { title, description, priority, dueDate, tagIds, folderId } = req.body as {
       title?: string;
       description?: string;
       priority?: number;
       dueDate?: string | null;
       tagIds?: number[];
+      folderId?: number | null;
     };
     const task = createTask(req.user!.id, {
       title: title ?? '',
@@ -324,6 +327,7 @@ app.post('/api/tasks', requireAuth, (req: AuthRequest, res) => {
       priority,
       dueDate,
       tagIds,
+      folderId: Object.prototype.hasOwnProperty.call(req.body, 'folderId') ? folderId ?? null : null,
     });
     res.status(201).json({ task });
   } catch (error) {
@@ -343,7 +347,7 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       return;
     }
 
-    const { title, description, priority, dueDate, completed, archived, tagIds } = req.body as {
+    const { title, description, priority, dueDate, completed, archived, tagIds, folderId } = req.body as {
       title?: string;
       description?: string;
       priority?: number;
@@ -351,6 +355,7 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       completed?: boolean;
       archived?: boolean;
       tagIds?: number[];
+      folderId?: number | null;
     };
     const task = updateTask(req.user!.id, taskId, {
       title,
@@ -360,6 +365,7 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       completed,
       archived,
       tagIds,
+      folderId: Object.prototype.hasOwnProperty.call(req.body, 'folderId') ? folderId ?? null : undefined,
     });
     if (!task) {
       res.status(404).json({ message: 'Задача не найдена' });
@@ -437,6 +443,36 @@ app.get('/api/tasks/description-images/:filename', requireAuth, (req: AuthReques
   res.setHeader('Content-Type', file.contentType);
   res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
   res.send(file.buffer);
+});
+
+app.post('/api/folders', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { name } = req.body as { name?: string };
+    const folder = createFolder(req.user!.id, name ?? '');
+    res.status(201).json({ folder });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/folders/:folderId', requireAuth, (req: AuthRequest, res) => {
+  const folderId = Number(req.params.folderId);
+  if (!Number.isInteger(folderId) || folderId <= 0) {
+    res.status(400).json({ message: 'Некорректный идентификатор папки' });
+    return;
+  }
+
+  const deleted = deleteFolder(req.user!.id, folderId);
+  if (!deleted) {
+    res.status(404).json({ message: 'Папка не найдена' });
+    return;
+  }
+
+  res.status(204).end();
 });
 
 app.delete('/api/tags/:tagId', requireAuth, (req: AuthRequest, res) => {

@@ -164,7 +164,14 @@ export interface Task {
   created_at: string;
   completed_at: string | null;
   due_date: string | null;
+  folder_id: number | null;
   tags: Tag[];
+}
+
+export interface Folder {
+  id: number;
+  name: string;
+  created_at: string;
 }
 
 export class AuthError extends Error {

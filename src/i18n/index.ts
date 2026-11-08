@@ -63,6 +63,11 @@ const apiMessages: Record<string, MessageKey> = {
   'Некорректные данные изображения': 'imageUploadFailed',
   'year и month обязательны': 'connectionFailed',
   'Некорректные year и month': 'connectionFailed',
+  'Укажите название папки': 'folderNameRequired',
+  'Название папки слишком длинное': 'folderNameRequired',
+  'Папка не найдена': 'folderMissing',
+  'Не удалось создать папку': 'folderCreateFailed',
+  'Некорректный идентификатор папки': 'folderDeleteFailed',
 };
 
 export function localizeApiMessage(message: string): string {

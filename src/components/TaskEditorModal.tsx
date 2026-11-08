@@ -17,6 +17,7 @@ import { t } from '../i18n';
 interface TaskEditorModalProps {
   task: Task | null;
   tags: Tag[];
+  folderId?: number | null;
   onClose: () => void;
   onSaved: (task: Task, options?: { keepOpen?: boolean }) => void;
   onDelete: (task: Task) => void;
@@ -26,6 +27,7 @@ interface TaskEditorModalProps {
 export function TaskEditorModal({
   task,
   tags,
+  folderId,
   onClose,
   onSaved,
   onDelete,
@@ -53,7 +55,14 @@ export function TaskEditorModal({
     try {
       const saved = task
         ? await updateTask(task.id, { title, description, priority, dueDate: dueDate || null, tagIds })
-        : await createTask({ title, description, priority, dueDate: dueDate || null, tagIds });
+        : await createTask({
+          title,
+          description,
+          priority,
+          dueDate: dueDate || null,
+          tagIds,
+          ...(folderId != null ? { folderId } : {}),
+        });
       onSaved(saved, options);
       return saved;
     } catch (err) {

@@ -69,7 +69,8 @@
 }
 
 .tasks-tag-create-btn,
-.tasks-archive-btn {
+.tasks-archive-btn,
+.tasks-folders-open-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -92,7 +93,8 @@
   }
 
   .tasks-tag-create-btn:hover,
-  .tasks-archive-btn:hover {
+  .tasks-archive-btn:hover,
+  .tasks-folders-open-btn:hover {
     border-color: var(--foreground);
   }
 }
@@ -834,6 +836,7 @@
   .tasks-create-btn,
   .tasks-tag-create-btn,
   .tasks-archive-btn,
+  .tasks-folders-open-btn,
   .tasks-completed-toggle {
     width: 100%;
   }
@@ -859,5 +862,11 @@
     width: 100%;
     flex: 1 1 auto;
     min-width: 0;
+  }
+}
+
+@media (min-width: 1101px) {
+  .tasks-folders-open-btn {
+    display: none;
   }
 }

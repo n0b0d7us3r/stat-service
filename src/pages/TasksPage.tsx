@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Archive, ArrowDown, ArrowUp, ChevronsUp, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ChevronsUp, FolderClosed, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
@@ -9,11 +9,11 @@ import { TaskEditorModal } from '../components/TaskEditorModal';
 import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
 import { TagManageModal } from '../components/TagManageModal';
 import { TaskArchiveModal } from '../components/TaskArchiveModal';
-import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
+import { FolderGlyph, TaskFolders } from '../components/TaskFolders';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
-import { deleteTask, getTaskBoard, updateTask } from '../api/tasks';
-import type { Tag, Task, TaskPriority, TaskSortMode } from '../types';
+import { createFolder, deleteFolder, deleteTask, getTaskBoard, updateTask } from '../api/tasks';
+import type { Folder, Tag, Task, TaskPriority, TaskSortMode } from '../types';
 import { formatLocalDate } from '../utils/date';
 import { dateLocaleTag, t } from '../i18n';
 import { notifyTaskBoardChanged } from '../utils/taskBoardEvents';
@@ -46,6 +46,11 @@ function formatCompletedAt(value: string): string {
 export function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [openFolderId, setOpenFolderId] = useState<number | null>(null);
+  const [foldersModalOpen, setFoldersModalOpen] = useState(false);
+  const [taskToMove, setTaskToMove] = useState<Task | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sort, setSort] = useState<TaskSortMode>('created');
@@ -66,6 +71,7 @@ export function TasksPage() {
     const board = await getTaskBoard();
     setTasks(board.tasks);
     setTags(board.tags);
+    setFolders(board.folders);
   }, []);
 
   useEffect(() => {
@@ -107,9 +113,15 @@ export function TasksPage() {
 
   const boardTasks = tasks.filter((task) => !task.archived);
   const archivedCount = tasks.filter((task) => task.archived).length;
-  const visibleTasks = tagFilter === 'all'
+  const openFolder = folders.find((folder) => folder.id === openFolderId) ?? null;
+  const taggedTasks = tagFilter === 'all'
     ? boardTasks
     : boardTasks.filter((task) => task.tags.some((tag) => String(tag.id) === tagFilter));
+  const visibleTasks = openFolder
+    ? taggedTasks.filter((task) => task.folder_id === openFolder.id)
+    : taggedTasks.filter((task) => task.folder_id == null);
+  const summaryActiveCount = taggedTasks.filter((task) => !task.completed).length;
+  const summaryCompletedCount = taggedTasks.filter((task) => task.completed).length;
   const activeTasks = visibleTasks
     .filter((task) => !task.completed)
     .sort((a, b) => compareTasks(a, b, sort));
@@ -204,11 +216,11 @@ export function TasksPage() {
     ? t('loading')
     : archivedCount > 0
       ? t('tasksSummaryArchive', {
-        active: activeTasks.length,
-        completed: completedTasks.length,
+        active: summaryActiveCount,
+        completed: summaryCompletedCount,
         archived: archivedCount,
       })
-      : t('tasksSummary', { active: activeTasks.length, completed: completedTasks.length });
+      : t('tasksSummary', { active: summaryActiveCount, completed: summaryCompletedCount });
 
   const handleArchiveTask = async (task: Task) => {
     if (pendingTaskId === task.id) return;
@@ -227,6 +239,63 @@ export function TasksPage() {
       setPendingTaskId(null);
     }
   };
+
+  const handleCreateFolder = async (name: string) => {
+    const folder = await createFolder(name);
+    setFolders((current) => [...current, folder].sort((a, b) => a.name.localeCompare(b.name, dateLocaleTag)));
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!folderToDelete || pendingTaskId !== null) return;
+    const folderId = folderToDelete.id;
+    setPendingTaskId(-folderId);
+    setError('');
+    try {
+      await deleteFolder(folderId);
+      setFolders((current) => current.filter((folder) => folder.id !== folderId));
+      setTasks((current) => current.map((task) => (
+        task.folder_id === folderId ? { ...task, folder_id: null } : task
+      )));
+      if (openFolderId === folderId) {
+        setOpenFolderId(null);
+      }
+      setFolderToDelete(null);
+      notifyTaskBoardChanged();
+    } catch (err) {
+      setError(errorText(err, t('folderDeleteFailed')));
+    } finally {
+      setPendingTaskId(null);
+    }
+  };
+
+  const handleMoveTask = async (folderId: number | null) => {
+    if (!taskToMove || pendingTaskId === taskToMove.id) return;
+    setPendingTaskId(taskToMove.id);
+    setError('');
+    try {
+      const updated = await updateTask(taskToMove.id, { folderId });
+      setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setTaskToMove(null);
+      notifyTaskBoardChanged();
+    } catch (err) {
+      setError(errorText(err, t('updateTaskFailed')));
+    } finally {
+      setPendingTaskId(null);
+    }
+  };
+
+  const openFolderFromList = (folderId: number) => {
+    setOpenFolderId(folderId);
+    setFoldersModalOpen(false);
+  };
+
+  const emptyListText = tagFilter !== 'all'
+    ? t('tasksTagEmpty')
+    : openFolder
+      ? t('folderEmpty')
+      : boardTasks.some((task) => task.folder_id != null)
+        ? t('unfiledEmpty')
+        : t('tasksEmpty');
 
   return (
     <Layout>
@@ -270,6 +339,11 @@ export function TasksPage() {
               <span>{t('archive')}{archivedCount > 0 ? ` (${archivedCount})` : ''}</span>
             </button>
 
+            <button type="button" className="tasks-folders-open-btn" onClick={() => setFoldersModalOpen(true)}>
+              <FolderClosed size={18} strokeWidth={2.25} />
+              <span>{t('folders')}</span>
+            </button>
+
             <div className="tasks-sorts">
               <SortSelect<TaskSortMode>
                 value={sort}
@@ -302,21 +376,24 @@ export function TasksPage() {
 
         {error && <p className="tasks-error">{error}</p>}
 
-        {loading && tasks.length === 0 ? (
+        {loading && tasks.length === 0 && folders.length === 0 ? (
           <p className="tasks-placeholder">{t('tasksLoading')}</p>
-        ) : tasks.length === 0 ? (
-          <div className="tasks-empty app-border-card">
-            <ListTodo size={40} aria-hidden="true" />
-            <p>{t('tasksEmpty')}</p>
-          </div>
         ) : (
           <div className="tasks-workspace">
             <div className="tasks-workspace-main">
+          {openFolder && (
+            <div className="tasks-folder-bar">
+              <span className="tasks-folder-bar-name">{openFolder.name}</span>
+              <button type="button" className="tasks-folder-close" onClick={() => setOpenFolderId(null)}>
+                {t('close')}
+              </button>
+            </div>
+          )}
           <div className="tasks-groups">
             {activeTasks.length === 0 && completedTasks.length === 0 && (
               <div className="tasks-empty app-border-card">
                 <ListTodo size={40} aria-hidden="true" />
-                <p>{t('tasksTagEmpty')}</p>
+                <p>{emptyListText}</p>
               </div>
             )}
 
@@ -336,6 +413,7 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
+                    onMove={setTaskToMove}
                   />
                 ))}
               </section>
@@ -351,13 +429,23 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
+                    onMove={setTaskToMove}
                   />
                 ))}
               </section>
             )}
           </div>
             </div>
-            <TaskActivityCalendar tasks={boardTasks} />
+            <aside className="task-folders-panel">
+              <h2 className="task-folders-heading">{t('folders')}</h2>
+              <TaskFolders
+                folders={folders}
+                activeFolderId={openFolder?.id ?? null}
+                onOpen={openFolderFromList}
+                onCreate={handleCreateFolder}
+                onDelete={setFolderToDelete}
+              />
+            </aside>
           </div>
         )}
       </div>
@@ -397,6 +485,7 @@ export function TasksPage() {
           key={editorTask?.id ?? 'create'}
           task={editorTask}
           tags={tags}
+          folderId={editorTask ? undefined : openFolder?.id}
           onClose={() => {
             setEditorOpen(false);
             setEditorTask(null);
@@ -418,6 +507,94 @@ export function TasksPage() {
           onCreated={handleTagCreated}
           onDeleted={handleTagDeleted}
         />
+      )}
+
+      {foldersModalOpen && (
+        <Modal title={t('folders')} isOpen onClose={() => setFoldersModalOpen(false)} className="task-folders-modal">
+          <TaskFolders
+            folders={folders}
+            activeFolderId={openFolder?.id ?? null}
+            onOpen={openFolderFromList}
+            onCreate={handleCreateFolder}
+            onDelete={setFolderToDelete}
+          />
+          <button type="button" className="modal-action-cancel task-folders-close" onClick={() => setFoldersModalOpen(false)}>
+            {t('close')}
+          </button>
+        </Modal>
+      )}
+
+      {taskToMove && (
+        <Modal
+          title={t('moveToFolder')}
+          isOpen
+          onClose={() => {
+            if (pendingTaskId === taskToMove.id) return;
+            setTaskToMove(null);
+          }}
+          className="task-folders-modal"
+        >
+          <div className="task-move-list">
+            <button
+              type="button"
+              className={`task-move-option${taskToMove.folder_id == null ? ' is-active' : ''}`}
+              onClick={() => void handleMoveTask(null)}
+            >
+              <span className="task-folder-name">{t('noFolder')}</span>
+            </button>
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                type="button"
+                className={`task-move-option${taskToMove.folder_id === folder.id ? ' is-active' : ''}`}
+                onClick={() => void handleMoveTask(folder.id)}
+              >
+                <FolderGlyph id={`move-${folder.id}`} />
+                <span className="task-folder-name">{folder.name}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="modal-action-cancel task-folders-close"
+            onClick={() => {
+              if (pendingTaskId === taskToMove.id) return;
+              setTaskToMove(null);
+            }}
+          >
+            {t('close')}
+          </button>
+        </Modal>
+      )}
+
+      {folderToDelete && (
+        <Modal
+          title={t('deleteFolder')}
+          isOpen
+          onClose={() => {
+            if (pendingTaskId !== null) return;
+            setFolderToDelete(null);
+          }}
+        >
+          <form
+            className="task-delete-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleDeleteFolder();
+            }}
+          >
+            <p>{t('deleteFolderConfirm', { name: folderToDelete.name })}</p>
+            <ModalActions
+              onCancel={() => {
+                if (pendingTaskId !== null) return;
+                setFolderToDelete(null);
+              }}
+              submitLabel={t('delete')}
+              pending={pendingTaskId !== null}
+              pendingLabel={t('deleting')}
+            />
+          </form>
+        </Modal>
       )}
 
       {archiveOpen && (
@@ -443,6 +620,7 @@ interface TaskCardProps {
   pending: boolean;
   onToggle: (task: Task) => void;
   onEdit: (task: Task) => void;
+  onMove: (task: Task) => void;
 }
 
 const PRIORITY_ICONS = {
@@ -463,7 +641,7 @@ function PriorityIcon({ priority }: { priority: TaskPriority }) {
   );
 }
 
-function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
+function TaskCard({ task, pending, onToggle, onEdit, onMove }: TaskCardProps) {
   const vaporRef = useRef<VaporizeHandle>(null);
   const leavingRef = useRef(false);
   const [leaving, setLeaving] = useState(false);
@@ -538,6 +716,14 @@ function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
               <span className="task-card-tag-face">{formatTagName(task.tags[0].name)}</span>
             </span>
           )}
+          <button
+            type="button"
+            className="task-icon-btn task-card-edit"
+            aria-label={t('moveTaskAria', { title: task.title })}
+            onClick={() => onMove(task)}
+          >
+            <FolderClosed size={18} />
+          </button>
         </div>
       </article>
     </Vaporize>

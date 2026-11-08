@@ -1,10 +1,11 @@
-import type { Tag, Task, TaskPriority } from '../types';
+import type { Folder, Tag, Task, TaskPriority } from '../types';
 import { fileToBase64 } from '../utils/taskDescription';
 import { apiFetch } from './client';
 
 export interface TaskBoard {
   tasks: Task[];
   tags: Tag[];
+  folders: Folder[];
 }
 
 export async function getTaskBoard(): Promise<TaskBoard> {
@@ -23,12 +24,25 @@ export async function deleteTag(tagId: number): Promise<void> {
   await apiFetch(`/tags/${tagId}`, { method: 'DELETE' });
 }
 
+export async function createFolder(name: string): Promise<Folder> {
+  const { folder } = await apiFetch<{ folder: Folder }>('/folders', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+  return folder;
+}
+
+export async function deleteFolder(folderId: number): Promise<void> {
+  await apiFetch(`/folders/${folderId}`, { method: 'DELETE' });
+}
+
 export async function createTask(input: {
   title: string;
   description: string;
   priority: TaskPriority;
   dueDate: string | null;
   tagIds: number[];
+  folderId?: number | null;
 }): Promise<Task> {
   const { task } = await apiFetch<{ task: Task }>('/tasks', {
     method: 'POST',
@@ -47,6 +61,7 @@ export async function updateTask(
     completed?: boolean;
     archived?: boolean;
     tagIds?: number[];
+    folderId?: number | null;
   },
 ): Promise<Task> {
   const { task } = await apiFetch<{ task: Task }>(`/tasks/${taskId}`, {
