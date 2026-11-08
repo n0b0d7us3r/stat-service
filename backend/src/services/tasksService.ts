@@ -93,7 +93,7 @@ function normalizeTagName(raw: string): string {
   return name.toLocaleUpperCase('ru');
 }
 
-function normalizeColor(raw: string): string {
+export function normalizeColor(raw: string, errorMessage = 'Выберите цвет тега'): string {
   const color = raw.trim().toLowerCase();
   if (/^#[0-9a-f]{6}$/.test(color)) {
     return color;
@@ -103,20 +103,20 @@ function normalizeColor(raw: string): string {
   if (rgb) {
     const channels = [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
     if (channels.some((channel) => channel > 255)) {
-      throw new DbError('Выберите цвет тега');
+      throw new DbError(errorMessage);
     }
     return `rgb(${channels.join(', ')})`;
   }
 
   const rgba = color.match(/^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0|1|0?\.\d+)\s*\)$/);
   if (!rgba) {
-    throw new DbError('Выберите цвет тега');
+    throw new DbError(errorMessage);
   }
 
   const channels = [Number(rgba[1]), Number(rgba[2]), Number(rgba[3])];
   const alpha = Number(rgba[4]);
   if (channels.some((channel) => channel > 255) || alpha > 1) {
-    throw new DbError('Выберите цвет тега');
+    throw new DbError(errorMessage);
   }
 
   return `rgba(${channels.join(', ')}, ${rgba[4]})`;

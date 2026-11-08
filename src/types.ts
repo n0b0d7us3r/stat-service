@@ -174,6 +174,35 @@ export interface Folder {
   created_at: string;
 }
 
+export type FinanceEntryKind = 'income' | 'expense';
+
+export interface FinanceCategory {
+  id: number;
+  kind: FinanceEntryKind;
+  name: string;
+  color: string;
+  icon: string;
+  created_at: string;
+}
+
+export interface FinanceEntry {
+  id: number;
+  kind: FinanceEntryKind;
+  amount_cents: number;
+  currency: string;
+  category_id: number | null;
+  date: string;
+  note: string;
+  created_at: string;
+}
+
+export interface FinanceOverview {
+  from: string;
+  to: string;
+  categories: FinanceCategory[];
+  entries: FinanceEntry[];
+}
+
 export class AuthError extends Error {
   constructor(message: string) {
     super(message);

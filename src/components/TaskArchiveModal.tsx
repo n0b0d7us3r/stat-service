@@ -4,7 +4,6 @@ import { Modal } from './Modal';
 import { ApiError } from '../api/client';
 import { deleteTask, updateTask } from '../api/tasks';
 import type { Task } from '../types';
-import { TaskDescriptionContent } from './TaskDescriptionContent';
 import { compareTasks, formatTagName } from '../utils/taskUi';
 import { t } from '../i18n';
 import '../styles/components/TaskArchiveModal.css';
@@ -87,11 +86,6 @@ export function TaskArchiveModal({
                     )}
                     {task.title}
                   </p>
-                  {task.description.trim() && (
-                    <div className="task-archive-item-description">
-                      <TaskDescriptionContent value={task.description} />
-                    </div>
-                  )}
                 </div>
                 <div className="task-archive-item-actions">
                   <button

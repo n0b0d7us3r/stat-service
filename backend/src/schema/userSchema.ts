@@ -216,6 +216,46 @@ function migrateToV13(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_folder_id ON tasks(folder_id)');
 }
 
+function migrateToV14(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      color TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT NOT NULL CHECK (kind IN ('income', 'expense')),
+      amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+      category_id INTEGER REFERENCES finance_categories(id) ON DELETE SET NULL,
+      date TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec('CREATE INDEX IF NOT EXISTS idx_finance_entries_date ON finance_entries(date)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_finance_entries_category_id ON finance_entries(category_id)');
+}
+
+function migrateToV15(db: Database.Database): void {
+  if (!columnExists(db, 'finance_categories', 'kind')) {
+    db.exec(
+      "ALTER TABLE finance_categories ADD COLUMN kind TEXT NOT NULL DEFAULT 'expense' CHECK (kind IN ('income', 'expense'))",
+    );
+  }
+  if (!columnExists(db, 'finance_categories', 'icon')) {
+    db.exec("ALTER TABLE finance_categories ADD COLUMN icon TEXT NOT NULL DEFAULT 'list'");
+  }
+  if (!columnExists(db, 'finance_entries', 'currency')) {
+    db.exec("ALTER TABLE finance_entries ADD COLUMN currency TEXT NOT NULL DEFAULT 'BYN'");
+  }
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -294,6 +334,18 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 13) {
     migrateToV13(db);
     version = 13;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 14) {
+    migrateToV14(db);
+    version = 14;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 15) {
+    migrateToV15(db);
+    version = 15;
     setSchemaVersion(db, version);
   }
 }

@@ -13,6 +13,14 @@ import {
 } from './services/authService.js';
 import { getDashboardMonthlyStats, getDashboardStats } from './services/dashboardService.js';
 import {
+  createFinanceCategory,
+  createFinanceEntry,
+  deleteFinanceCategory,
+  deleteFinanceEntry,
+  getFinanceOverview,
+  normalizeFinanceDate,
+} from './services/financeService.js';
+import {
   getAllMarkedDays,
   getMarkedDaysForMonth,
   getProjectStats,
@@ -502,6 +510,68 @@ app.delete('/api/tags/:tagId', requireAuth, (req: AuthRequest, res) => {
   const deleted = deleteTag(req.user!.id, tagId);
   if (!deleted) {
     res.status(404).json({ message: 'Тег не найден' });
+    return;
+  }
+
+  res.status(204).end();
+});
+
+app.get('/api/finance', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const from = normalizeFinanceDate(req.query.from);
+    const to = normalizeFinanceDate(req.query.to);
+    res.json(getFinanceOverview(req.user!.id, from, to));
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: 'Некорректный период' });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.post('/api/finance/entries', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { kind, amount, currency, categoryId, date, note } = req.body as Record<string, unknown>;
+    const entry = createFinanceEntry(req.user!.id, { kind, amount, currency, categoryId, date, note });
+    res.status(201).json({ entry });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/finance/entries/:entryId', requireAuth, (req: AuthRequest, res) => {
+  const entryId = Number(req.params.entryId);
+  if (!Number.isInteger(entryId) || entryId <= 0 || !deleteFinanceEntry(req.user!.id, entryId)) {
+    res.status(404).json({ message: 'Операция не найдена' });
+    return;
+  }
+
+  res.status(204).end();
+});
+
+app.post('/api/finance/categories', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { kind, name, color, icon } = req.body as Record<string, unknown>;
+    const category = createFinanceCategory(req.user!.id, { kind, name, color, icon });
+    res.status(201).json({ category });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/finance/categories/:categoryId', requireAuth, (req: AuthRequest, res) => {
+  const categoryId = Number(req.params.categoryId);
+  if (!Number.isInteger(categoryId) || categoryId <= 0 || !deleteFinanceCategory(req.user!.id, categoryId)) {
+    res.status(404).json({ message: 'Раздел не найден' });
     return;
   }
 

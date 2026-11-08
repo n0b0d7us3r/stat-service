@@ -301,6 +301,11 @@ export function TasksPage() {
   };
 
   const openFolderFromList = (folderId: number) => {
+    if (folderId === openFolderId && folderMotion !== 'out') {
+      closeOpenFolder();
+      setFoldersModalOpen(false);
+      return;
+    }
     if (folderCloseTimer.current) {
       window.clearTimeout(folderCloseTimer.current);
       folderCloseTimer.current = null;

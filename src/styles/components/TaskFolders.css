@@ -257,6 +257,15 @@
 
 .task-folders-modal .modal-header {
   border-bottom: none;
+  padding-bottom: 0.5rem;
+}
+
+.task-folders-modal .modal-body {
+  padding-top: 0.5rem;
+}
+
+.task-folders-modal .task-folders-close {
+  margin-top: 1.75rem;
 }
 
 @layer components {

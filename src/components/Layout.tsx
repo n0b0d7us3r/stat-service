@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, BarChart3, FolderKanban, ListTodo, StickyNote, Trophy } from 'lucide-react';
+import { LogOut, BarChart3, FolderKanban, ListTodo, StickyNote, Trophy, Wallet } from 'lucide-react';
 import { getTaskBoard } from '../api/tasks';
 import { APP_NAME } from '../config/app';
 import { t } from '../i18n';
@@ -105,11 +105,6 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         <nav>
-          {!isCollapsed && user && (
-            <div className="sidebar-user-section">
-              <div className="sidebar-user-email">{user.email}</div>
-            </div>
-          )}
           <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <FolderKanban size={20} />
             <span>{t('navProjects')}</span>
@@ -121,6 +116,10 @@ export function Layout({ children }: LayoutProps) {
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <BarChart3 size={20} />
             <span>{t('navStats')}</span>
+          </NavLink>
+          <NavLink to="/finance" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Wallet size={20} />
+            <span>{t('navFinance')}</span>
           </NavLink>
           <NavLink to="/notes" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <StickyNote size={20} />

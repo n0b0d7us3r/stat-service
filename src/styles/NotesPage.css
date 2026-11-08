@@ -10,6 +10,12 @@
   gap: 1rem;
 }
 
+@media (max-width: 768px) {
+  .notes-page-header .sort-select {
+    justify-content: flex-start;
+  }
+}
+
 .notes-placeholder {
   margin: 0;
   color: var(--muted);
@@ -70,6 +76,14 @@
   cursor: pointer;
   font: inherit;
   color: inherit;
+}
+
+@layer components {
+  .note-card.app-border-card {
+    background-color: transparent !important;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
 }
 
 @media (hover: hover) {

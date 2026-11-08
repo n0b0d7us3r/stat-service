@@ -96,10 +96,10 @@
 
 @layer components {
   .project-card.app-border-card {
-    background-color: color-mix(in srgb, var(--card) 42%, transparent) !important;
+    background-color: transparent !important;
     border: 1px solid var(--border) !important;
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 }
 

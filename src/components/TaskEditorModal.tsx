@@ -38,7 +38,6 @@ export function TaskEditorModal({
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
   const [detailsEditable, setDetailsEditable] = useState(task === null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 2);
@@ -95,7 +94,6 @@ export function TaskEditorModal({
     }
 
     setDetailsEditable(true);
-    requestAnimationFrame(() => titleInputRef.current?.focus());
   };
 
   const handleDescriptionPaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -178,14 +176,13 @@ export function TaskEditorModal({
             <label htmlFor="task-title">{t('name')}</label>
             <input
               id="task-title"
-              ref={titleInputRef}
               type="text"
               className="task-editor-input"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               maxLength={200}
               required
-              autoFocus={detailsEditable}
+              autoFocus={!task}
             />
           </div>
         )}

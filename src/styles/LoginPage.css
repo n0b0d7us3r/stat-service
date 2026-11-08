@@ -13,11 +13,12 @@
 }
 
 .login-card {
-  background-color: var(--card);
+  background-color: transparent;
   border: 1px solid var(--border);
   border-radius: 0;
   padding: 40px;
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
 }
 

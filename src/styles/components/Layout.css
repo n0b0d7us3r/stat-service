@@ -12,7 +12,8 @@ aside {
   background-color: color-mix(in srgb, var(--card) 42%, transparent);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border: 1px solid var(--border);
+  border: none;
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -135,29 +136,6 @@ aside nav {
   border: 2px solid var(--create-border);
 }
 
-.sidebar-user-section {
-  padding: 0 24px 1.25rem 24px;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sidebar-user-email {
-  font-size: 0.9rem;
-  color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sidebar-user-balance {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--foreground);
-}
-
 .logout-btn {
   background: transparent;
   border: none;
@@ -197,7 +175,6 @@ main {
 /* Скрытие текста при свернутом сайдбаре */
 aside.collapsed .logo-brand,
 aside.collapsed .logo-sub,
-aside.collapsed .sidebar-user-section,
 aside.collapsed nav a span,
 aside.collapsed nav button span,
 aside.collapsed .theme-toggle-btn {
@@ -272,7 +249,8 @@ aside.collapsed .nav-item {
     transform: translateX(0);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
-    border: 1px solid var(--border);
+    border: none;
+    border-right: 1px solid var(--border);
     padding: 1rem 0;
   }
 

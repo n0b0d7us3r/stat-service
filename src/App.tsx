@@ -9,6 +9,7 @@ import { ProjectPage } from './pages/ProjectPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { NotesPage } from './pages/NotesPage';
 import { TasksPage } from './pages/TasksPage';
+import { FinancePage } from './pages/FinancePage';
 import { Starfield } from './components/Starfield';
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
+            <Route path="/finance" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
