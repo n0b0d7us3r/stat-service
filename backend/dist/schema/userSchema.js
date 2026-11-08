@@ -109,6 +109,83 @@ function migrateToV7(db) {
         db.exec("ALTER TABLE achievements ADD COLUMN criteria_type TEXT NOT NULL DEFAULT 'streak'");
     }
 }
+function migrateToV8(db) {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS goal_days (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      UNIQUE (project_id, date)
+    )
+  `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_goal_days_project_id ON goal_days(project_id)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_goal_days_date ON goal_days(date)');
+}
+function migrateToV9(db) {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      color TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      priority INTEGER NOT NULL DEFAULT 2 CHECK (priority BETWEEN 1 AND 4),
+      completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      completed_at TEXT
+    )
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS task_tags (
+      task_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      PRIMARY KEY (task_id, tag_id),
+      FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+    )
+  `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_task_tags_tag_id ON task_tags(tag_id)');
+}
+function migrateToV10(db) {
+    if (!columnExists(db, 'tasks', 'description')) {
+        db.exec("ALTER TABLE tasks ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+    }
+}
+function migrateToV11(db) {
+    if (!columnExists(db, 'tasks', 'due_date')) {
+        db.exec('ALTER TABLE tasks ADD COLUMN due_date TEXT');
+    }
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)');
+}
+function migrateToV12(db) {
+    if (!columnExists(db, 'tasks', 'archived')) {
+        db.exec('ALTER TABLE tasks ADD COLUMN archived INTEGER NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))');
+    }
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_archived ON tasks(archived)');
+}
+function migrateToV13(db) {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS folders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+    if (!columnExists(db, 'tasks', 'folder_id')) {
+        db.exec('ALTER TABLE tasks ADD COLUMN folder_id INTEGER REFERENCES folders(id) ON DELETE SET NULL');
+    }
+    db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_folder_id ON tasks(folder_id)');
+}
 export function applyUserDataSchema(db) {
     let version = getSchemaVersion(db);
     if (version < 1) {
@@ -144,6 +221,36 @@ export function applyUserDataSchema(db) {
     if (version < 7) {
         migrateToV7(db);
         version = 7;
+        setSchemaVersion(db, version);
+    }
+    if (version < 8) {
+        migrateToV8(db);
+        version = 8;
+        setSchemaVersion(db, version);
+    }
+    if (version < 9) {
+        migrateToV9(db);
+        version = 9;
+        setSchemaVersion(db, version);
+    }
+    if (version < 10) {
+        migrateToV10(db);
+        version = 10;
+        setSchemaVersion(db, version);
+    }
+    if (version < 11) {
+        migrateToV11(db);
+        version = 11;
+        setSchemaVersion(db, version);
+    }
+    if (version < 12) {
+        migrateToV12(db);
+        version = 12;
+        setSchemaVersion(db, version);
+    }
+    if (version < 13) {
+        migrateToV13(db);
+        version = 13;
         setSchemaVersion(db, version);
     }
 }

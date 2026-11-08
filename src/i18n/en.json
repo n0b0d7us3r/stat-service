@@ -77,7 +77,6 @@
   "typeGoals": "Goals",
   "priorityNormalFallback": "Normal",
   "projectsTitle": "Projects",
-  "projectsSubtitle": "Create projects and mark days on the calendar",
   "createProject": "Create project",
   "projectsCount": "Projects: {count}",
   "projectsEmpty": "No projects yet. Create the first one to start marking days.",

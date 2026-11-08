@@ -77,7 +77,6 @@
   "typeGoals": "Цели",
   "priorityNormalFallback": "Обычный",
   "projectsTitle": "Проекты",
-  "projectsSubtitle": "Создавайте проекты и отмечайте дни в календаре",
   "createProject": "Создать проект",
   "projectsCount": "Проектов: {count}",
   "projectsEmpty": "Пока нет проектов. Создайте первый, чтобы начать отмечать дни.",

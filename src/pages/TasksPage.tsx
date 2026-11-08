@@ -51,6 +51,18 @@ export function TasksPage() {
   const [openFolderId, setOpenFolderId] = useState<number | null>(null);
   const [folderMotion, setFolderMotion] = useState<'in' | 'out' | null>(null);
   const folderCloseTimer = useRef<number | null>(null);
+  const foldersPanelObserver = useRef<ResizeObserver | null>(null);
+  const foldersPanelRef = useCallback((panel: HTMLElement | null) => {
+    foldersPanelObserver.current?.disconnect();
+    foldersPanelObserver.current = null;
+    const workspace = panel?.closest<HTMLElement>('.tasks-workspace');
+    if (!panel || !workspace) return;
+    const observer = new ResizeObserver(() => {
+      workspace.style.setProperty('--task-folders-panel-height', `${panel.offsetHeight}px`);
+    });
+    observer.observe(panel);
+    foldersPanelObserver.current = observer;
+  }, []);
   const [foldersModalOpen, setFoldersModalOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -418,14 +430,14 @@ export function TasksPage() {
           )}
           <div className="tasks-groups">
             {activeTasks.length === 0 && completedTasks.length === 0 && (
-              <div className="tasks-empty app-border-card">
+              <div className={`tasks-empty app-border-card${openFolder && tagFilter === 'all' ? ' tasks-empty-plain' : ''}`}>
                 <ListTodo size={40} aria-hidden="true" />
                 <p>{emptyListText}</p>
               </div>
             )}
 
             {activeTasks.length === 0 && completedTasks.length > 0 && !showCompleted && (
-              <div className="tasks-empty app-border-card">
+              <div className="tasks-empty tasks-empty-plain app-border-card">
                 <ListTodo size={40} aria-hidden="true" />
                 <p>{t('tasksActiveEmpty')}</p>
               </div>
@@ -462,7 +474,7 @@ export function TasksPage() {
           </div>
             </div>
             <div className="tasks-workspace-side">
-              <aside className="task-folders-panel">
+              <aside ref={foldersPanelRef} className="task-folders-panel">
                 <TaskFolders
                   folders={folders}
                   activeFolderId={openFolder?.id ?? null}

@@ -1,6 +1,5 @@
 import type { Folder, Tag, Task, TaskPriority } from '../types';
-import { fileToBase64 } from '../utils/taskDescription';
-import { apiFetch } from './client';
+import { API_BASE, ApiError, apiFetch, parseError } from './client';
 
 export interface TaskBoard {
   tasks: Task[];
@@ -76,9 +75,18 @@ export async function deleteTask(taskId: number): Promise<void> {
 }
 
 export async function uploadTaskDescriptionImage(file: File): Promise<{ url: string; filename: string }> {
-  const data = await fileToBase64(file);
-  return apiFetch<{ url: string; filename: string }>('/tasks/description-images', {
+  const contentType = file.type?.startsWith('image/') ? file.type : 'image/png';
+  const response = await fetch(`${API_BASE}/tasks/description-images`, {
     method: 'POST',
-    body: JSON.stringify({ contentType: file.type, data }),
+    credentials: 'include',
+    headers: { 'Content-Type': contentType },
+    body: file,
   });
+
+  if (!response.ok) {
+    const message = await parseError(response);
+    throw new ApiError(message, response.status);
+  }
+
+  return response.json() as Promise<{ url: string; filename: string }>;
 }

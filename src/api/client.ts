@@ -35,7 +35,7 @@ export class ApiError extends Error {
   }
 }
 
-async function parseError(response: Response): Promise<string> {
+export async function parseError(response: Response): Promise<string> {
   try {
     const body = await response.json() as { message?: string };
     return localizeApiMessage(body.message ?? response.statusText);

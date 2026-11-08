@@ -6,13 +6,20 @@ export class DbError extends Error {
         this.name = 'DbError';
     }
 }
+function mapProjectType(value) {
+    if (value === 'goals')
+        return 'goals';
+    if (value === 'day')
+        return 'day';
+    return 'calendar';
+}
 function mapProject(row) {
     return {
         id: row.id,
         user_id: row.user_id,
         name: row.name,
         description: row.description,
-        project_type: row.project_type === 'day' ? 'day' : 'calendar',
+        project_type: mapProjectType(row.project_type),
         is_mutable: row.is_mutable === 1,
         created_at: row.created_at,
         marked_count: row.marked_count,
@@ -56,7 +63,7 @@ export function createProject(userId, name, description = '', projectType = 'cal
     if (!trimmedName) {
         throw new DbError('Название проекта обязательно');
     }
-    if (projectType !== 'calendar') {
+    if (projectType !== 'calendar' && projectType !== 'goals') {
         throw new DbError('Тип «День» пока недоступен');
     }
     const db = dbForUser(userId);

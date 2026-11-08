@@ -412,25 +412,42 @@ app.post('/api/tags', requireAuth, (req: AuthRequest, res) => {
   }
 });
 
-app.post('/api/tasks/description-images', requireAuth, (req: AuthRequest, res) => {
-  try {
-    const { contentType, data } = req.body as { contentType?: string; data?: string };
-    if (!contentType || typeof data !== 'string' || !data.trim()) {
-      res.status(400).json({ message: 'Некорректные данные изображения' });
-      return;
-    }
+app.post(
+  '/api/tasks/description-images',
+  requireAuth,
+  express.raw({
+    type: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    limit: '6mb',
+  }),
+  (req: AuthRequest, res) => {
+    try {
+      let contentType: string;
+      let buffer: Buffer;
 
-    const buffer = Buffer.from(data, 'base64');
-    const saved = saveTaskDescriptionImage(req.user!.id, contentType, buffer);
-    res.status(201).json(saved);
-  } catch (error) {
-    if (error instanceof DbError) {
-      res.status(400).json({ message: error.message });
-      return;
+      if (Buffer.isBuffer(req.body) && req.body.length > 0) {
+        contentType = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+        buffer = req.body;
+      } else {
+        const { contentType: jsonType, data } = req.body as { contentType?: string; data?: string };
+        if (!jsonType || typeof data !== 'string' || !data.trim()) {
+          res.status(400).json({ message: 'Некорректные данные изображения' });
+          return;
+        }
+        contentType = jsonType.trim().toLowerCase();
+        buffer = Buffer.from(data, 'base64');
+      }
+
+      const saved = saveTaskDescriptionImage(req.user!.id, contentType, buffer);
+      res.status(201).json(saved);
+    } catch (error) {
+      if (error instanceof DbError) {
+        res.status(400).json({ message: error.message });
+        return;
+      }
+      throw error;
     }
-    throw error;
-  }
-});
+  },
+);
 
 app.get('/api/tasks/description-images/:filename', requireAuth, (req: AuthRequest, res) => {
   const filename = String(req.params.filename ?? '');

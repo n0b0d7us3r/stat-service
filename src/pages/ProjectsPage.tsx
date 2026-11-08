@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, FolderKanban } from 'lucide-react';
+import { FolderKanban } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { CreateProjectModal } from '../components/CreateProjectModal';
@@ -40,7 +40,7 @@ export function ProjectsPage() {
     <Layout>
       <div className="projects-page">
         <div className="projects-page-intro">
-          <PageTitle title={t('projectsTitle')} subtitle={t('projectsSubtitle')} />
+          <PageTitle title={t('projectsTitle')} />
           <button type="button" className="projects-create-open-btn" onClick={() => setIsModalOpen(true)}>
             <span>{t('createProject')}</span>
           </button>
@@ -77,9 +77,9 @@ export function ProjectsPage() {
                       </div>
                       <span className="project-card-meta">{t('markedDays', { count: project.marked_count })}</span>
                     </div>
-                    <span className="project-card-chevron" aria-hidden="true">
-                      <ChevronRight size={20} />
-                    </span>
+                    <svg className="project-card-open" viewBox="0 0 24 24" aria-hidden="true">
+                      <polyline points="7 7 17 7 17 17" />
+                    </svg>
                   </button>
                 </article>
               ))}

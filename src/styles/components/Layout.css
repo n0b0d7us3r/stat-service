@@ -9,7 +9,9 @@
 aside {
   width: 300px;
   box-sizing: border-box;
-  background-color: var(--card);
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -231,6 +233,9 @@ aside.collapsed .nav-item {
     width: 0;
     position: static;
     border: none;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .sidebar-header {
@@ -260,7 +265,9 @@ aside.collapsed .nav-item {
     left: 0;
     bottom: 0;
     width: 280px;
-    background-color: var(--card);
+    background-color: color-mix(in srgb, var(--card) 42%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     z-index: 100;
     transform: translateX(0);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
