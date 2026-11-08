@@ -11,12 +11,11 @@ import '../styles/components/TaskActivityCalendar.css';
 
 interface TaskActivityCalendarProps {
   tasks: Task[];
-  className?: string;
 }
 
 const WEEKDAY_LABELS = activityWeekdayLabels;
 
-export function TaskActivityCalendar({ tasks, className = '' }: TaskActivityCalendarProps) {
+export function TaskActivityCalendar({ tasks }: TaskActivityCalendarProps) {
   const { columns, monthLabels, counts, totalCompleted } = useMemo(() => {
     const completionCounts = buildTaskCompletionCounts(tasks);
     const grid = buildTaskActivityGrid();
@@ -35,7 +34,7 @@ export function TaskActivityCalendar({ tasks, className = '' }: TaskActivityCale
   }, [tasks]);
 
   return (
-    <aside className={`task-activity-calendar ${className}`.trim()} aria-label={t('activityCalendar')}>
+    <aside className="task-activity-calendar" aria-label={t('activityCalendar')}>
       <div className="task-activity-calendar-header">
         <h2 className="task-activity-calendar-title">{t('activity')}</h2>
         <p className="task-activity-calendar-summary">

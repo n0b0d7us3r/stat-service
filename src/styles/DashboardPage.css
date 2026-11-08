@@ -350,8 +350,10 @@
   align-items: flex-start;
   gap: 0.875rem;
   padding: 0.875rem 1rem;
-  background: var(--card);
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
   border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .dashboard-achievement-icon {

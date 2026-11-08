@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
-import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
 import { createTag, deleteTag } from '../api/tasks';
 import type { Tag } from '../types';
@@ -66,7 +65,12 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
   };
 
   return (
-    <Modal title={t('tagManageTitle')} isOpen onClose={onClose}>
+    <Modal
+      title={t('tagManageTitle')}
+      isOpen
+      onClose={onClose}
+      className="glass-modal"
+    >
       <div className="tag-manage-modal">
         {error && <p className="task-editor-error">{error}</p>}
 
@@ -107,12 +111,9 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
             </div>
           </div>
 
-          <ModalActions
-            onCancel={onClose}
-            submitLabel={t('create')}
-            pending={saving}
-            pendingLabel={t('creating')}
-          />
+          <button type="submit" className="modal-action-submit" disabled={saving}>
+            {saving ? t('creating') : t('create')}
+          </button>
         </form>
 
         <section className="tag-manage-delete" aria-labelledby="tag-delete-heading">
@@ -147,6 +148,10 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
             {deleting ? t('deleting') : t('deleteTag')}
           </button>
         </section>
+
+        <button type="button" className="modal-action-cancel tag-manage-close" onClick={onClose}>
+          {t('close')}
+        </button>
       </div>
     </Modal>
   );

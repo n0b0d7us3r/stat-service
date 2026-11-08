@@ -2,32 +2,26 @@
   display: none;
 }
 
-.task-folders-heading {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
 .task-folders-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, 8.75rem);
+  justify-content: start;
   gap: 0.7rem;
 }
 
 .task-folder-tile {
   position: relative;
   display: flex;
+  width: 8.75rem;
+  aspect-ratio: 1;
   min-width: 0;
-  border: 1px solid var(--border);
+  border: none;
   background: transparent;
   color: var(--foreground);
 }
 
 .task-folder-tile.is-active {
-  border-color: var(--create-border);
-  box-shadow: inset 0 0 0 1px var(--create-border);
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
 }
 
 .task-folder-open,
@@ -38,7 +32,8 @@
   justify-content: center;
   gap: 0.4rem;
   width: 100%;
-  min-height: 6.5rem;
+  height: 100%;
+  min-height: 0;
   padding: 0.75rem 0.45rem 0.65rem;
   border: 0;
   background: transparent;
@@ -52,9 +47,18 @@
 }
 
 .task-folder-glyph {
-  width: 3.4rem;
-  height: 2.7rem;
+  width: 4.75rem;
+  height: auto;
   display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+
+.task-folder-glyph-tab {
+  fill: #2c4c81;
+}
+
+.task-folder-glyph-body {
+  fill: #5b739d;
 }
 
 .task-folder-name {
@@ -64,22 +68,6 @@
   line-height: 1.25;
   text-align: center;
   overflow-wrap: anywhere;
-}
-
-.task-folder-delete {
-  position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
-  padding: 0;
-  border: 1px solid var(--border);
-  background: var(--background);
-  color: var(--foreground);
-  cursor: pointer;
 }
 
 .task-folder-create {
@@ -134,6 +122,38 @@
   font-size: 0.8125rem;
 }
 
+.tasks-folder-stage {
+  animation: tasks-folder-in 0.28s ease;
+}
+
+.tasks-folder-stage.is-closing {
+  animation: tasks-folder-out 0.24s ease forwards;
+}
+
+@keyframes tasks-folder-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tasks-folder-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 .tasks-folder-bar {
   display: flex;
   align-items: center;
@@ -142,6 +162,13 @@
   margin-bottom: 0.75rem;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--border);
+  background: transparent;
+}
+
+.tasks-folder-bar-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.45rem;
 }
 
 .tasks-folder-bar-name {
@@ -151,7 +178,7 @@
 }
 
 .tasks-folder-close,
-.task-move-option,
+.tasks-folder-delete,
 .task-folders-close {
   border: 1px solid var(--border);
   background: transparent;
@@ -162,8 +189,14 @@
 }
 
 .tasks-folder-close,
+.tasks-folder-delete,
 .task-folders-close {
   padding: 0.45rem 0.8rem;
+}
+
+.tasks-folder-delete {
+  border-color: #f87171;
+  color: #f87171;
 }
 
 .task-folders-close {
@@ -171,43 +204,19 @@
   margin-top: 0.85rem;
 }
 
-.task-move-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
-.task-move-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 6.5rem;
-  padding: 0.75rem 0.45rem;
-}
-
-.task-move-option.is-active {
-  border-color: var(--create-border);
-  box-shadow: inset 0 0 0 1px var(--create-border);
-}
-
-.tasks-card-move {
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
 @media (min-width: 1101px) {
   .task-folders-panel {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
-    width: 18.5rem;
-    flex: 0 0 18.5rem;
+    width: 100%;
+    min-width: 0;
     box-sizing: border-box;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    background: var(--card);
+    padding: 0;
+    border: none;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .tasks-folders-open-btn {
@@ -218,13 +227,38 @@
 @media (hover: hover) {
   .task-folder-open:hover,
   .task-folder-add:hover,
-  .task-move-option:hover,
   .tasks-folder-close:hover,
   .task-folders-close:hover {
     border-color: var(--foreground);
   }
 
-  .task-folder-delete:hover {
-    border-color: var(--foreground);
+  .tasks-folder-delete:hover {
+    border-color: #f87171;
+    background: rgba(248, 113, 113, 0.08);
+  }
+}
+
+.task-folders-modal {
+  animation: tasks-folder-in 0.28s ease;
+}
+
+.glass-modal .modal-header,
+.glass-modal .modal-body,
+.task-folders-modal .modal-header,
+.task-folders-modal .modal-body {
+  background: transparent;
+}
+
+.task-folders-modal .modal-header {
+  border-bottom: none;
+}
+
+@layer components {
+  .modal-window.glass-modal.app-border-card,
+  .modal-window.task-folders-modal.app-border-card {
+    background-color: color-mix(in srgb, var(--card) 42%, transparent) !important;
+    border: 1px solid var(--border) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 }

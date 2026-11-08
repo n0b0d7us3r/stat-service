@@ -64,7 +64,20 @@ export function Layout({ children }: LayoutProps) {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+  const toggleSidebar = () => {
+    if (window.matchMedia('(min-width: 769px)').matches) return;
+    setIsCollapsed((collapsed) => !collapsed);
+  };
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 769px)');
+    const keepExpanded = () => {
+      if (media.matches) setIsCollapsed(false);
+    };
+    keepExpanded();
+    media.addEventListener('change', keepExpanded);
+    return () => media.removeEventListener('change', keepExpanded);
+  }, []);
 
   const handleLogout = () => {
     void logout().then(() => navigate('/login'));

@@ -32,7 +32,7 @@
 }
 
 .task-activity-calendar-scroll {
-  overflow-x: auto;
+  overflow-x: visible;
   padding-bottom: 0.25rem;
 }
 
@@ -154,15 +154,9 @@
     display: flex;
     flex: 0 0 auto;
     width: max-content;
-    max-width: 100%;
+    max-width: none;
+    min-width: max-content;
   }
-}
-
-.task-activity-calendar.task-activity-calendar--stats {
-  display: flex;
-  width: 100%;
-  max-width: 100%;
-  flex: none;
 }
 
 @media (hover: hover) {

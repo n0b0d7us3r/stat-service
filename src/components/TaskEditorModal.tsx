@@ -5,7 +5,7 @@ import { ModalActions } from './ModalActions';
 import { TaskDescriptionContent } from './TaskDescriptionContent';
 import { ApiError } from '../api/client';
 import { createTask, updateTask, uploadTaskDescriptionImage } from '../api/tasks';
-import type { Tag, Task, TaskPriority } from '../types';
+import type { Folder, Tag, Task, TaskPriority } from '../types';
 import {
   TASK_DESCRIPTION_MAX_LENGTH,
   descriptionHasImages,
@@ -17,6 +17,7 @@ import { t } from '../i18n';
 interface TaskEditorModalProps {
   task: Task | null;
   tags: Tag[];
+  folders: Folder[];
   folderId?: number | null;
   onClose: () => void;
   onSaved: (task: Task, options?: { keepOpen?: boolean }) => void;
@@ -27,6 +28,7 @@ interface TaskEditorModalProps {
 export function TaskEditorModal({
   task,
   tags,
+  folders,
   folderId,
   onClose,
   onSaved,
@@ -42,6 +44,9 @@ export function TaskEditorModal({
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 2);
   const [dueDate, setDueDate] = useState(task?.due_date ?? '');
   const [tagIds, setTagIds] = useState<number[]>(task?.tags[0] ? [task.tags[0].id] : []);
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(
+    task ? task.folder_id : folderId ?? null,
+  );
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const locked = !detailsEditable;
@@ -54,14 +59,21 @@ export function TaskEditorModal({
 
     try {
       const saved = task
-        ? await updateTask(task.id, { title, description, priority, dueDate: dueDate || null, tagIds })
+        ? await updateTask(task.id, {
+          title,
+          description,
+          priority,
+          dueDate: dueDate || null,
+          tagIds,
+          folderId: selectedFolderId,
+        })
         : await createTask({
           title,
           description,
           priority,
           dueDate: dueDate || null,
           tagIds,
-          ...(folderId != null ? { folderId } : {}),
+          folderId: selectedFolderId,
         });
       onSaved(saved, options);
       return saved;
@@ -142,7 +154,7 @@ export function TaskEditorModal({
 
   return (
     <Modal
-      className="task-editor-modal"
+      className="task-editor-modal glass-modal"
       title={title.trim() || (task ? t('task') : t('newTask'))}
       isOpen
       onClose={onClose}
@@ -248,6 +260,25 @@ export function TaskEditorModal({
                 </select>
               </label>
             </div>
+
+            <label className="task-editor-field">
+              <span>{t('folder')}</span>
+              <select
+                className="task-editor-select"
+                value={selectedFolderId == null ? '' : String(selectedFolderId)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setSelectedFolderId(value ? Number(value) : null);
+                }}
+              >
+                <option value="">{t('noFolder')}</option>
+                {folders.map((folder) => (
+                  <option key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <label className="task-editor-field">
               <span>{t('dueDate')}</span>

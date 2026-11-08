@@ -9,7 +9,8 @@ import { TaskEditorModal } from '../components/TaskEditorModal';
 import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
 import { TagManageModal } from '../components/TagManageModal';
 import { TaskArchiveModal } from '../components/TaskArchiveModal';
-import { FolderGlyph, TaskFolders } from '../components/TaskFolders';
+import { TaskFolders } from '../components/TaskFolders';
+import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
 import { createFolder, deleteFolder, deleteTask, getTaskBoard, updateTask } from '../api/tasks';
@@ -48,8 +49,9 @@ export function TasksPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [openFolderId, setOpenFolderId] = useState<number | null>(null);
+  const [folderMotion, setFolderMotion] = useState<'in' | 'out' | null>(null);
+  const folderCloseTimer = useRef<number | null>(null);
   const [foldersModalOpen, setFoldersModalOpen] = useState(false);
-  const [taskToMove, setTaskToMove] = useState<Task | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -91,6 +93,12 @@ export function TasksPage() {
     return () => media.removeEventListener('change', syncLayout);
   }, []);
 
+  useEffect(() => () => {
+    if (folderCloseTimer.current) {
+      window.clearTimeout(folderCloseTimer.current);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -127,7 +135,14 @@ export function TasksPage() {
     .sort((a, b) => compareTasks(a, b, sort));
   const completedTasks = visibleTasks
     .filter((task) => task.completed)
-    .sort((a, b) => compareTasks(a, b, sort));
+    .sort((a, b) => {
+      const aDone = a.completed_at ?? '';
+      const bDone = b.completed_at ?? '';
+      if (aDone !== bDone) {
+        return aDone < bDone ? 1 : -1;
+      }
+      return b.id - a.id;
+    });
 
   const openCreate = () => {
     setEditorTask(null);
@@ -257,7 +272,12 @@ export function TasksPage() {
         task.folder_id === folderId ? { ...task, folder_id: null } : task
       )));
       if (openFolderId === folderId) {
+        if (folderCloseTimer.current) {
+          window.clearTimeout(folderCloseTimer.current);
+          folderCloseTimer.current = null;
+        }
         setOpenFolderId(null);
+        setFolderMotion(null);
       }
       setFolderToDelete(null);
       notifyTaskBoardChanged();
@@ -268,25 +288,24 @@ export function TasksPage() {
     }
   };
 
-  const handleMoveTask = async (folderId: number | null) => {
-    if (!taskToMove || pendingTaskId === taskToMove.id) return;
-    setPendingTaskId(taskToMove.id);
-    setError('');
-    try {
-      const updated = await updateTask(taskToMove.id, { folderId });
-      setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-      setTaskToMove(null);
-      notifyTaskBoardChanged();
-    } catch (err) {
-      setError(errorText(err, t('updateTaskFailed')));
-    } finally {
-      setPendingTaskId(null);
+  const openFolderFromList = (folderId: number) => {
+    if (folderCloseTimer.current) {
+      window.clearTimeout(folderCloseTimer.current);
+      folderCloseTimer.current = null;
     }
+    setOpenFolderId(folderId);
+    setFolderMotion('in');
+    setFoldersModalOpen(false);
   };
 
-  const openFolderFromList = (folderId: number) => {
-    setOpenFolderId(folderId);
-    setFoldersModalOpen(false);
+  const closeOpenFolder = () => {
+    if (openFolderId == null || folderMotion === 'out') return;
+    setFolderMotion('out');
+    folderCloseTimer.current = window.setTimeout(() => {
+      setOpenFolderId(null);
+      setFolderMotion(null);
+      folderCloseTimer.current = null;
+    }, 240);
   };
 
   const emptyListText = tagFilter !== 'all'
@@ -380,13 +399,21 @@ export function TasksPage() {
           <p className="tasks-placeholder">{t('tasksLoading')}</p>
         ) : (
           <div className="tasks-workspace">
-            <div className="tasks-workspace-main">
+            <div
+              key={openFolder?.id ?? 'all'}
+              className={`tasks-workspace-main${openFolder ? ' tasks-folder-stage' : ''}${folderMotion === 'out' ? ' is-closing' : ''}`}
+            >
           {openFolder && (
             <div className="tasks-folder-bar">
               <span className="tasks-folder-bar-name">{openFolder.name}</span>
-              <button type="button" className="tasks-folder-close" onClick={() => setOpenFolderId(null)}>
-                {t('close')}
-              </button>
+              <div className="tasks-folder-bar-actions">
+                <button type="button" className="tasks-folder-delete" onClick={() => setFolderToDelete(openFolder)}>
+                  {t('delete')}
+                </button>
+                <button type="button" className="tasks-folder-close" onClick={closeOpenFolder}>
+                  {t('close')}
+                </button>
+              </div>
             </div>
           )}
           <div className="tasks-groups">
@@ -413,7 +440,6 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onMove={setTaskToMove}
                   />
                 ))}
               </section>
@@ -429,23 +455,23 @@ export function TasksPage() {
                     pending={pendingTaskId === task.id}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onMove={setTaskToMove}
                   />
                 ))}
               </section>
             )}
           </div>
             </div>
-            <aside className="task-folders-panel">
-              <h2 className="task-folders-heading">{t('folders')}</h2>
-              <TaskFolders
-                folders={folders}
-                activeFolderId={openFolder?.id ?? null}
-                onOpen={openFolderFromList}
-                onCreate={handleCreateFolder}
-                onDelete={setFolderToDelete}
-              />
-            </aside>
+            <div className="tasks-workspace-side">
+              <aside className="task-folders-panel">
+                <TaskFolders
+                  folders={folders}
+                  activeFolderId={openFolder?.id ?? null}
+                  onOpen={openFolderFromList}
+                  onCreate={handleCreateFolder}
+                />
+              </aside>
+              <TaskActivityCalendar tasks={boardTasks} />
+            </div>
           </div>
         )}
       </div>
@@ -485,6 +511,7 @@ export function TasksPage() {
           key={editorTask?.id ?? 'create'}
           task={editorTask}
           tags={tags}
+          folders={folders}
           folderId={editorTask ? undefined : openFolder?.id}
           onClose={() => {
             setEditorOpen(false);
@@ -510,58 +537,19 @@ export function TasksPage() {
       )}
 
       {foldersModalOpen && (
-        <Modal title={t('folders')} isOpen onClose={() => setFoldersModalOpen(false)} className="task-folders-modal">
+        <Modal
+          title={t('folders')}
+          isOpen
+          onClose={() => setFoldersModalOpen(false)}
+          className="task-folders-modal glass-modal"
+        >
           <TaskFolders
             folders={folders}
             activeFolderId={openFolder?.id ?? null}
             onOpen={openFolderFromList}
             onCreate={handleCreateFolder}
-            onDelete={setFolderToDelete}
           />
           <button type="button" className="modal-action-cancel task-folders-close" onClick={() => setFoldersModalOpen(false)}>
-            {t('close')}
-          </button>
-        </Modal>
-      )}
-
-      {taskToMove && (
-        <Modal
-          title={t('moveToFolder')}
-          isOpen
-          onClose={() => {
-            if (pendingTaskId === taskToMove.id) return;
-            setTaskToMove(null);
-          }}
-          className="task-folders-modal"
-        >
-          <div className="task-move-list">
-            <button
-              type="button"
-              className={`task-move-option${taskToMove.folder_id == null ? ' is-active' : ''}`}
-              onClick={() => void handleMoveTask(null)}
-            >
-              <span className="task-folder-name">{t('noFolder')}</span>
-            </button>
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                type="button"
-                className={`task-move-option${taskToMove.folder_id === folder.id ? ' is-active' : ''}`}
-                onClick={() => void handleMoveTask(folder.id)}
-              >
-                <FolderGlyph id={`move-${folder.id}`} />
-                <span className="task-folder-name">{folder.name}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="modal-action-cancel task-folders-close"
-            onClick={() => {
-              if (pendingTaskId === taskToMove.id) return;
-              setTaskToMove(null);
-            }}
-          >
             {t('close')}
           </button>
         </Modal>
@@ -620,7 +608,6 @@ interface TaskCardProps {
   pending: boolean;
   onToggle: (task: Task) => void;
   onEdit: (task: Task) => void;
-  onMove: (task: Task) => void;
 }
 
 const PRIORITY_ICONS = {
@@ -641,7 +628,7 @@ function PriorityIcon({ priority }: { priority: TaskPriority }) {
   );
 }
 
-function TaskCard({ task, pending, onToggle, onEdit, onMove }: TaskCardProps) {
+function TaskCard({ task, pending, onToggle, onEdit }: TaskCardProps) {
   const vaporRef = useRef<VaporizeHandle>(null);
   const leavingRef = useRef(false);
   const [leaving, setLeaving] = useState(false);
@@ -716,14 +703,6 @@ function TaskCard({ task, pending, onToggle, onEdit, onMove }: TaskCardProps) {
               <span className="task-card-tag-face">{formatTagName(task.tags[0].name)}</span>
             </span>
           )}
-          <button
-            type="button"
-            className="task-icon-btn task-card-edit"
-            aria-label={t('moveTaskAria', { title: task.title })}
-            onClick={() => onMove(task)}
-          >
-            <FolderClosed size={18} />
-          </button>
         </div>
       </article>
     </Vaporize>

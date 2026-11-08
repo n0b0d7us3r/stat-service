@@ -8,7 +8,7 @@ import { DashboardWeeklyMatrix } from '../components/DashboardWeeklyMatrix';
 import { DashboardMonthTable } from '../components/DashboardMonthTable';
 import { DashboardTaskList } from '../components/DashboardTaskList';
 import { DashboardTodayGoals } from '../components/DashboardTodayGoals';
-import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
+// import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { getUserAchievements } from '../api/achievements';
@@ -79,8 +79,8 @@ export function DashboardPage() {
   return (
     <Layout>
       <div className="dashboard-page">
-        <TaskActivityCalendar className="task-activity-calendar--stats" tasks={activeTasks} />
         <PageTitle title={t('dashboardTitle')} />
+        {/* <TaskActivityCalendar className="task-activity-calendar--stats" tasks={activeTasks} /> */}
 
         <div className="dashboard-stats-sections">
           <DashboardCollapsibleSection title={t('goalsToday')} defaultExpandedOnMobile>

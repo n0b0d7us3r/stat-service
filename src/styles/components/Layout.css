@@ -239,8 +239,11 @@ aside.collapsed .nav-item {
     left: 0;
     width: 100%;
     z-index: 101;
-    background-color: var(--card);
+    background-color: color-mix(in srgb, var(--card) 42%, transparent);
     border-right: none;
+    border-bottom: 1px solid var(--border);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     justify-content: flex-start;
     gap: 1rem;
     padding: 0 1rem;

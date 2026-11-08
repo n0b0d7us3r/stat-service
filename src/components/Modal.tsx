@@ -7,10 +7,19 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  overlayClassName?: string;
   headerExtra?: ReactNode;
 }
 
-export function Modal({ title, isOpen, onClose, children, className = '', headerExtra }: ModalProps) {
+export function Modal({
+  title,
+  isOpen,
+  onClose,
+  children,
+  className = '',
+  overlayClassName = '',
+  headerExtra,
+}: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -34,7 +43,7 @@ export function Modal({ title, isOpen, onClose, children, className = '', header
   }
 
   return (
-    <div className="modal-overlay">
+    <div className={`modal-overlay ${overlayClassName}`.trim()}>
       <div
         className={`modal-window app-border-card ${className}`.trim()}
         role="dialog"

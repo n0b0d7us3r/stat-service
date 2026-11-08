@@ -56,20 +56,22 @@ export interface TaskActivityGrid {
 export function buildTaskActivityGrid(
   endDate: Date = new Date(),
   weeks: number = TASK_ACTIVITY_WEEKS,
+  dayCount?: number,
 ): TaskActivityGrid {
   const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-  const spanDays = weeks * 7;
+  const spanDays = dayCount ?? weeks * 7;
   const rangeStart = addDays(end, -(spanDays - 1));
   const rangeStartWeekday = rangeStart.getDay();
   const mondayOffset = rangeStartWeekday === 0 ? 6 : rangeStartWeekday - 1;
   const gridStart = addDays(rangeStart, -mondayOffset);
+  const columnCount = Math.ceil((mondayOffset + spanDays) / 7);
 
   const columns: TaskActivityWeekColumn[] = [];
   const monthLabels: Array<{ weekIndex: number; label: string }> = [];
   let cursor = gridStart;
   let previousMonth: number | null = null;
 
-  for (let weekIndex = 0; weekIndex < weeks; weekIndex += 1) {
+  for (let weekIndex = 0; weekIndex < columnCount; weekIndex += 1) {
     const days: Array<string | null> = [];
 
     for (let row = 0; row < 7; row += 1) {

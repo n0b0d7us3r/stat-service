@@ -60,7 +60,12 @@ export function TaskArchiveModal({
   };
 
   return (
-    <Modal title={t('archiveTitle')} isOpen onClose={onClose}>
+    <Modal
+      title={t('archiveTitle')}
+      isOpen
+      onClose={onClose}
+      className="glass-modal"
+    >
       <div className="task-archive-modal">
         {error && <p className="task-editor-error">{error}</p>}
 

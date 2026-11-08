@@ -175,6 +175,10 @@
   cursor: pointer;
 }
 
+.tag-manage-close {
+  margin-top: 0.25rem;
+}
+
 .tag-manage-delete-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;

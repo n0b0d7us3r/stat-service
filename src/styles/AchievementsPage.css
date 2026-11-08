@@ -17,6 +17,15 @@
   padding: 1.25rem 1.5rem;
 }
 
+@layer components {
+  .achievement-card.app-border-card {
+    background-color: color-mix(in srgb, var(--card) 42%, transparent) !important;
+    border: 1px solid var(--border) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+}
+
 .achievement-card-icon {
   display: inline-flex;
   align-items: center;

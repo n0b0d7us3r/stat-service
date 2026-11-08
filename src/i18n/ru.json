@@ -264,6 +264,7 @@
   "createFolder": "Создать",
   "folderEmpty": "В этой папке пусто.",
   "unfiledEmpty": "В общем списке нет задач вне папок.",
+  "folder": "Папка",
   "noFolder": "Без папки",
   "moveToFolder": "Перенести в папку",
   "moveTaskAria": "Перенести «{title}» в папку",

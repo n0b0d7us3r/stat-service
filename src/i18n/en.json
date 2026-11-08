@@ -264,6 +264,7 @@
   "createFolder": "Create",
   "folderEmpty": "This folder is empty.",
   "unfiledEmpty": "No tasks outside folders.",
+  "folder": "Folder",
   "noFolder": "No folder",
   "moveToFolder": "Move to folder",
   "moveTaskAria": "Move “{title}” to a folder",
