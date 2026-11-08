@@ -82,6 +82,15 @@
   overflow: hidden;
 }
 
+@layer components {
+  .project-card.app-border-card {
+    background-color: color-mix(in srgb, var(--card) 42%, transparent) !important;
+    border: 1px solid var(--border) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+}
+
 .project-card-main {
   display: flex;
   align-items: flex-start;

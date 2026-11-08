@@ -6,7 +6,9 @@
   gap: 0.75rem;
   padding: 1rem 1.125rem;
   border: 1px solid var(--border);
-  background: var(--card);
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   min-width: 0;
 }
 
