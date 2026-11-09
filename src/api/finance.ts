@@ -30,9 +30,10 @@ export interface FinanceTransferInput {
   fromAccountId: number;
   toAccountId: number;
   amount: number;
+  toAmount: number;
   currency: string;
   toCurrency: string;
-  rate: number | null;
+  fee: number;
   date: string;
   note: string;
 }

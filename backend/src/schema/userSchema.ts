@@ -308,6 +308,12 @@ function migrateToV19(db: Database.Database): void {
   db.exec('CREATE INDEX IF NOT EXISTS idx_finance_transfers_date ON finance_transfers(date)');
 }
 
+function migrateToV20(db: Database.Database): void {
+  if (!columnExists(db, 'finance_transfers', 'fee_cents')) {
+    db.exec('ALTER TABLE finance_transfers ADD COLUMN fee_cents INTEGER NOT NULL DEFAULT 0');
+  }
+}
+
 function migrateToV18(db: Database.Database): void {
   if (!columnExists(db, 'finance_entries', 'rate_mode')) {
     db.exec("ALTER TABLE finance_entries ADD COLUMN rate_mode TEXT NOT NULL DEFAULT 'fixed'");
@@ -428,6 +434,12 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 19) {
     migrateToV19(db);
     version = 19;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 20) {
+    migrateToV20(db);
+    version = 20;
     setSchemaVersion(db, version);
   }
 }

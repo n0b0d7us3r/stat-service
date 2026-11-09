@@ -88,8 +88,14 @@ export interface FinanceTransfer {
   currency: string;
   to_amount_cents: number;
   to_currency: string;
-  /** Сколько to_currency за 1 единицу currency; null, если валюта не менялась. */
+  /**
+   * Сколько to_currency за 1 единицу currency без комиссии.
+   * Комиссия входит в amount_cents и из курса исключается: to_amount / (amount − fee).
+   * null, если валюта не менялась.
+   */
   rate: number | null;
+  /** Комиссия в валюте списания. Входит в amount_cents. */
+  fee_cents: number;
   date: string;
   note: string;
   created_at: string;
@@ -106,7 +112,7 @@ const ACCOUNT_COLUMNS = 'id, name, color, icon, created_at';
 const ENTRY_COLUMNS =
   'id, kind, amount_cents, currency, category_id, account_id, rate, rate_currency, rate_mode, date, note, created_at';
 const TRANSFER_COLUMNS =
-  'id, from_account_id, to_account_id, amount_cents, currency, to_amount_cents, to_currency, rate, date, note, created_at';
+  'id, from_account_id, to_account_id, amount_cents, currency, to_amount_cents, to_currency, rate, fee_cents, date, note, created_at';
 
 function normalizeKind(value: unknown): FinanceEntryKind {
   if (value !== 'income' && value !== 'expense') {
@@ -431,9 +437,10 @@ interface FinanceTransferInput {
   fromAccountId?: unknown;
   toAccountId?: unknown;
   amount?: unknown;
+  toAmount?: unknown;
   currency?: unknown;
   toCurrency?: unknown;
-  rate?: unknown;
+  fee?: unknown;
   date?: unknown;
   note?: unknown;
 }
@@ -449,6 +456,22 @@ function requireAccount(db: Database.Database, raw: unknown): number {
   return accountId;
 }
 
+/** Комиссия необязательна: пустое значение — 0. */
+function normalizeFee(value: unknown): number {
+  if (value === undefined || value === null || value === '') {
+    return 0;
+  }
+  const amount = typeof value === 'string' ? Number(value.replace(',', '.')) : value;
+  if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+    throw new DbError('Некорректная комиссия');
+  }
+  const cents = Math.round(amount * 100);
+  if (cents < 0 || cents > MAX_AMOUNT_CENTS) {
+    throw new DbError('Некорректная комиссия');
+  }
+  return cents;
+}
+
 function normalizeTransferInput(db: Database.Database, input: FinanceTransferInput) {
   const fromAccountId = requireAccount(db, input.fromAccountId);
   const toAccountId = requireAccount(db, input.toAccountId);
@@ -457,26 +480,38 @@ function normalizeTransferInput(db: Database.Database, input: FinanceTransferInp
   }
 
   const amountCents = normalizeAmount(input.amount);
+  const toAmountCents = normalizeAmount(input.toAmount);
+  const feeCents = normalizeFee(input.fee);
   const currency = normalizeCurrency(input.currency);
   const toCurrency = normalizeCurrency(input.toCurrency ?? input.currency);
   const date = normalizeFinanceDate(input.date);
   const note = normalizeNote(input.note);
 
-  let rate: number | null = null;
-  let toAmountCents = amountCents;
-  if (toCurrency !== currency) {
-    const value = typeof input.rate === 'string' ? Number(input.rate.replace(',', '.')) : input.rate;
-    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > MAX_RATE) {
-      throw new DbError('Укажите курс валюты');
-    }
-    rate = Number(value.toPrecision(12));
-    toAmountCents = Math.round(amountCents * rate);
-    if (toAmountCents <= 0 || toAmountCents > MAX_AMOUNT_CENTS) {
-      throw new DbError('Некорректная сумма');
-    }
+  if (feeCents >= amountCents) {
+    throw new DbError('Комиссия должна быть меньше суммы списания');
   }
 
-  return { fromAccountId, toAccountId, amountCents, currency, toAmountCents, toCurrency, rate, date, note };
+  let rate: number | null = null;
+  if (toCurrency !== currency) {
+    const value = toAmountCents / (amountCents - feeCents);
+    if (!Number.isFinite(value) || value <= 0 || value > MAX_RATE) {
+      throw new DbError('Некорректная сумма');
+    }
+    rate = Number(value.toPrecision(12));
+  }
+
+  return {
+    fromAccountId,
+    toAccountId,
+    amountCents,
+    currency,
+    toAmountCents,
+    toCurrency,
+    rate,
+    feeCents,
+    date,
+    note,
+  };
 }
 
 function readTransfer(db: Database.Database, transferId: number): FinanceTransfer | null {
@@ -488,9 +523,12 @@ export function createFinanceTransfer(userId: number, input: FinanceTransferInpu
   const v = normalizeTransferInput(db, input);
   const result = db.prepare(
     `INSERT INTO finance_transfers
-       (from_account_id, to_account_id, amount_cents, currency, to_amount_cents, to_currency, rate, date, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(v.fromAccountId, v.toAccountId, v.amountCents, v.currency, v.toAmountCents, v.toCurrency, v.rate, v.date, v.note);
+       (from_account_id, to_account_id, amount_cents, currency, to_amount_cents, to_currency, rate, fee_cents, date, note)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    v.fromAccountId, v.toAccountId, v.amountCents, v.currency, v.toAmountCents, v.toCurrency,
+    v.rate, v.feeCents, v.date, v.note,
+  );
 
   const transfer = readTransfer(db, Number(result.lastInsertRowid));
   if (!transfer) {
@@ -508,11 +546,11 @@ export function updateFinanceTransfer(userId: number, transferId: number, input:
   db.prepare(
     `UPDATE finance_transfers
      SET from_account_id = ?, to_account_id = ?, amount_cents = ?, currency = ?,
-         to_amount_cents = ?, to_currency = ?, rate = ?, date = ?, note = ?
+         to_amount_cents = ?, to_currency = ?, rate = ?, fee_cents = ?, date = ?, note = ?
      WHERE id = ?`,
   ).run(
     v.fromAccountId, v.toAccountId, v.amountCents, v.currency,
-    v.toAmountCents, v.toCurrency, v.rate, v.date, v.note, transferId,
+    v.toAmountCents, v.toCurrency, v.rate, v.feeCents, v.date, v.note, transferId,
   );
 
   const transfer = readTransfer(db, transferId);

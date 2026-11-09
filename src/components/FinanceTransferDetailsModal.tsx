@@ -22,7 +22,7 @@ interface FinanceTransferDetailsModalProps {
 
 export function transferAmountLabel(transfer: FinanceTransfer): string {
   const sent = formatMoney(transfer.amount_cents, transfer.currency);
-  if (transfer.currency === transfer.to_currency) return sent;
+  if (transfer.currency === transfer.to_currency && transfer.amount_cents === transfer.to_amount_cents) return sent;
   return `${sent} → ${formatMoney(transfer.to_amount_cents, transfer.to_currency)}`;
 }
 
@@ -86,11 +86,14 @@ export function FinanceTransferDetailsModal({
     { label: t('financeTransferTo'), value: <AccountChip account={toAccount} /> },
   ];
 
-  if (transfer.currency !== transfer.to_currency) {
+  if (transfer.currency !== transfer.to_currency || transfer.amount_cents !== transfer.to_amount_cents) {
     rows.push({ label: t('financeTransferReceived'), value: formatMoney(transfer.to_amount_cents, transfer.to_currency) });
-    if (transfer.rate) {
-      rows.push({ label: t('financeRate'), value: formatRateQuote(transfer.currency, transfer.to_currency, transfer.rate) });
-    }
+  }
+  if (transfer.fee_cents > 0) {
+    rows.push({ label: t('financeTransferFee'), value: formatMoney(transfer.fee_cents, transfer.currency) });
+  }
+  if (transfer.rate) {
+    rows.push({ label: t('financeRate'), value: formatRateQuote(transfer.currency, transfer.to_currency, transfer.rate) });
   }
 
   rows.push({

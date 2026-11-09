@@ -645,8 +645,8 @@ app.delete('/api/finance/categories/:categoryId', requireAuth, (req: AuthRequest
 });
 
 function parseTransferBody(body: unknown) {
-  const { fromAccountId, toAccountId, amount, currency, toCurrency, rate, date, note } = body as Record<string, unknown>;
-  return { fromAccountId, toAccountId, amount, currency, toCurrency, rate, date, note };
+  const { fromAccountId, toAccountId, amount, toAmount, currency, toCurrency, fee, date, note } = body as Record<string, unknown>;
+  return { fromAccountId, toAccountId, amount, toAmount, currency, toCurrency, fee, date, note };
 }
 
 app.post('/api/finance/transfers', requireAuth, (req: AuthRequest, res) => {

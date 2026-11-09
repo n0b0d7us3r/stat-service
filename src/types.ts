@@ -225,8 +225,14 @@ export interface FinanceTransfer {
   currency: string;
   to_amount_cents: number;
   to_currency: string;
-  /** Сколько to_currency за 1 единицу currency; null, если валюта не менялась. */
+  /**
+   * Сколько to_currency за 1 единицу currency без комиссии.
+   * Комиссия входит в amount_cents и из курса исключается.
+   * null, если валюта не менялась.
+   */
   rate: number | null;
+  /** Комиссия в валюте списания. Входит в amount_cents. */
+  fee_cents: number;
   date: string;
   note: string;
   created_at: string;

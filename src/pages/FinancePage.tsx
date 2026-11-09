@@ -646,7 +646,6 @@ export function FinancePage() {
         <FinanceTransferModal
           accounts={accounts}
           baseCurrency={currency}
-          todayRates={todayRates}
           defaultDate={defaultEntryDate}
           onClose={() => setTransferModalOpen(false)}
           onSaved={handleTransferSaved}
@@ -661,7 +660,6 @@ export function FinancePage() {
         <FinanceTransferModal
           accounts={accounts}
           baseCurrency={currency}
-          todayRates={todayRates}
           defaultDate={selectedTransfer.date}
           transfer={selectedTransfer}
           onClose={() => setEditingTransfer(false)}

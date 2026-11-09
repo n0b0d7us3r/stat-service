@@ -5,20 +5,12 @@ import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
 import { createFinanceTransfer, updateFinanceTransfer } from '../api/finance';
 import { t } from '../i18n';
-import type { FinanceAccount, FinanceTransfer, TodayRates } from '../types';
-import {
-  FINANCE_CURRENCIES,
-  crossRate,
-  displayRateToStored,
-  formatMoney,
-  rateQuote,
-  storedRateToDisplay,
-} from '../utils/finance';
+import type { FinanceAccount, FinanceTransfer } from '../types';
+import { FINANCE_CURRENCIES, formatRateQuote } from '../utils/finance';
 
 interface FinanceTransferModalProps {
   accounts: FinanceAccount[];
   baseCurrency: string;
-  todayRates: TodayRates | null;
   defaultDate: string;
   transfer?: FinanceTransfer;
   onClose: () => void;
@@ -26,18 +18,34 @@ interface FinanceTransferModalProps {
   onManageAccounts: () => void;
 }
 
-function displayRate(rate: number, inverted: boolean): string {
-  return String(Number(storedRateToDisplay(rate, inverted).toFixed(6)));
+function centsOf(value: string, empty: number | null): number | null {
+  if (value.trim() === '') return empty;
+  const parsed = Number(value.replace(',', '.'));
+  if (!Number.isFinite(parsed)) return null;
+  return Math.round(parsed * 100);
 }
 
-function accountIdOrNull(accounts: FinanceAccount[], id: number | null | undefined): number | null {
-  return id != null && accounts.some((account) => account.id === id) ? id : null;
+function formatCentsInput(cents: number, sample: string): string {
+  const text = (cents / 100).toFixed(2).replace(/\.?0+$/, '');
+  return sample.includes(',') ? text.replace('.', ',') : text;
+}
+
+/** При одной валюте зачисление по умолчанию — списание минус комиссия. */
+function sameCurrencyCredit(amount: string, fee: string): string {
+  const amountCents = centsOf(amount, null);
+  if (amountCents == null || amountCents <= 0) return '';
+  const feeCents = centsOf(fee, 0);
+  if (feeCents == null || feeCents < 0 || feeCents >= amountCents) return formatCentsInput(amountCents, amount);
+  return formatCentsInput(amountCents - feeCents, amount);
+}
+
+function moneyNumber(cents: number): number {
+  return Number((cents / 100).toFixed(2));
 }
 
 export function FinanceTransferModal({
   accounts,
   baseCurrency,
-  todayRates,
   defaultDate,
   transfer,
   onClose,
@@ -47,24 +55,26 @@ export function FinanceTransferModal({
   const [fromAccountId, setFromAccountId] = useState(() => accountIdOrNull(accounts, transfer?.from_account_id));
   const [toAccountId, setToAccountId] = useState(() => accountIdOrNull(accounts, transfer?.to_account_id));
   const [amount, setAmount] = useState(() => (transfer ? String(transfer.amount_cents / 100) : ''));
+  const [toAmount, setToAmount] = useState(() => (transfer ? String(transfer.to_amount_cents / 100) : ''));
+  const [toAmountTouched, setToAmountTouched] = useState(() => transfer != null);
   const [currency, setCurrency] = useState(transfer?.currency ?? baseCurrency);
   const [toCurrency, setToCurrency] = useState(transfer?.to_currency ?? baseCurrency);
-  const [rate, setRate] = useState(() => {
-    if (!transfer?.rate) return '';
-    return displayRate(transfer.rate, rateQuote(transfer.currency, transfer.to_currency).inverted);
-  });
+  const [fee, setFee] = useState(() => (transfer?.fee_cents ? String(transfer.fee_cents / 100) : ''));
   const [date, setDate] = useState(transfer?.date ?? defaultDate);
   const [note, setNote] = useState(transfer?.note ?? '');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const exchange = currency !== toCurrency;
-  const quote = rateQuote(currency, toCurrency);
-  const todayRate = exchange ? crossRate(todayRates, currency, toCurrency) : undefined;
-  const rateNumber = Number(rate.replace(',', '.'));
-  const amountNumber = Number(amount.replace(',', '.'));
-  const receivedPreview = exchange && rateNumber > 0 && amountNumber > 0
-    ? formatMoney(Math.round(amountNumber * 100 * displayRateToStored(rateNumber, quote.inverted)), toCurrency)
+  const credited = exchange || toAmountTouched ? toAmount : sameCurrencyCredit(amount, fee);
+  const amountCents = centsOf(amount, null);
+  const creditedCents = centsOf(credited, null);
+  const feeCents = centsOf(fee, 0);
+  const ratePreview = exchange
+    && amountCents != null && amountCents > 0
+    && creditedCents != null && creditedCents > 0
+    && feeCents != null && feeCents >= 0 && feeCents < amountCents
+    ? formatRateQuote(currency, toCurrency, creditedCents / (amountCents - feeCents))
     : null;
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -77,12 +87,16 @@ export function FinanceTransferModal({
       setError(t('financeTransferSameAccount'));
       return;
     }
-    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+    if (amountCents == null || amountCents <= 0) {
       setError(t('financeAmountInvalid'));
       return;
     }
-    if (exchange && (!Number.isFinite(rateNumber) || rateNumber <= 0)) {
-      setError(t('financeRateInvalid'));
+    if (creditedCents == null || creditedCents <= 0) {
+      setError(t('financeTransferToAmountInvalid'));
+      return;
+    }
+    if (feeCents == null || feeCents < 0 || feeCents >= amountCents) {
+      setError(t('financeTransferFeeInvalid'));
       return;
     }
 
@@ -91,10 +105,11 @@ export function FinanceTransferModal({
     const input = {
       fromAccountId,
       toAccountId,
-      amount: amountNumber,
+      amount: moneyNumber(amountCents),
+      toAmount: moneyNumber(creditedCents),
       currency,
       toCurrency,
-      rate: exchange ? displayRateToStored(rateNumber, quote.inverted) : null,
+      fee: moneyNumber(feeCents),
       date,
       note,
     };
@@ -134,10 +149,7 @@ export function FinanceTransferModal({
       <select
         className="task-editor-select"
         value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-          setRate('');
-        }}
+        onChange={(event) => onChange(event.target.value)}
       >
         {FINANCE_CURRENCIES.map((code) => (
           <option key={code} value={code}>{code}</option>
@@ -184,7 +196,7 @@ export function FinanceTransferModal({
 
           <div className="finance-amount-row">
             <label className="task-editor-field">
-              <span>{t('financeAmount')}</span>
+              <span>{t('financeTransferDebited')}</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -198,29 +210,44 @@ export function FinanceTransferModal({
             {currencySelect(t('financeCurrency'), currency, setCurrency)}
           </div>
 
-          {currencySelect(t('financeTransferToCurrency'), toCurrency, setToCurrency)}
+          <div className="finance-amount-row">
+            <label className="task-editor-field">
+              <span>{t('financeTransferReceived')}</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                className="task-editor-input"
+                value={credited}
+                onChange={(event) => {
+                  setToAmountTouched(true);
+                  setToAmount(event.target.value.replace(/[^\d.,]/g, ''));
+                }}
+                placeholder="0"
+                required
+              />
+            </label>
+            {currencySelect(t('financeTransferToCurrency'), toCurrency, setToCurrency)}
+          </div>
 
-          {exchange && (
-            <div className="task-editor-field">
-              <span>{t('financeRate')}</span>
-              <div className="finance-rate-input">
-                <span>1 {quote.unit} =</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  className="task-editor-input"
-                  value={rate}
-                  onChange={(event) => setRate(event.target.value.replace(/[^\d.,]/g, ''))}
-                  placeholder={todayRate ? String(Number(storedRateToDisplay(todayRate, quote.inverted).toFixed(4))) : '0'}
-                  aria-label={t('financeRate')}
-                  required
-                />
-                <span>{quote.quote}</span>
-              </div>
-              {receivedPreview && (
-                <p className="finance-rate-preview">{t('financeTransferReceived')}: {receivedPreview}</p>
-              )}
+          <label className="task-editor-field">
+            <span>{t('financeTransferFee')}</span>
+            <div className="finance-rate-input">
+              <input
+                type="text"
+                inputMode="decimal"
+                className="task-editor-input"
+                value={fee}
+                onChange={(event) => setFee(event.target.value.replace(/[^\d.,]/g, ''))}
+                placeholder="0"
+                aria-label={t('financeTransferFee')}
+              />
+              <span>{currency}</span>
             </div>
+            <p className="finance-rate-preview">{t('financeTransferFeeHint')}</p>
+          </label>
+
+          {ratePreview && (
+            <p className="finance-rate-preview">{t('financeRate')}: {ratePreview}</p>
           )}
 
           <label className="task-editor-field">
@@ -251,4 +278,8 @@ export function FinanceTransferModal({
       )}
     </Modal>
   );
+}
+
+function accountIdOrNull(accounts: FinanceAccount[], id: number | null | undefined): number | null {
+  return id != null && accounts.some((account) => account.id === id) ? id : null;
 }

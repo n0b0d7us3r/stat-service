@@ -112,6 +112,8 @@ const apiMessages: Record<string, MessageKey> = {
   'Не удалось сохранить операцию': 'financeSaveEntryFailed',
   'Операция не найдена': 'financeDeleteEntryFailed',
   'Выберите разные счета': 'financeTransferSameAccount',
+  'Некорректная комиссия': 'financeTransferFeeInvalid',
+  'Комиссия должна быть меньше суммы списания': 'financeTransferFeeInvalid',
   'Перевод не найден': 'financeDeleteTransferFailed',
   'Не удалось сохранить перевод': 'financeSaveTransferFailed',
   'Неверный текущий пароль': 'settingsWrongPassword',
