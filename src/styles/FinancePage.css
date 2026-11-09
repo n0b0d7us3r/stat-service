@@ -831,21 +831,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.finance-entry-amount-transfer {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 0.25rem;
-  max-width: min(100%, 14rem);
-  text-align: right;
-}
-
-.finance-entry-amount-arrow {
-  color: var(--muted);
-  font-weight: 700;
-}
-
 .finance-modal-hint {
   margin: 0;
   color: var(--muted);

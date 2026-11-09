@@ -575,23 +575,17 @@ export function FinancePage() {
                               <span className="finance-entry-title">{t('financeTransferOne')}</span>
                               <span className="finance-entry-meta">{meta}</span>
                             </span>
-                            {transferAmount.mode === 'single' ? (
-                              <span
-                                className={`finance-entry-amount ${
-                                  transferAmount.kind === 'income'
-                                    ? 'finance-amount-income'
-                                    : 'finance-amount-expense'
-                                }`}
-                              >
-                                {transferAmount.text}
-                              </span>
-                            ) : (
-                              <span className="finance-entry-amount finance-entry-amount-transfer">
-                                <span className="finance-amount-expense">{transferAmount.debit}</span>
-                                <span className="finance-entry-amount-arrow" aria-hidden="true">→</span>
-                                <span className="finance-amount-income">{transferAmount.credit}</span>
-                              </span>
-                            )}
+                            <span
+                              className={`finance-entry-amount ${
+                                transferAmount.kind === 'income'
+                                  ? 'finance-amount-income'
+                                  : transferAmount.kind === 'expense'
+                                    ? 'finance-amount-expense'
+                                    : ''
+                              }`}
+                            >
+                              {transferAmount.text}
+                            </span>
                           </button>
                         </li>
                       );
@@ -600,10 +594,7 @@ export function FinancePage() {
                     const entry = listItem.item;
                     const category = categoryOf(entry);
                     const account = entry.account_id != null ? accountById.get(entry.account_id) : undefined;
-                    const baseCents = toBaseCents(entry, currency, todayRates);
-                    const amount = baseCents !== null
-                      ? formatMoney(baseCents, currency)
-                      : formatMoney(entry.amount_cents, entry.currency);
+                    const amount = formatMoney(entry.amount_cents, entry.currency);
                     const meta = [formatEntryDate(entry.date), account?.name, entry.note].filter(Boolean).join(' · ');
                     return (
                       <li key={`entry-${entry.id}`}>
