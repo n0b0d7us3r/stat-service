@@ -12,7 +12,7 @@ import { FinanceCompareChart, type FinanceCompareColumn } from '../components/Fi
 import { FinanceTopList } from '../components/FinanceTopList';
 import { FinanceIconBadge } from '../components/FinanceIconBadge';
 import { FinanceTransferModal } from '../components/FinanceTransferModal';
-import { FinanceBalances } from '../components/FinanceBalances';
+import { FinanceBalanceAccounts, FinanceBalanceTotal, accountBalances } from '../components/FinanceBalances';
 import {
   FinanceTransferDetailsModal,
   TRANSFER_COLOR,
@@ -203,6 +203,11 @@ export function FinancePage() {
   }, [accountEntries, currency, todayRates]);
   const incomeInCurrency = useMemo(() => inCurrency.filter((entry) => entry.kind === 'income'), [inCurrency]);
   const expenseInCurrency = useMemo(() => inCurrency.filter((entry) => entry.kind === 'expense'), [inCurrency]);
+
+  const balanceRows = useMemo(
+    () => accountBalances(accounts, balances, currency, todayRates),
+    [accounts, balances, currency, todayRates],
+  );
 
   const totals = useMemo(() => {
     const income = sumCents(incomeInCurrency);
@@ -452,15 +457,8 @@ export function FinancePage() {
           <>
             {tab === 'all' ? (
               <>
-                <FinanceBalances
-                  accounts={accounts}
-                  balances={balances}
-                  baseCurrency={currency}
-                  todayRates={todayRates}
-                  hiddenAccounts={hiddenBalanceAccounts}
-                  onHiddenAccountsChange={saveHiddenBalanceAccounts}
-                />
-                <div className="finance-summary">
+                <div className="finance-summary finance-summary-with-balance">
+                  <FinanceBalanceTotal rows={balanceRows} baseCurrency={currency} />
                   <div
                     className={`finance-panel finance-summary-card finance-result ${
                       totals.balance < 0 ? 'is-negative' : totals.balance > 0 ? 'is-positive' : ''
@@ -485,6 +483,12 @@ export function FinancePage() {
                       {formatMoney(totals.expense, currency)}
                     </span>
                   </div>
+                  <FinanceBalanceAccounts
+                    rows={balanceRows}
+                    baseCurrency={currency}
+                    hiddenAccounts={hiddenBalanceAccounts}
+                    onHiddenAccountsChange={saveHiddenBalanceAccounts}
+                  />
                 </div>
 
                 <section className="finance-panel">
@@ -573,8 +577,10 @@ export function FinancePage() {
                     const entry = listItem.item;
                     const category = categoryOf(entry);
                     const account = entry.account_id != null ? accountById.get(entry.account_id) : undefined;
-                    const amount = formatMoney(entry.amount_cents, entry.currency);
-                    const baseCents = entry.currency === currency ? null : toBaseCents(entry, currency, todayRates);
+                    const baseCents = toBaseCents(entry, currency, todayRates);
+                    const amount = baseCents !== null
+                      ? formatMoney(baseCents, currency)
+                      : formatMoney(entry.amount_cents, entry.currency);
                     const meta = [formatEntryDate(entry.date), account?.name, entry.note].filter(Boolean).join(' · ');
                     return (
                       <li key={`entry-${entry.id}`}>
@@ -594,9 +600,6 @@ export function FinancePage() {
                             }`}
                           >
                             {entry.kind === 'income' ? '+' : '−'}{amount}
-                            {baseCents !== null && (
-                              <span className="finance-entry-converted">({formatMoney(baseCents, currency)})</span>
-                            )}
                           </span>
                         </button>
                       </li>

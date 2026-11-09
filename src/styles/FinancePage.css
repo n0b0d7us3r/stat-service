@@ -117,17 +117,12 @@
   gap: 0.75rem;
 }
 
-.finance-balances {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
-  gap: 0.75rem;
+.finance-summary-with-balance {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.finance-balance-total {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.35rem;
+.finance-summary-with-balance > .finance-balance-accounts {
+  grid-column: 1 / -1;
 }
 
 .finance-balance-total-value {
@@ -228,6 +223,12 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.finance-balance-amount-native {
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .finance-summary-card {
@@ -1135,17 +1136,40 @@
   .finance-charts {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .finance-summary-with-balance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
-  .finance-summary,
-  .finance-balances {
+  .finance-summary {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .finance-balance-amount {
     flex-shrink: 1;
     overflow-wrap: anywhere;
+  }
+
+  .finance-balance-amount-base {
+    display: none;
+  }
+
+  .finance-summary-with-balance > * {
+    order: 2;
+  }
+
+  .finance-summary-with-balance > .finance-balance-total {
+    order: 0;
+  }
+
+  .finance-summary-with-balance > .finance-balance-accounts {
+    order: 1;
+  }
+
+  .finance-balance-amount-native {
+    display: flex;
   }
 
   .finance-toolbar .sort-select {
