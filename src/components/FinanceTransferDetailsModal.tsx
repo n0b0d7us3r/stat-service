@@ -5,7 +5,7 @@ import { FinanceIconBadge } from './FinanceIconBadge';
 import { dateLocaleTag, t } from '../i18n';
 import type { FinanceAccount, FinanceTransfer } from '../types';
 import { parseLocalDate } from '../utils/date';
-import { formatMoney, formatRateQuote } from '../utils/finance';
+import { formatMoney, formatTransferRateQuote } from '../utils/finance';
 import { TRANSFER_ICON } from '../utils/financeIcons';
 
 export const TRANSFER_COLOR = '#0a84ff';
@@ -93,7 +93,7 @@ export function FinanceTransferDetailsModal({
     rows.push({ label: t('financeTransferFee'), value: formatMoney(transfer.fee_cents, transfer.currency) });
   }
   if (transfer.rate) {
-    rows.push({ label: t('financeRate'), value: formatRateQuote(transfer.currency, transfer.to_currency, transfer.rate) });
+    rows.push({ label: t('financeRate'), value: formatTransferRateQuote(transfer.currency, transfer.to_currency, transfer.rate) });
   }
 
   rows.push({

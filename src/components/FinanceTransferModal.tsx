@@ -6,7 +6,7 @@ import { ApiError } from '../api/client';
 import { createFinanceTransfer, updateFinanceTransfer } from '../api/finance';
 import { t } from '../i18n';
 import type { FinanceAccount, FinanceTransfer } from '../types';
-import { FINANCE_CURRENCIES, formatRateQuote } from '../utils/finance';
+import { FINANCE_CURRENCIES, formatTransferRateQuote } from '../utils/finance';
 
 interface FinanceTransferModalProps {
   accounts: FinanceAccount[];
@@ -74,7 +74,7 @@ export function FinanceTransferModal({
     && amountCents != null && amountCents > 0
     && creditedCents != null && creditedCents > 0
     && feeCents != null && feeCents >= 0 && feeCents < amountCents
-    ? formatRateQuote(currency, toCurrency, creditedCents / (amountCents - feeCents))
+    ? formatTransferRateQuote(currency, toCurrency, creditedCents / (amountCents - feeCents))
     : null;
 
   const handleSubmit = async (event: React.FormEvent) => {

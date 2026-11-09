@@ -89,7 +89,7 @@ export function FinanceCategoryModal({ mode, items, onClose, onCreated, onDelete
         ? await createFinanceAccount({ name: trimmed, color, icon })
         : await createFinanceCategory({ kind: mode, name: trimmed, color, icon });
       onCreated(created);
-      setName('');
+      onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeCreateCategoryFailed'));
     } finally {

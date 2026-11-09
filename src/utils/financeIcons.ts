@@ -138,7 +138,7 @@ export const FINANCE_ICONS: Array<{ key: string; Icon: LucideIcon }> = [
   { key: 'leaf', Icon: Leaf },
 ];
 
-export const ACCOUNT_ICONS = ['card', 'cash'] as const;
+export const ACCOUNT_ICONS = ['card', 'cash', 'piggy'] as const;
 
 export const TRANSFER_ICON = 'transfer';
 

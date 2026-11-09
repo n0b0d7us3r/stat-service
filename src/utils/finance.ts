@@ -84,6 +84,21 @@ export function formatRateQuote(currency: string, baseCurrency: string, rate: nu
   return `1 ${quote.unit} = ${formatRate(storedRateToDisplay(rate, quote.inverted))} ${quote.quote}`;
 }
 
+const RUB_RATE_LOT = 100;
+
+/**
+ * Курс перевода: `rate` — сколько toCurrency за 1 fromCurrency.
+ * При участии RUB показываем, сколько другой валюты за 100 RUB.
+ */
+export function formatTransferRateQuote(fromCurrency: string, toCurrency: string, rate: number): string {
+  if (fromCurrency !== 'RUB' && toCurrency !== 'RUB') {
+    return formatRateQuote(fromCurrency, toCurrency, rate);
+  }
+  const other = fromCurrency === 'RUB' ? toCurrency : fromCurrency;
+  const otherPer100Rub = fromCurrency === 'RUB' ? rate * RUB_RATE_LOT : RUB_RATE_LOT / rate;
+  return `${RUB_RATE_LOT} RUB = ${formatRate(otherPer100Rub)} ${other}`;
+}
+
 export function todayRatesSourceLabel(todayRates: TodayRates, currency: string): string {
   if (todayRates.manual.includes(currency)) return t('financeRateSourceManual');
   if (!todayRates.market) return '';

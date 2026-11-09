@@ -241,7 +241,7 @@ export function createFinanceAccount(
   }
   const color = normalizeColor(typeof input.color === 'string' ? input.color : '', 'Выберите цвет раздела');
   const icon = normalizeIcon(input.icon);
-  if (icon !== 'card' && icon !== 'cash') {
+  if (icon !== 'card' && icon !== 'cash' && icon !== 'piggy') {
     throw new DbError('Выберите иконку');
   }
 
