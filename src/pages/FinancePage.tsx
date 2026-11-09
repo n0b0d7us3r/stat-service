@@ -16,7 +16,7 @@ import { FinanceBalanceAccounts, FinanceBalanceTotal, accountBalances } from '..
 import {
   FinanceTransferDetailsModal,
   TRANSFER_COLOR,
-  transferAmountLabel,
+  transferListAmount,
 } from '../components/FinanceTransferDetailsModal';
 import { SortSelect } from '../components/SortSelect';
 import { ApiError } from '../api/client';
@@ -556,6 +556,8 @@ export function FinancePage() {
                       const transfer = listItem.item;
                       const from = transfer.from_account_id != null ? accountById.get(transfer.from_account_id) : undefined;
                       const to = transfer.to_account_id != null ? accountById.get(transfer.to_account_id) : undefined;
+                      const accountId = accountFilterValue === 'all' ? null : Number(accountFilterValue);
+                      const transferAmount = transferListAmount(transfer, accountId);
                       const meta = [
                         formatEntryDate(transfer.date),
                         `${from?.name ?? t('financeNoAccount')} → ${to?.name ?? t('financeNoAccount')}`,
@@ -573,7 +575,17 @@ export function FinancePage() {
                               <span className="finance-entry-title">{t('financeTransferOne')}</span>
                               <span className="finance-entry-meta">{meta}</span>
                             </span>
-                            <span className="finance-entry-amount">{transferAmountLabel(transfer)}</span>
+                            <span
+                              className={`finance-entry-amount ${
+                                transferAmount.kind === 'income'
+                                  ? 'finance-amount-income'
+                                  : transferAmount.kind === 'expense'
+                                    ? 'finance-amount-expense'
+                                    : ''
+                              }`}
+                            >
+                              {transferAmount.text}
+                            </span>
                           </button>
                         </li>
                       );

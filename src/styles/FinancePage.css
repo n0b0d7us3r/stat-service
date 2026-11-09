@@ -873,7 +873,9 @@
 }
 
 .finance-icon-grid.finance-icon-grid-compact {
-  grid-template-columns: repeat(2, 2.5rem);
+  grid-template-columns: repeat(3, 2.5rem);
+  max-height: none;
+  overflow: visible;
 }
 
 .finance-color-option,
