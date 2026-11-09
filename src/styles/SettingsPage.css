@@ -54,6 +54,47 @@
   font-size: 0.8125rem;
 }
 
+.settings-rates {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.settings-rates-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.75rem 1.5rem;
+}
+
+.settings-rate-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.settings-rate-badge {
+  align-self: flex-start;
+  color: var(--primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-rates-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.settings-rates-actions > button {
+  width: auto;
+  min-width: 12rem;
+}
+
 .settings-segmented {
   display: inline-flex;
   box-sizing: border-box;
@@ -147,5 +188,9 @@
 
   .settings-segmented button {
     flex: 1 1 0;
+  }
+
+  .settings-rates-actions > button {
+    width: 100%;
   }
 }

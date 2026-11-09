@@ -18,7 +18,11 @@ import {
   createFinanceAccount,
   createFinanceCategory,
   createFinanceEntry,
+  createFinanceTransfer,
   deleteFinanceAccount,
+  deleteFinanceTransfer,
+  getFinanceBalances,
+  updateFinanceTransfer,
   deleteFinanceCategory,
   deleteFinanceEntry,
   getFinanceOverview,
@@ -51,6 +55,12 @@ import {
 } from './services/tasksService.js';
 import { readTaskDescriptionImage, saveTaskDescriptionImage } from './services/taskImagesService.js';
 import { getUserSettings, updateUserSettings } from './services/settingsService.js';
+import {
+  getTodayRates,
+  refreshMarketRates,
+  setRateOverride,
+  startExchangeRatesUpdater,
+} from './services/exchangeRatesService.js';
 
 const app = express();
 
@@ -565,8 +575,10 @@ app.get('/api/finance', requireAuth, (req: AuthRequest, res) => {
 
 app.post('/api/finance/entries', requireAuth, (req: AuthRequest, res) => {
   try {
-    const { kind, amount, currency, categoryId, accountId, rate, date, note } = req.body as Record<string, unknown>;
-    const entry = createFinanceEntry(req.user!.id, { kind, amount, currency, categoryId, accountId, rate, date, note });
+    const { kind, amount, currency, categoryId, accountId, rate, rateMode, date, note } = req.body as Record<string, unknown>;
+    const entry = createFinanceEntry(req.user!.id, {
+      kind, amount, currency, categoryId, accountId, rate, rateMode, date, note,
+    });
     res.status(201).json({ entry });
   } catch (error) {
     if (error instanceof DbError) {
@@ -584,8 +596,10 @@ app.put('/api/finance/entries/:entryId', requireAuth, (req: AuthRequest, res) =>
       res.status(404).json({ message: 'Операция не найдена' });
       return;
     }
-    const { amount, currency, categoryId, accountId, rate, date, note } = req.body as Record<string, unknown>;
-    const entry = updateFinanceEntry(req.user!.id, entryId, { amount, currency, categoryId, accountId, rate, date, note });
+    const { amount, currency, categoryId, accountId, rate, rateMode, date, note } = req.body as Record<string, unknown>;
+    const entry = updateFinanceEntry(req.user!.id, entryId, {
+      amount, currency, categoryId, accountId, rate, rateMode, date, note,
+    });
     res.json({ entry });
   } catch (error) {
     if (error instanceof DbError) {
@@ -628,6 +642,79 @@ app.delete('/api/finance/categories/:categoryId', requireAuth, (req: AuthRequest
   }
 
   res.status(204).end();
+});
+
+function parseTransferBody(body: unknown) {
+  const { fromAccountId, toAccountId, amount, currency, toCurrency, rate, date, note } = body as Record<string, unknown>;
+  return { fromAccountId, toAccountId, amount, currency, toCurrency, rate, date, note };
+}
+
+app.post('/api/finance/transfers', requireAuth, (req: AuthRequest, res) => {
+  try {
+    res.status(201).json({ transfer: createFinanceTransfer(req.user!.id, parseTransferBody(req.body)) });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.put('/api/finance/transfers/:transferId', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const transferId = Number(req.params.transferId);
+    if (!Number.isInteger(transferId) || transferId <= 0) {
+      res.status(404).json({ message: 'Перевод не найден' });
+      return;
+    }
+    res.json({ transfer: updateFinanceTransfer(req.user!.id, transferId, parseTransferBody(req.body)) });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/finance/transfers/:transferId', requireAuth, (req: AuthRequest, res) => {
+  const transferId = Number(req.params.transferId);
+  if (!Number.isInteger(transferId) || transferId <= 0 || !deleteFinanceTransfer(req.user!.id, transferId)) {
+    res.status(404).json({ message: 'Перевод не найден' });
+    return;
+  }
+  res.status(204).end();
+});
+
+app.get('/api/finance/balances', requireAuth, (req: AuthRequest, res) => {
+  res.json({ balances: getFinanceBalances(req.user!.id), rates: getTodayRates(req.user!.id) });
+});
+
+app.get('/api/finance/rates', requireAuth, (req: AuthRequest, res) => {
+  res.json({ rates: getTodayRates(req.user!.id) });
+});
+
+app.post('/api/finance/rates/refresh', requireAuth, async (req: AuthRequest, res) => {
+  await refreshMarketRates();
+  res.json({ rates: getTodayRates(req.user!.id) });
+});
+
+app.put('/api/finance/rates/override', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { rates } = req.body as Record<string, unknown>;
+    res.json({ rates: setRateOverride(req.user!.id, rates) });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/finance/rates/override', requireAuth, (req: AuthRequest, res) => {
+  res.json({ rates: setRateOverride(req.user!.id, null) });
 });
 
 app.get('/api/settings', requireAuth, (req: AuthRequest, res) => {
@@ -677,6 +764,7 @@ app.use((error: unknown, _req: express.Request, res: express.Response, _next: ex
 });
 
 await seedInitialAdmin();
+startExchangeRatesUpdater();
 
 app.listen(PORT, () => {
   console.log(`stat-service API listening on :${PORT} (TZ=${process.env.TZ ?? 'system'}, today=${getTodayKey()})`);

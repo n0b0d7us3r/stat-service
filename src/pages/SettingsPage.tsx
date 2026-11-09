@@ -5,12 +5,20 @@ import { SortSelect } from '../components/SortSelect';
 import { ApiError } from '../api/client';
 import { changeEmail, changePassword } from '../api/auth';
 import { getUserSettings, updateUserSettings } from '../api/settings';
+import { clearRateOverride, getTodayRates, refreshTodayRates, setRateOverride } from '../api/finance';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { locale, setLocale, t, type Locale } from '../i18n';
-import type { UserSettings } from '../types';
-import { FINANCE_CURRENCIES } from '../utils/finance';
+import type { TodayRates, UserSettings } from '../types';
+import {
+  FINANCE_CURRENCIES,
+  displayRateToStored,
+  rateQuote,
+  storedRateToDisplay,
+  todayRatesSourceLabel,
+} from '../utils/finance';
 import '../styles/TasksPage.css';
+import '../styles/FinancePage.css';
 import '../styles/SettingsPage.css';
 
 const LOCALES: Array<{ value: Locale; label: string }> = [
@@ -24,15 +32,143 @@ function errorText(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
 }
 
+function TodayRatesSettings({ todayRates, onChange }: {
+  todayRates: TodayRates;
+  onChange: (next: TodayRates) => void;
+}) {
+  const base = todayRates.base;
+  const currencies = FINANCE_CURRENCIES.filter((code) => code !== base);
+  const [values, setValues] = useState<Record<string, string>>(() => manualValues(todayRates));
+  const [pending, setPending] = useState<'save' | 'reset' | 'refresh' | null>(null);
+  const [status, setStatus] = useState<FormStatus>(null);
+
+  const run = async (kind: 'save' | 'reset' | 'refresh', action: () => Promise<TodayRates>, success: string) => {
+    setPending(kind);
+    setStatus(null);
+    try {
+      const next = await action();
+      onChange(next);
+      setValues(manualValues(next));
+      setStatus({ kind: 'success', text: success });
+    } catch (err) {
+      setStatus({ kind: 'error', text: errorText(err, t('settingsSaveFailed')) });
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const handleSave = (event: FormEvent) => {
+    event.preventDefault();
+    const rates: Record<string, number> = {};
+    for (const code of currencies) {
+      const raw = values[code]?.trim();
+      if (!raw) continue;
+      const value = Number(raw.replace(',', '.'));
+      if (!Number.isFinite(value) || value <= 0) {
+        setStatus({ kind: 'error', text: t('financeRateInvalid') });
+        return;
+      }
+      rates[code] = displayRateToStored(value, rateQuote(code, base).inverted);
+    }
+    void run('save', () => setRateOverride(rates), t('settingsRatesSaved'));
+  };
+
+  return (
+    <form className="settings-rates" onSubmit={handleSave}>
+      <div className="settings-row-text">
+        <span className="settings-row-label">{t('settingsTodayRates')}</span>
+        <span className="settings-row-hint">{t('settingsTodayRatesHint')}</span>
+        {todayRates.market ? (
+          <span className="settings-row-hint">{todayRatesSourceLabel({ ...todayRates, manual: [] }, '')}</span>
+        ) : (
+          <span className="settings-row-hint">{t('settingsRatesUnavailable')}</span>
+        )}
+      </div>
+
+      <div className="settings-rates-list">
+        {currencies.map((code) => {
+          const quote = rateQuote(code, base);
+          const current = todayRates.rates[code];
+          const isManual = todayRates.manual.includes(code);
+          return (
+            <div key={code} className="settings-rate-row">
+              <div className="finance-rate-input">
+                <span>1 {quote.unit} =</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="task-editor-input"
+                  value={values[code] ?? ''}
+                  onChange={(event) => setValues((prev) => ({
+                    ...prev,
+                    [code]: event.target.value.replace(/[^\d.,]/g, ''),
+                  }))}
+                  placeholder={current ? displayRateText(current, quote.inverted) : '—'}
+                  aria-label={`${t('financeRate')} ${code}`}
+                />
+                <span>{quote.quote}</span>
+              </div>
+              {isManual && <span className="settings-rate-badge">{t('financeRateSourceManual')}</span>}
+            </div>
+          );
+        })}
+      </div>
+
+      {status && <p className={`settings-form-status is-${status.kind}`}>{status.text}</p>}
+
+      <div className="settings-rates-actions">
+        <button type="submit" className="modal-action-submit" disabled={pending !== null}>
+          {pending === 'save' ? t('settingsSaving') : t('settingsSaveTodayRates')}
+        </button>
+        {todayRates.manual.length > 0 && (
+          <button
+            type="button"
+            className="modal-action-cancel"
+            disabled={pending !== null}
+            onClick={() => void run('reset', clearRateOverride, t('settingsRatesReset'))}
+          >
+            {t('settingsResetTodayRates')}
+          </button>
+        )}
+        <button
+          type="button"
+          className="modal-action-cancel"
+          disabled={pending !== null}
+          onClick={() => void run('refresh', refreshTodayRates, t('settingsRatesRefreshed'))}
+        >
+          {pending === 'refresh' ? t('settingsRatesRefreshing') : t('settingsRefreshRates')}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function displayRateText(rate: number, inverted: boolean): string {
+  return String(Number(storedRateToDisplay(rate, inverted).toFixed(4)));
+}
+
+function manualValues(todayRates: TodayRates): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const code of todayRates.manual) {
+    const rate = todayRates.rates[code];
+    if (rate) values[code] = displayRateText(rate, rateQuote(code, todayRates.base).inverted);
+  }
+  return values;
+}
+
 function FinanceSettings() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [todayRates, setTodayRates] = useState<TodayRates | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    getUserSettings()
-      .then(setSettings)
+    Promise.all([getUserSettings(), getTodayRates()])
+      .then(([nextSettings, nextRates]) => {
+        setSettings(nextSettings);
+        setTodayRates(nextRates);
+      })
       .catch((err) => setError(errorText(err, t('settingsLoadFailed'))));
   }, []);
 
@@ -45,6 +181,7 @@ function FinanceSettings() {
     setError('');
     try {
       setSettings(await updateUserSettings({ baseCurrency }));
+      setTodayRates(await getTodayRates());
       setSaved(true);
     } catch (err) {
       setSettings(previous);
@@ -76,6 +213,13 @@ function FinanceSettings() {
           </div>
           {(saving || saved) && (
             <p className="settings-status">{saving ? t('settingsSaving') : t('settingsSaved')}</p>
+          )}
+          {todayRates && todayRates.base === settings.baseCurrency && (
+            <TodayRatesSettings
+              key={todayRates.base}
+              todayRates={todayRates}
+              onChange={setTodayRates}
+            />
           )}
         </>
       )}

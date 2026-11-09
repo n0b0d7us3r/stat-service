@@ -1,5 +1,6 @@
 import {
   Apple,
+  ArrowLeftRight,
   Armchair,
   Baby,
   Backpack,
@@ -139,7 +140,12 @@ export const FINANCE_ICONS: Array<{ key: string; Icon: LucideIcon }> = [
 
 export const ACCOUNT_ICONS = ['card', 'cash'] as const;
 
-const iconByKey = new Map(FINANCE_ICONS.map((item) => [item.key, item.Icon]));
+export const TRANSFER_ICON = 'transfer';
+
+const iconByKey = new Map<string, LucideIcon>([
+  ...FINANCE_ICONS.map((item) => [item.key, item.Icon] as const),
+  [TRANSFER_ICON, ArrowLeftRight],
+]);
 
 export function financeIcon(key: string): LucideIcon {
   return iconByKey.get(key) ?? List;

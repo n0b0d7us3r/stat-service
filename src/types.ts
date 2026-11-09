@@ -202,9 +202,42 @@ export interface FinanceEntry {
   account_id: number | null;
   rate: number | null;
   rate_currency: string | null;
+  rate_mode: FinanceRateMode;
   date: string;
   note: string;
   created_at: string;
+}
+
+export type FinanceRateMode = 'fixed' | 'floating';
+
+/** Остаток за всё время по счёту в конкретной валюте; account_id null — операции без счёта. */
+export interface FinanceBalance {
+  account_id: number | null;
+  currency: string;
+  cents: number;
+}
+
+export interface FinanceTransfer {
+  id: number;
+  from_account_id: number | null;
+  to_account_id: number | null;
+  amount_cents: number;
+  currency: string;
+  to_amount_cents: number;
+  to_currency: string;
+  /** Сколько to_currency за 1 единицу currency; null, если валюта не менялась. */
+  rate: number | null;
+  date: string;
+  note: string;
+  created_at: string;
+}
+
+export interface TodayRates {
+  base: string;
+  /** Сколько основной валюты за 1 единицу валюты. */
+  rates: Record<string, number>;
+  manual: string[];
+  market: { source: 'myfin' | 'nbrb'; fetchedAt: string } | null;
 }
 
 export interface UserSettings {
@@ -215,6 +248,9 @@ export interface FinanceOverview {
   from: string;
   to: string;
   baseCurrency: string;
+  todayRates: TodayRates;
+  transfers: FinanceTransfer[];
+  balances: FinanceBalance[];
   categories: FinanceCategory[];
   accounts: FinanceAccount[];
   entries: FinanceEntry[];

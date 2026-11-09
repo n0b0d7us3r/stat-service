@@ -6,13 +6,22 @@ import { FinanceIconBadge } from './FinanceIconBadge';
 import type { FinanceCollectionMode } from './FinanceCategoryModal';
 import { ApiError } from '../api/client';
 import { createFinanceEntry, updateFinanceEntry } from '../api/finance';
-import type { FinanceAccount, FinanceCategory, FinanceEntry, FinanceEntryKind } from '../types';
+import type {
+  FinanceAccount,
+  FinanceCategory,
+  FinanceEntry,
+  FinanceEntryKind,
+  FinanceRateMode,
+  TodayRates,
+} from '../types';
 import {
   FINANCE_CURRENCIES,
   displayRateToStored,
   formatMoney,
+  formatRateQuote,
   rateQuote,
   storedRateToDisplay,
+  todayRatesSourceLabel,
 } from '../utils/finance';
 import { t } from '../i18n';
 
@@ -21,6 +30,7 @@ interface FinanceEntryModalProps {
   categories: FinanceCategory[];
   accounts: FinanceAccount[];
   baseCurrency: string;
+  todayRates: TodayRates | null;
   defaultDate: string;
   entry?: FinanceEntry;
   onClose: () => void;
@@ -69,6 +79,7 @@ export function FinanceEntryModal({
   categories,
   accounts,
   baseCurrency,
+  todayRates,
   defaultDate,
   entry,
   onClose,
@@ -83,6 +94,7 @@ export function FinanceEntryModal({
     const { inverted } = rateQuote(entry.currency, baseCurrency);
     return String(Number(storedRateToDisplay(entry.rate, inverted).toFixed(6)));
   });
+  const [rateMode, setRateMode] = useState<FinanceRateMode>(entry?.rate_mode ?? 'fixed');
   const [date, setDate] = useState(entry?.date ?? defaultDate);
   const [categoryId, setCategoryId] = useState(() => initialId(categories, entry?.category_id));
   const [accountId, setAccountId] = useState(() => initialId(accounts, entry?.account_id));
@@ -94,11 +106,13 @@ export function FinanceEntryModal({
   const quote = rateQuote(currency, baseCurrency);
   const rateNumber = Number(rate.replace(',', '.'));
   const amountNumber = Number(amount.replace(',', '.'));
-  const convertedPreview = needsRate && rateNumber > 0 && amountNumber > 0
-    ? formatMoney(
-      Math.round(amountNumber * 100 * displayRateToStored(rateNumber, quote.inverted)),
-      baseCurrency,
-    )
+  const floating = needsRate && rateMode === 'floating';
+  const todayRate = todayRates?.base === baseCurrency ? todayRates.rates[currency] : undefined;
+  const storedRate = floating
+    ? todayRate
+    : rateNumber > 0 ? displayRateToStored(rateNumber, quote.inverted) : undefined;
+  const convertedPreview = needsRate && storedRate && amountNumber > 0
+    ? formatMoney(Math.round(amountNumber * 100 * storedRate), baseCurrency)
     : null;
 
   const missing: FinanceCollectionMode | null = categories.length === 0 ? kind : accounts.length === 0 ? 'account' : null;
@@ -118,7 +132,7 @@ export function FinanceEntryModal({
       setError(t('financeChooseAccount'));
       return;
     }
-    const displayRate = needsRate ? Number(rate.replace(',', '.')) : null;
+    const displayRate = needsRate && !floating ? Number(rate.replace(',', '.')) : null;
     if (displayRate !== null && (!Number.isFinite(displayRate) || displayRate <= 0)) {
       setError(t('financeRateInvalid'));
       return;
@@ -128,7 +142,16 @@ export function FinanceEntryModal({
     setError('');
     setSaving(true);
 
-    const input = { amount: value, currency, categoryId, accountId, rate: rateValue, date, note };
+    const input = {
+      amount: value,
+      currency,
+      categoryId,
+      accountId,
+      rate: rateValue,
+      rateMode: floating ? 'floating' as const : 'fixed' as const,
+      date,
+      note,
+    };
 
     try {
       onSaved(entry ? await updateFinanceEntry(entry.id, input) : await createFinanceEntry({ ...input, kind }));
@@ -214,20 +237,45 @@ export function FinanceEntryModal({
           {needsRate && (
             <div className="task-editor-field">
               <span>{t('financeRate')}</span>
-              <div className="finance-rate-input">
-                <span>1 {quote.unit} =</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  className="task-editor-input"
-                  value={rate}
-                  onChange={(event) => setRate(event.target.value.replace(/[^\d.,]/g, ''))}
-                  placeholder="0"
-                  aria-label={t('financeRate')}
-                  required
-                />
-                <span>{quote.quote}</span>
+              <div className="finance-rate-mode" role="radiogroup" aria-label={t('financeRate')}>
+                {(['fixed', 'floating'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={rateMode === mode}
+                    className={rateMode === mode ? 'is-active' : ''}
+                    onClick={() => setRateMode(mode)}
+                  >
+                    {mode === 'fixed' ? t('financeRateFixed') : t('financeRateFloating')}
+                  </button>
+                ))}
               </div>
+              {floating ? (
+                <p className="finance-rate-today">
+                  {todayRate && todayRates ? (
+                    <>
+                      {t('financeRateToday')}: <strong>{formatRateQuote(currency, baseCurrency, todayRate)}</strong>
+                      <span className="finance-rate-source">{todayRatesSourceLabel(todayRates, currency)}</span>
+                    </>
+                  ) : t('financeRateTodayMissing')}
+                </p>
+              ) : (
+                <div className="finance-rate-input">
+                  <span>1 {quote.unit} =</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    className="task-editor-input"
+                    value={rate}
+                    onChange={(event) => setRate(event.target.value.replace(/[^\d.,]/g, ''))}
+                    placeholder={todayRate ? String(Number(storedRateToDisplay(todayRate, quote.inverted).toFixed(4))) : '0'}
+                    aria-label={t('financeRate')}
+                    required
+                  />
+                  <span>{quote.quote}</span>
+                </div>
+              )}
               {convertedPreview && (
                 <p className="finance-rate-preview">≈ {convertedPreview}</p>
               )}

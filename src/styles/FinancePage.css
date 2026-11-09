@@ -50,6 +50,16 @@
   border-color: #ff6b62;
 }
 
+.finance-add-btn-transfer {
+  border-color: #0a84ff;
+}
+
+.finance-entry-converted {
+  margin-left: 0.35rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .finance-period-btn {
   display: inline-flex;
   align-items: center;
@@ -105,6 +115,76 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+}
+
+.finance-balances {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  gap: 0.75rem;
+}
+
+.finance-balance-total {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.finance-balance-total-value {
+  font-size: 1.75rem;
+}
+
+.finance-balance-total.is-negative .finance-balance-total-value {
+  color: #ff6b62;
+}
+
+.finance-balance-note {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.finance-balance-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.finance-balance-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finance-balance-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.finance-balance-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.finance-balance-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-balance-amount {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .finance-summary-card {
@@ -530,6 +610,56 @@
   min-width: 0;
 }
 
+.finance-rate-mode {
+  display: flex;
+  border: 1px solid var(--border);
+}
+
+.finance-rate-mode button {
+  flex: 1 1 0;
+  min-height: 2.5rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.finance-rate-mode button + button {
+  border-left: 1px solid var(--border);
+}
+
+.finance-rate-mode button.is-active {
+  background: var(--primary-gradient);
+  color: #fff;
+}
+
+.finance-rate-today {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.finance-rate-source {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.finance-details-rate {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
 .finance-rate-preview {
   margin: 0;
   color: var(--muted);
@@ -934,6 +1064,10 @@
     background: rgba(255, 107, 98, 0.1);
   }
 
+  .finance-add-btn-transfer:hover {
+    background: rgba(10, 132, 255, 0.1);
+  }
+
   .finance-entry:hover .finance-entry-title {
     text-decoration: underline;
     text-underline-offset: 3px;
@@ -961,8 +1095,14 @@
 }
 
 @media (max-width: 768px) {
-  .finance-summary {
+  .finance-summary,
+  .finance-balances {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-balance-amount {
+    flex-shrink: 1;
+    overflow-wrap: anywhere;
   }
 
   .finance-toolbar .sort-select {

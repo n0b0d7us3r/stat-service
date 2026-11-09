@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarRange, CreditCard, Layers, Minus, Plus } from 'lucide-react';
+import { ArrowLeftRight, CalendarRange, CreditCard, Layers, Minus, Plus } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { FinanceCategoryModal, type FinanceCollectionMode } from '../components/FinanceCategoryModal';
@@ -11,12 +11,32 @@ import { FinanceMonthChart, type FinanceChartColumn } from '../components/Financ
 import { FinanceCompareChart, type FinanceCompareColumn } from '../components/FinanceCompareChart';
 import { FinanceTopList } from '../components/FinanceTopList';
 import { FinanceIconBadge } from '../components/FinanceIconBadge';
+import { FinanceTransferModal } from '../components/FinanceTransferModal';
+import { FinanceBalances } from '../components/FinanceBalances';
+import {
+  FinanceTransferDetailsModal,
+  TRANSFER_COLOR,
+  transferAmountLabel,
+} from '../components/FinanceTransferDetailsModal';
 import { SortSelect } from '../components/SortSelect';
 import { ApiError } from '../api/client';
-import { deleteFinanceEntry, getFinanceOverview } from '../api/finance';
+import {
+  deleteFinanceEntry,
+  deleteFinanceTransfer,
+  getFinanceBalances,
+  getFinanceOverview,
+} from '../api/finance';
 import { APP_NAME } from '../config/app';
 import { dateLocaleTag, t } from '../i18n';
-import type { FinanceAccount, FinanceCategory, FinanceEntry, FinanceEntryKind } from '../types';
+import type {
+  FinanceAccount,
+  FinanceBalance,
+  FinanceCategory,
+  FinanceEntry,
+  FinanceEntryKind,
+  FinanceTransfer,
+  TodayRates,
+} from '../types';
 import { formatLocalDate, parseLocalDate } from '../utils/date';
 import {
   DEFAULT_CURRENCY,
@@ -27,6 +47,7 @@ import {
   toBaseCents,
   type FinancePeriod,
 } from '../utils/finance';
+import { TRANSFER_ICON } from '../utils/financeIcons';
 import '../styles/TasksPage.css';
 import '../styles/components/TaskArchiveModal.css';
 import '../styles/FinancePage.css';
@@ -40,6 +61,14 @@ function sumCents(entries: FinanceEntry[]): number {
   return entries.reduce((sum, entry) => sum + entry.amount_cents, 0);
 }
 
+type ListItem =
+  | { type: 'entry'; item: FinanceEntry }
+  | { type: 'transfer'; item: FinanceTransfer };
+
+function formatEntryDate(date: string): string {
+  return parseLocalDate(date).toLocaleDateString(dateLocaleTag, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 function sortByName<T extends { name: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.name.localeCompare(b.name, dateLocaleTag));
 }
@@ -51,6 +80,7 @@ export function FinancePage() {
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [editingSelected, setEditingSelected] = useState(false);
   const [accountFilter, setAccountFilter] = useState('all');
+  const [todayRates, setTodayRates] = useState<TodayRates | null>(null);
   const [categories, setCategories] = useState<FinanceCategory[]>([]);
   const [accounts, setAccounts] = useState<FinanceAccount[]>([]);
   const [entries, setEntries] = useState<FinanceEntry[]>([]);
@@ -60,6 +90,12 @@ export function FinancePage() {
   const [manageMode, setManageMode] = useState<FinanceCollectionMode | null>(null);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [deletingEntryId, setDeletingEntryId] = useState<number | null>(null);
+  const [transfers, setTransfers] = useState<FinanceTransfer[]>([]);
+  const [balances, setBalances] = useState<FinanceBalance[]>([]);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [selectedTransferId, setSelectedTransferId] = useState<number | null>(null);
+  const [editingTransfer, setEditingTransfer] = useState(false);
+  const [deletingTransferId, setDeletingTransferId] = useState<number | null>(null);
 
   const loadPeriod = useCallback(async (target: FinancePeriod) => {
     try {
@@ -67,12 +103,25 @@ export function FinancePage() {
       setCategories(overview.categories);
       setAccounts(overview.accounts);
       setCurrency(overview.baseCurrency);
+      setTodayRates(overview.todayRates);
       setEntries(overview.entries);
+      setTransfers(overview.transfers);
+      setBalances(overview.balances);
       setError('');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeLoadFailed'));
     } finally {
       setLoaded(true);
+    }
+  }, []);
+
+  const refreshBalances = useCallback(async () => {
+    try {
+      const next = await getFinanceBalances();
+      setBalances(next.balances);
+      setTodayRates(next.rates);
+    } catch {
+      /* баланс обновится при следующей загрузке страницы */
     }
   }, []);
 
@@ -90,6 +139,7 @@ export function FinancePage() {
   );
   const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
   const selectedEntry = entries.find((entry) => entry.id === selectedEntryId);
+  const selectedTransfer = transfers.find((transfer) => transfer.id === selectedTransferId);
 
   const categoryOf = useCallback((entry: FinanceEntry) => {
     const category = entry.category_id != null ? categoryById.get(entry.category_id) : undefined;
@@ -134,7 +184,7 @@ export function FinancePage() {
     const converted: FinanceEntry[] = [];
     let skipped = 0;
     for (const entry of accountEntries) {
-      const cents = toBaseCents(entry, currency);
+      const cents = toBaseCents(entry, currency, todayRates);
       if (cents === null) {
         skipped += 1;
       } else {
@@ -142,7 +192,7 @@ export function FinancePage() {
       }
     }
     return { inCurrency: converted, unconvertedCount: skipped };
-  }, [accountEntries, currency]);
+  }, [accountEntries, currency, todayRates]);
   const incomeInCurrency = useMemo(() => inCurrency.filter((entry) => entry.kind === 'income'), [inCurrency]);
   const expenseInCurrency = useMemo(() => inCurrency.filter((entry) => entry.kind === 'expense'), [inCurrency]);
 
@@ -179,10 +229,21 @@ export function FinancePage() {
     return buckets.map((bucket) => ({ ...bucket, ...(totalsByBucket.get(bucket.key) ?? { income: 0, expense: 0 }) }));
   }, [buckets, inCurrency, keyOf]);
 
-  const listEntries = useMemo(
-    () => (tab === 'all' ? accountEntries : accountEntries.filter((entry) => entry.kind === tab)),
-    [accountEntries, tab],
-  );
+  const listItems = useMemo(() => {
+    const items: ListItem[] = (tab === 'all' ? accountEntries : accountEntries.filter((entry) => entry.kind === tab))
+      .map((entry) => ({ type: 'entry', item: entry }));
+    if (tab === 'all') {
+      const accountId = accountFilterValue === 'all' ? null : Number(accountFilterValue);
+      for (const transfer of transfers) {
+        if (accountId === null || transfer.from_account_id === accountId || transfer.to_account_id === accountId) {
+          items.push({ type: 'transfer', item: transfer });
+        }
+      }
+    }
+    return items.sort((a, b) => (
+      b.item.date.localeCompare(a.item.date) || b.item.created_at.localeCompare(a.item.created_at)
+    ));
+  }, [accountEntries, accountFilterValue, tab, transfers]);
 
   const defaultEntryDate = (() => {
     const todayKey = formatLocalDate(new Date());
@@ -192,6 +253,7 @@ export function FinancePage() {
 
   const handleEntrySaved = (entry: FinanceEntry) => {
     setEntryKind(null);
+    void refreshBalances();
     if (entry.date < period.from || entry.date > period.to) return;
     setEntries((current) => [entry, ...current].sort((a, b) => (
       b.date.localeCompare(a.date) || b.id - a.id
@@ -200,6 +262,7 @@ export function FinancePage() {
 
   const handleEntryUpdated = (entry: FinanceEntry) => {
     setEditingSelected(false);
+    void refreshBalances();
     const inPeriod = entry.date >= period.from && entry.date <= period.to;
     if (!inPeriod) setSelectedEntryId(null);
     setEntries((current) => {
@@ -220,10 +283,42 @@ export function FinancePage() {
       await deleteFinanceEntry(entry.id);
       setEntries((current) => current.filter((item) => item.id !== entry.id));
       setSelectedEntryId(null);
+      void refreshBalances();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeDeleteEntryFailed'));
     } finally {
       setDeletingEntryId(null);
+    }
+  };
+
+  const handleTransferSaved = (transfer: FinanceTransfer) => {
+    setTransferModalOpen(false);
+    setEditingTransfer(false);
+    void refreshBalances();
+    const inPeriod = transfer.date >= period.from && transfer.date <= period.to;
+    if (!inPeriod) setSelectedTransferId(null);
+    setTransfers((current) => {
+      const rest = current.filter((item) => item.id !== transfer.id);
+      return inPeriod ? [transfer, ...rest] : rest;
+    });
+  };
+
+  const closeSelectedTransfer = () => {
+    setSelectedTransferId(null);
+    setEditingTransfer(false);
+  };
+
+  const handleDeleteTransfer = async (transfer: FinanceTransfer) => {
+    setDeletingTransferId(transfer.id);
+    try {
+      await deleteFinanceTransfer(transfer.id);
+      setTransfers((current) => current.filter((item) => item.id !== transfer.id));
+      setSelectedTransferId(null);
+      void refreshBalances();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t('financeDeleteTransferFailed'));
+    } finally {
+      setDeletingTransferId(null);
     }
   };
 
@@ -241,6 +336,12 @@ export function FinancePage() {
       setEntries((current) => current.map((entry) => (
         entry.account_id === itemId ? { ...entry, account_id: null } : entry
       )));
+      void refreshBalances();
+      setTransfers((current) => current.map((transfer) => ({
+        ...transfer,
+        from_account_id: transfer.from_account_id === itemId ? null : transfer.from_account_id,
+        to_account_id: transfer.to_account_id === itemId ? null : transfer.to_account_id,
+      })));
       return;
     }
     setCategories((current) => current.filter((category) => category.id !== itemId));
@@ -310,6 +411,14 @@ export function FinancePage() {
                 <span>{t('financeAddExpense')}</span>
               </button>
             )}
+            <button
+              type="button"
+              className="finance-add-btn finance-add-btn-transfer"
+              onClick={() => setTransferModalOpen(true)}
+            >
+              <ArrowLeftRight size={18} strokeWidth={2.5} />
+              <span>{t('financeTransfer')}</span>
+            </button>
             {tab !== 'all' && (
               <button type="button" className="tasks-tag-create-btn finance-manage-btn" onClick={() => setManageMode(tab)}>
                 <Layers size={18} strokeWidth={2.25} />
@@ -335,6 +444,12 @@ export function FinancePage() {
           <>
             {tab === 'all' ? (
               <>
+                <FinanceBalances
+                  accounts={accounts}
+                  balances={balances}
+                  baseCurrency={currency}
+                  todayRates={todayRates}
+                />
                 <div className="finance-summary">
                   <div
                     className={`finance-panel finance-summary-card finance-result ${
@@ -413,25 +528,46 @@ export function FinancePage() {
                   {t('financeUnconverted', { count: unconvertedCount, currency })}
                 </p>
               )}
-              {listEntries.length === 0 ? (
+              {listItems.length === 0 ? (
                 <p className="finance-empty">{t('financeNoEntries')}</p>
               ) : (
                 <ul className="finance-entries">
-                  {listEntries.map((entry) => {
+                  {listItems.map((listItem) => {
+                    if (listItem.type === 'transfer') {
+                      const transfer = listItem.item;
+                      const from = transfer.from_account_id != null ? accountById.get(transfer.from_account_id) : undefined;
+                      const to = transfer.to_account_id != null ? accountById.get(transfer.to_account_id) : undefined;
+                      const meta = [
+                        formatEntryDate(transfer.date),
+                        `${from?.name ?? t('financeNoAccount')} → ${to?.name ?? t('financeNoAccount')}`,
+                        transfer.note,
+                      ].filter(Boolean).join(' · ');
+                      return (
+                        <li key={`transfer-${transfer.id}`}>
+                          <button
+                            type="button"
+                            className="finance-entry"
+                            onClick={() => setSelectedTransferId(transfer.id)}
+                          >
+                            <FinanceIconBadge icon={TRANSFER_ICON} color={TRANSFER_COLOR} />
+                            <span className="finance-entry-body">
+                              <span className="finance-entry-title">{t('financeTransferOne')}</span>
+                              <span className="finance-entry-meta">{meta}</span>
+                            </span>
+                            <span className="finance-entry-amount">{transferAmountLabel(transfer)}</span>
+                          </button>
+                        </li>
+                      );
+                    }
+
+                    const entry = listItem.item;
                     const category = categoryOf(entry);
                     const account = entry.account_id != null ? accountById.get(entry.account_id) : undefined;
                     const amount = formatMoney(entry.amount_cents, entry.currency);
-                    const meta = [
-                      parseLocalDate(entry.date).toLocaleDateString(dateLocaleTag, {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      }),
-                      account?.name,
-                      entry.note,
-                    ].filter(Boolean).join(' · ');
+                    const baseCents = entry.currency === currency ? null : toBaseCents(entry, currency, todayRates);
+                    const meta = [formatEntryDate(entry.date), account?.name, entry.note].filter(Boolean).join(' · ');
                     return (
-                      <li key={entry.id}>
+                      <li key={`entry-${entry.id}`}>
                         <button
                           type="button"
                           className="finance-entry"
@@ -448,6 +584,9 @@ export function FinancePage() {
                             }`}
                           >
                             {entry.kind === 'income' ? '+' : '−'}{amount}
+                            {baseCents !== null && (
+                              <span className="finance-entry-converted">({formatMoney(baseCents, currency)})</span>
+                            )}
                           </span>
                         </button>
                       </li>
@@ -466,6 +605,7 @@ export function FinancePage() {
           categories={categories.filter((category) => category.kind === entryKind)}
           accounts={accounts}
           baseCurrency={currency}
+          todayRates={todayRates}
           defaultDate={defaultEntryDate}
           onClose={() => setEntryKind(null)}
           onSaved={handleEntrySaved}
@@ -489,12 +629,54 @@ export function FinancePage() {
         />
       )}
 
+      {transferModalOpen && (
+        <FinanceTransferModal
+          accounts={accounts}
+          baseCurrency={currency}
+          todayRates={todayRates}
+          defaultDate={defaultEntryDate}
+          onClose={() => setTransferModalOpen(false)}
+          onSaved={handleTransferSaved}
+          onManageAccounts={() => {
+            setTransferModalOpen(false);
+            setManageMode('account');
+          }}
+        />
+      )}
+
+      {selectedTransfer && (editingTransfer ? (
+        <FinanceTransferModal
+          accounts={accounts}
+          baseCurrency={currency}
+          todayRates={todayRates}
+          defaultDate={selectedTransfer.date}
+          transfer={selectedTransfer}
+          onClose={() => setEditingTransfer(false)}
+          onSaved={handleTransferSaved}
+          onManageAccounts={() => {
+            closeSelectedTransfer();
+            setManageMode('account');
+          }}
+        />
+      ) : (
+        <FinanceTransferDetailsModal
+          transfer={selectedTransfer}
+          fromAccount={selectedTransfer.from_account_id != null ? accountById.get(selectedTransfer.from_account_id) : undefined}
+          toAccount={selectedTransfer.to_account_id != null ? accountById.get(selectedTransfer.to_account_id) : undefined}
+          deleting={deletingTransferId === selectedTransfer.id}
+          onClose={closeSelectedTransfer}
+          onEdit={() => setEditingTransfer(true)}
+          onDelete={() => void handleDeleteTransfer(selectedTransfer)}
+        />
+      ))}
+
       {selectedEntry && (editingSelected ? (
         <FinanceEntryModal
           kind={selectedEntry.kind}
           categories={categories.filter((category) => category.kind === selectedEntry.kind)}
           accounts={accounts}
           baseCurrency={currency}
+          todayRates={todayRates}
           defaultDate={selectedEntry.date}
           entry={selectedEntry}
           onClose={() => setEditingSelected(false)}
@@ -510,6 +692,7 @@ export function FinancePage() {
           category={categoryOf(selectedEntry)}
           account={selectedEntry.account_id != null ? accountById.get(selectedEntry.account_id) : undefined}
           baseCurrency={currency}
+          todayRates={todayRates}
           deleting={deletingEntryId === selectedEntry.id}
           onClose={closeSelectedEntry}
           onEdit={() => setEditingSelected(true)}

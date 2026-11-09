@@ -3,15 +3,16 @@ import { Pencil } from 'lucide-react';
 import { Modal } from './Modal';
 import { FinanceIconBadge } from './FinanceIconBadge';
 import { dateLocaleTag, t } from '../i18n';
-import type { FinanceAccount, FinanceEntry } from '../types';
+import type { FinanceAccount, FinanceEntry, TodayRates } from '../types';
 import { parseLocalDate } from '../utils/date';
-import { formatMoney, formatRate, rateQuote, storedRateToDisplay, toBaseCents } from '../utils/finance';
+import { formatMoney, formatRateQuote, toBaseCents, todayRatesSourceLabel } from '../utils/finance';
 
 interface FinanceEntryDetailsModalProps {
   entry: FinanceEntry;
   category: { label: string; color: string; icon: string };
   account: FinanceAccount | undefined;
   baseCurrency: string;
+  todayRates: TodayRates | null;
   deleting: boolean;
   onClose: () => void;
   onEdit: () => void;
@@ -23,6 +24,7 @@ export function FinanceEntryDetailsModal({
   category,
   account,
   baseCurrency,
+  todayRates,
   deleting,
   onClose,
   onEdit,
@@ -30,7 +32,7 @@ export function FinanceEntryDetailsModal({
 }: FinanceEntryDetailsModalProps) {
   const [confirming, setConfirming] = useState(false);
   const isIncome = entry.kind === 'income';
-  const baseCents = toBaseCents(entry, baseCurrency);
+  const baseCents = toBaseCents(entry, baseCurrency, todayRates);
   const showConverted = entry.currency !== baseCurrency && baseCents !== null;
 
   const rows: Array<{ label: string; value: React.ReactNode }> = [
@@ -64,11 +66,25 @@ export function FinanceEntryDetailsModal({
     },
   ];
 
-  if (entry.rate != null && entry.rate_currency) {
-    const quote = rateQuote(entry.currency, entry.rate_currency);
+  if (entry.rate_mode === 'floating' && entry.currency !== baseCurrency) {
+    const todayRate = todayRates?.base === baseCurrency ? todayRates.rates[entry.currency] : undefined;
     rows.push({
       label: t('financeRate'),
-      value: `1 ${quote.unit} = ${formatRate(storedRateToDisplay(entry.rate, quote.inverted))} ${quote.quote}`,
+      value: (
+        <span className="finance-details-rate">
+          <span>{t('financeRateFloating')}</span>
+          <span className="finance-rate-source">
+            {todayRate && todayRates
+              ? `${formatRateQuote(entry.currency, baseCurrency, todayRate)} · ${todayRatesSourceLabel(todayRates, entry.currency)}`
+              : t('financeRateTodayMissing')}
+          </span>
+        </span>
+      ),
+    });
+  } else if (entry.rate != null && entry.rate_currency) {
+    rows.push({
+      label: t('financeRate'),
+      value: formatRateQuote(entry.currency, entry.rate_currency, entry.rate),
     });
   }
 

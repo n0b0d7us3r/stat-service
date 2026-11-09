@@ -1,4 +1,5 @@
-import { dateLocaleTag } from '../i18n';
+import { dateLocaleTag, t } from '../i18n';
+import type { FinanceEntry, TodayRates } from '../types';
 import { formatLocalDate, parseLocalDate } from './date';
 
 export const FINANCE_CURRENCIES = ['BYN', 'USD', 'EUR', 'RUB', 'PLN', 'CNY'] as const;
@@ -77,12 +78,45 @@ export function storedRateToDisplay(rate: number, inverted: boolean): number {
   return inverted ? 1 / rate : rate;
 }
 
+/** «1 USD = 2,99 BYN» по хранимому курсу (основная валюта за 1 единицу валюты операции). */
+export function formatRateQuote(currency: string, baseCurrency: string, rate: number): string {
+  const quote = rateQuote(currency, baseCurrency);
+  return `1 ${quote.unit} = ${formatRate(storedRateToDisplay(rate, quote.inverted))} ${quote.quote}`;
+}
+
+export function todayRatesSourceLabel(todayRates: TodayRates, currency: string): string {
+  if (todayRates.manual.includes(currency)) return t('financeRateSourceManual');
+  if (!todayRates.market) return '';
+  const time = new Date(todayRates.market.fetchedAt).toLocaleString(dateLocaleTag, {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const source = todayRates.market.source === 'myfin' ? t('financeRateSourceMyfin') : t('financeRateSourceNbrb');
+  return t('financeRateSourceMarket', { source, time });
+}
+
+/** Сегодняшний курс: сколько `to` за 1 единицу `from`. */
+export function crossRate(todayRates: TodayRates | null, from: string, to: string): number | undefined {
+  if (!todayRates) return undefined;
+  const inBase = (code: string) => (code === todayRates.base ? 1 : todayRates.rates[code]);
+  const fromRate = inBase(from);
+  const toRate = inBase(to);
+  return fromRate && toRate ? fromRate / toRate : undefined;
+}
+
 /** Сумма операции в основной валюте или null, если курса к ней нет. */
 export function toBaseCents(
-  entry: { amount_cents: number; currency: string; rate: number | null; rate_currency: string | null },
+  entry: Pick<FinanceEntry, 'amount_cents' | 'currency' | 'rate' | 'rate_currency' | 'rate_mode'>,
   baseCurrency: string,
+  todayRates?: TodayRates | null,
 ): number | null {
   if (entry.currency === baseCurrency) return entry.amount_cents;
+  if (entry.rate_mode === 'floating') {
+    const rate = todayRates?.base === baseCurrency ? todayRates.rates[entry.currency] : undefined;
+    return rate ? Math.round(entry.amount_cents * rate) : null;
+  }
   if (entry.rate != null && entry.rate_currency === baseCurrency) {
     return Math.round(entry.amount_cents * entry.rate);
   }
