@@ -10,6 +10,10 @@
   gap: 1rem;
 }
 
+.finance-balance-intro-mobile {
+  display: none;
+}
+
 .finance-toolbar,
 .finance-controls {
   display: flex;
@@ -1143,6 +1147,18 @@
 }
 
 @media (max-width: 768px) {
+  .finance-balance-intro-mobile {
+    display: block;
+  }
+
+  .finance-balance-intro-mobile .finance-balance-total {
+    padding: 0.85rem 1rem;
+  }
+
+  .finance-summary-with-balance > .finance-balance-total {
+    display: none;
+  }
+
   .finance-summary {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1158,10 +1174,6 @@
 
   .finance-summary-with-balance > * {
     order: 2;
-  }
-
-  .finance-summary-with-balance > .finance-balance-total {
-    order: 0;
   }
 
   .finance-summary-with-balance > .finance-balance-accounts {

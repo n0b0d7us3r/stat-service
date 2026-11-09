@@ -378,6 +378,11 @@ export function FinancePage() {
       <div className="finance-page">
         <div className="finance-page-intro">
           <PageTitle title={t('financeTitle')} />
+          {loaded && (
+            <div className="finance-balance-intro-mobile">
+              <FinanceBalanceTotal rows={balanceRows} baseCurrency={currency} />
+            </div>
+          )}
 
           <div className="finance-toolbar">
             <SortSelect<FinanceTab>
