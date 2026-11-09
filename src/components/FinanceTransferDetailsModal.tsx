@@ -26,26 +26,37 @@ export function transferAmountLabel(transfer: FinanceTransfer): string {
   return `${sent} → ${formatMoney(transfer.to_amount_cents, transfer.to_currency)}`;
 }
 
+export type TransferListAmount =
+  | { mode: 'single'; text: string; kind: 'income' | 'expense' }
+  | { mode: 'pair'; debit: string; credit: string };
+
 /** Сумма перевода в списке операций с учётом выбранного счёта. */
 export function transferListAmount(
   transfer: FinanceTransfer,
   accountId: number | null,
-): { text: string; kind: 'income' | 'expense' | null } {
+): TransferListAmount {
   if (accountId != null) {
     if (transfer.to_account_id === accountId) {
       return {
+        mode: 'single',
         text: `+${formatMoney(transfer.to_amount_cents, transfer.to_currency)}`,
         kind: 'income',
       };
     }
     if (transfer.from_account_id === accountId) {
       return {
+        mode: 'single',
         text: `−${formatMoney(transfer.amount_cents, transfer.currency)}`,
         kind: 'expense',
       };
     }
   }
-  return { text: transferAmountLabel(transfer), kind: null };
+
+  return {
+    mode: 'pair',
+    debit: `−${formatMoney(transfer.amount_cents, transfer.currency)}`,
+    credit: `+${formatMoney(transfer.to_amount_cents, transfer.to_currency)}`,
+  };
 }
 
 function AccountChip({ account }: { account: FinanceAccount | undefined }) {

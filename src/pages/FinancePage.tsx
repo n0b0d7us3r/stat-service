@@ -575,17 +575,23 @@ export function FinancePage() {
                               <span className="finance-entry-title">{t('financeTransferOne')}</span>
                               <span className="finance-entry-meta">{meta}</span>
                             </span>
-                            <span
-                              className={`finance-entry-amount ${
-                                transferAmount.kind === 'income'
-                                  ? 'finance-amount-income'
-                                  : transferAmount.kind === 'expense'
-                                    ? 'finance-amount-expense'
-                                    : ''
-                              }`}
-                            >
-                              {transferAmount.text}
-                            </span>
+                            {transferAmount.mode === 'single' ? (
+                              <span
+                                className={`finance-entry-amount ${
+                                  transferAmount.kind === 'income'
+                                    ? 'finance-amount-income'
+                                    : 'finance-amount-expense'
+                                }`}
+                              >
+                                {transferAmount.text}
+                              </span>
+                            ) : (
+                              <span className="finance-entry-amount finance-entry-amount-transfer">
+                                <span className="finance-amount-expense">{transferAmount.debit}</span>
+                                <span className="finance-entry-amount-arrow" aria-hidden="true">→</span>
+                                <span className="finance-amount-income">{transferAmount.credit}</span>
+                              </span>
+                            )}
                           </button>
                         </li>
                       );
