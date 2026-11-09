@@ -226,19 +226,26 @@ export function FinanceEntryModal({
             onChange={setCategoryId}
           />
 
-          <ChoiceGroup
-            name="financeEntryAccount"
-            label={isExpense ? t('financeAccountFrom') : t('financeAccountTo')}
-            items={accounts}
-            value={accountId}
-            onChange={setAccountId}
-          />
+          <label className="task-editor-field">
+            <span>{isExpense ? t('financeAccountFrom') : t('financeAccountTo')}</span>
+            <select
+              className="task-editor-select"
+              value={accountId ?? ''}
+              onChange={(event) => setAccountId(event.target.value ? Number(event.target.value) : null)}
+              required
+            >
+              {accountId == null && <option value="">{t('financeChooseAccount')}</option>}
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id}>{account.name}</option>
+              ))}
+            </select>
+          </label>
 
           <label className="task-editor-field">
             <span>{t('financeDate')}</span>
             <input
               type="date"
-              className="task-editor-input"
+              className="task-editor-input task-editor-date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
               required
