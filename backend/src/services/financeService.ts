@@ -273,7 +273,7 @@ function normalizeEntryInput(userId: number, db: Database.Database, kind: Financ
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > MAX_RATE) {
       throw new DbError('Укажите курс валюты');
     }
-    rate = Math.round(value * 1_000_000) / 1_000_000;
+    rate = Number(value.toPrecision(12));
     rateCurrency = baseCurrency;
   }
 

@@ -46,6 +46,37 @@ export function formatRate(rate: number): string {
   return rateFormatter.format(rate);
 }
 
+/** От самой дорогой к самой дешёвой: курс показывается за 1 единицу более дорогой валюты. */
+const CURRENCY_STRENGTH = ['EUR', 'USD', 'BYN', 'PLN', 'CNY', 'RUB'];
+
+function strengthRank(code: string): number {
+  const index = CURRENCY_STRENGTH.indexOf(code);
+  return index === -1 ? CURRENCY_STRENGTH.length : index;
+}
+
+export interface RateQuote {
+  unit: string;
+  quote: string;
+  /** true, если в интерфейсе вводится обратный курс (сколько валюты операции за 1 основную). */
+  inverted: boolean;
+}
+
+/** `rate` всегда хранится как «основная валюта за 1 единицу валюты операции». */
+export function rateQuote(currency: string, baseCurrency: string): RateQuote {
+  const inverted = strengthRank(currency) > strengthRank(baseCurrency);
+  return inverted
+    ? { unit: baseCurrency, quote: currency, inverted }
+    : { unit: currency, quote: baseCurrency, inverted };
+}
+
+export function displayRateToStored(value: number, inverted: boolean): number {
+  return inverted ? 1 / value : value;
+}
+
+export function storedRateToDisplay(rate: number, inverted: boolean): number {
+  return inverted ? 1 / rate : rate;
+}
+
 /** Сумма операции в основной валюте или null, если курса к ней нет. */
 export function toBaseCents(
   entry: { amount_cents: number; currency: string; rate: number | null; rate_currency: string | null },

@@ -7,7 +7,13 @@ import type { FinanceCollectionMode } from './FinanceCategoryModal';
 import { ApiError } from '../api/client';
 import { createFinanceEntry, updateFinanceEntry } from '../api/finance';
 import type { FinanceAccount, FinanceCategory, FinanceEntry, FinanceEntryKind } from '../types';
-import { FINANCE_CURRENCIES, formatMoney } from '../utils/finance';
+import {
+  FINANCE_CURRENCIES,
+  displayRateToStored,
+  formatMoney,
+  rateQuote,
+  storedRateToDisplay,
+} from '../utils/finance';
 import { t } from '../i18n';
 
 interface FinanceEntryModalProps {
@@ -72,9 +78,11 @@ export function FinanceEntryModal({
   const isExpense = kind === 'expense';
   const [amount, setAmount] = useState(() => (entry ? String(entry.amount_cents / 100) : ''));
   const [currency, setCurrency] = useState(entry?.currency ?? baseCurrency);
-  const [rate, setRate] = useState(() => (
-    entry?.rate != null && entry.rate_currency === baseCurrency ? String(entry.rate) : ''
-  ));
+  const [rate, setRate] = useState(() => {
+    if (entry?.rate == null || entry.rate_currency !== baseCurrency) return '';
+    const { inverted } = rateQuote(entry.currency, baseCurrency);
+    return String(Number(storedRateToDisplay(entry.rate, inverted).toFixed(6)));
+  });
   const [date, setDate] = useState(entry?.date ?? defaultDate);
   const [categoryId, setCategoryId] = useState(() => initialId(categories, entry?.category_id));
   const [accountId, setAccountId] = useState(() => initialId(accounts, entry?.account_id));
@@ -83,10 +91,14 @@ export function FinanceEntryModal({
   const [saving, setSaving] = useState(false);
 
   const needsRate = currency !== baseCurrency;
+  const quote = rateQuote(currency, baseCurrency);
   const rateNumber = Number(rate.replace(',', '.'));
   const amountNumber = Number(amount.replace(',', '.'));
   const convertedPreview = needsRate && rateNumber > 0 && amountNumber > 0
-    ? formatMoney(Math.round(amountNumber * 100 * rateNumber), baseCurrency)
+    ? formatMoney(
+      Math.round(amountNumber * 100 * displayRateToStored(rateNumber, quote.inverted)),
+      baseCurrency,
+    )
     : null;
 
   const missing: FinanceCollectionMode | null = categories.length === 0 ? kind : accounts.length === 0 ? 'account' : null;
@@ -106,11 +118,12 @@ export function FinanceEntryModal({
       setError(t('financeChooseAccount'));
       return;
     }
-    const rateValue = needsRate ? Number(rate.replace(',', '.')) : null;
-    if (rateValue !== null && (!Number.isFinite(rateValue) || rateValue <= 0)) {
+    const displayRate = needsRate ? Number(rate.replace(',', '.')) : null;
+    if (displayRate !== null && (!Number.isFinite(displayRate) || displayRate <= 0)) {
       setError(t('financeRateInvalid'));
       return;
     }
+    const rateValue = displayRate === null ? null : displayRateToStored(displayRate, quote.inverted);
 
     setError('');
     setSaving(true);
@@ -186,7 +199,10 @@ export function FinanceEntryModal({
               <select
                 className="task-editor-select"
                 value={currency}
-                onChange={(event) => setCurrency(event.target.value)}
+                onChange={(event) => {
+                  setCurrency(event.target.value);
+                  setRate('');
+                }}
               >
                 {FINANCE_CURRENCIES.map((code) => (
                   <option key={code} value={code}>{code}</option>
@@ -199,7 +215,7 @@ export function FinanceEntryModal({
             <div className="task-editor-field">
               <span>{t('financeRate')}</span>
               <div className="finance-rate-input">
-                <span>1 {currency} =</span>
+                <span>1 {quote.unit} =</span>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -210,7 +226,7 @@ export function FinanceEntryModal({
                   aria-label={t('financeRate')}
                   required
                 />
-                <span>{baseCurrency}</span>
+                <span>{quote.quote}</span>
               </div>
               {convertedPreview && (
                 <p className="finance-rate-preview">≈ {convertedPreview}</p>

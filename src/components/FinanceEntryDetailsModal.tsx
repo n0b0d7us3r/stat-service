@@ -5,7 +5,7 @@ import { FinanceIconBadge } from './FinanceIconBadge';
 import { dateLocaleTag, t } from '../i18n';
 import type { FinanceAccount, FinanceEntry } from '../types';
 import { parseLocalDate } from '../utils/date';
-import { formatMoney, formatRate, toBaseCents } from '../utils/finance';
+import { formatMoney, formatRate, rateQuote, storedRateToDisplay, toBaseCents } from '../utils/finance';
 
 interface FinanceEntryDetailsModalProps {
   entry: FinanceEntry;
@@ -65,9 +65,10 @@ export function FinanceEntryDetailsModal({
   ];
 
   if (entry.rate != null && entry.rate_currency) {
+    const quote = rateQuote(entry.currency, entry.rate_currency);
     rows.push({
       label: t('financeRate'),
-      value: `1 ${entry.currency} = ${formatRate(entry.rate)} ${entry.rate_currency}`,
+      value: `1 ${quote.unit} = ${formatRate(storedRateToDisplay(entry.rate, quote.inverted))} ${quote.quote}`,
     });
   }
 
@@ -157,7 +158,7 @@ export function FinanceEntryDetailsModal({
           >
             {t('delete')}
           </button>
-          <button type="button" className="modal-action-submit" onClick={onClose}>
+          <button type="button" className="modal-action-cancel" onClick={onClose}>
             {t('close')}
           </button>
         </div>
