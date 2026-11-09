@@ -46,6 +46,7 @@ export interface FinanceOverview {
   from: string;
   to: string;
   baseCurrency: string;
+  hiddenBalanceAccounts: string[];
   todayRates: TodayRates;
   categories: FinanceCategory[];
   accounts: FinanceAccount[];
@@ -204,12 +205,13 @@ export function getFinanceOverview(userId: number, from: string, to: string): Fi
     [start, end],
   );
 
-  const { baseCurrency } = getUserSettings(userId);
+  const { baseCurrency, hiddenBalanceAccounts } = getUserSettings(userId);
 
   return {
     from: start,
     to: end,
     baseCurrency,
+    hiddenBalanceAccounts,
     todayRates: getTodayRates(userId),
     categories,
     accounts,

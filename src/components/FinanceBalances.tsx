@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Pencil } from 'lucide-react';
+import { FinanceBalanceAccountsModal } from './FinanceBalanceAccountsModal';
 import { FinanceIconBadge } from './FinanceIconBadge';
 import { t } from '../i18n';
 import type { FinanceAccount, FinanceBalance, TodayRates } from '../types';
@@ -8,6 +11,8 @@ interface FinanceBalancesProps {
   balances: FinanceBalance[];
   baseCurrency: string;
   todayRates: TodayRates | null;
+  hiddenAccounts: string[];
+  onHiddenAccountsChange: (hidden: string[]) => Promise<void>;
 }
 
 interface AccountBalance {
@@ -32,7 +37,15 @@ function signed(cents: number, currency: string): string {
   return `${cents < 0 ? '−' : ''}${formatMoney(Math.abs(cents), currency)}`;
 }
 
-export function FinanceBalances({ accounts, balances, baseCurrency, todayRates }: FinanceBalancesProps) {
+export function FinanceBalances({
+  accounts,
+  balances,
+  baseCurrency,
+  todayRates,
+  hiddenAccounts,
+  onHiddenAccountsChange,
+}: FinanceBalancesProps) {
+  const [editing, setEditing] = useState(false);
   const rows = new Map<string, AccountBalance>();
   for (const account of accounts) {
     rows.set(String(account.id), {
@@ -68,6 +81,7 @@ export function FinanceBalances({ accounts, balances, baseCurrency, todayRates }
   const list = [...rows.values()];
   const total = list.reduce((sum, row) => sum + row.baseCents, 0);
   const unconverted = list.flatMap((row) => row.unconverted);
+  const visible = list.filter((row) => !hiddenAccounts.includes(row.key));
 
   return (
     <div className="finance-balances">
@@ -80,12 +94,25 @@ export function FinanceBalances({ accounts, balances, baseCurrency, todayRates }
       </section>
 
       <section className="finance-panel finance-balance-accounts">
-        <span className="finance-summary-label">{t('financeBalanceByAccount')}</span>
+        <div className="finance-balance-header">
+          <span className="finance-summary-label">{t('financeBalanceByAccount')}</span>
+          <button
+            type="button"
+            className="task-icon-btn task-card-edit finance-balance-edit"
+            aria-label={t('financeBalanceEditAccounts')}
+            title={t('financeBalanceEditAccounts')}
+            onClick={() => setEditing(true)}
+          >
+            <Pencil size={16} />
+          </button>
+        </div>
         {list.length === 0 ? (
           <p className="finance-empty">{t('financeNoAccounts')}</p>
+        ) : visible.length === 0 ? (
+          <p className="finance-empty">{t('financeBalanceNothingSelected')}</p>
         ) : (
           <ul className="finance-balance-list">
-            {list.map((row) => (
+            {visible.map((row) => (
               <li key={row.key} className="finance-balance-row">
                 <FinanceIconBadge icon={row.icon} color={row.color} size="sm" />
                 <span className="finance-balance-name">{row.name}</span>
@@ -102,6 +129,15 @@ export function FinanceBalances({ accounts, balances, baseCurrency, todayRates }
           </ul>
         )}
       </section>
+
+      {editing && (
+        <FinanceBalanceAccountsModal
+          options={list}
+          hidden={hiddenAccounts}
+          onClose={() => setEditing(false)}
+          onSave={onHiddenAccountsChange}
+        />
+      )}
     </div>
   );
 }

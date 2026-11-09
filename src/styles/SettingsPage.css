@@ -63,6 +63,10 @@
   border-top: 1px solid var(--border);
 }
 
+.settings-rates > .settings-row-text {
+  flex: none;
+}
+
 .settings-rates-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));

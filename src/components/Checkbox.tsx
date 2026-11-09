@@ -8,9 +8,10 @@ interface CheckboxProps {
   disabled?: boolean;
   ariaLabel?: string;
   className?: string;
+  children?: React.ReactNode;
 }
 
-export function Checkbox({ checked, onChange, label, disabled = false, ariaLabel, className }: CheckboxProps) {
+export function Checkbox({ checked, onChange, label, disabled = false, ariaLabel, className, children }: CheckboxProps) {
   return (
     <label className={['checkbox-wrapper', className].filter(Boolean).join(' ')}>
       <div className="checkbox-visual-container">
@@ -25,6 +26,7 @@ export function Checkbox({ checked, onChange, label, disabled = false, ariaLabel
         {checked && <div className="checkbox-inner-square" />}
       </div>
       {label && <span className="checkbox-label-text">{label}</span>}
+      {children}
     </label>
   );
 }

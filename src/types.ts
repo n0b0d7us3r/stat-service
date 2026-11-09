@@ -242,12 +242,15 @@ export interface TodayRates {
 
 export interface UserSettings {
   baseCurrency: string;
+  /** Счета, скрытые в списке баланса: id счёта или 'none' для операций без счёта. */
+  hiddenBalanceAccounts: string[];
 }
 
 export interface FinanceOverview {
   from: string;
   to: string;
   baseCurrency: string;
+  hiddenBalanceAccounts: string[];
   todayRates: TodayRates;
   transfers: FinanceTransfer[];
   balances: FinanceBalance[];

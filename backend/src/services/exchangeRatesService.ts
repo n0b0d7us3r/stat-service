@@ -118,8 +118,8 @@ const REQUIRED_CODES = FINANCE_CURRENCIES.filter((code) => code !== 'BYN');
 
 async function doRefresh(): Promise<MarketRatesCache | null> {
   const sources: Array<[MarketRateSource, () => Promise<Record<string, number>>]> = [
-    ['myfin', fetchFromMyfin],
     ['nbrb', fetchFromNbrb],
+    ['myfin', fetchFromMyfin],
   ];
   for (const [source, load] of sources) {
     try {

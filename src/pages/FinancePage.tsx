@@ -26,6 +26,7 @@ import {
   getFinanceBalances,
   getFinanceOverview,
 } from '../api/finance';
+import { updateUserSettings } from '../api/settings';
 import { APP_NAME } from '../config/app';
 import { dateLocaleTag, t } from '../i18n';
 import type {
@@ -92,6 +93,7 @@ export function FinancePage() {
   const [deletingEntryId, setDeletingEntryId] = useState<number | null>(null);
   const [transfers, setTransfers] = useState<FinanceTransfer[]>([]);
   const [balances, setBalances] = useState<FinanceBalance[]>([]);
+  const [hiddenBalanceAccounts, setHiddenBalanceAccounts] = useState<string[]>([]);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState<number | null>(null);
   const [editingTransfer, setEditingTransfer] = useState(false);
@@ -107,6 +109,7 @@ export function FinancePage() {
       setEntries(overview.entries);
       setTransfers(overview.transfers);
       setBalances(overview.balances);
+      setHiddenBalanceAccounts(overview.hiddenBalanceAccounts);
       setError('');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeLoadFailed'));
@@ -123,6 +126,11 @@ export function FinancePage() {
     } catch {
       /* баланс обновится при следующей загрузке страницы */
     }
+  }, []);
+
+  const saveHiddenBalanceAccounts = useCallback(async (hidden: string[]) => {
+    const settings = await updateUserSettings({ hiddenBalanceAccounts: hidden });
+    setHiddenBalanceAccounts(settings.hiddenBalanceAccounts);
   }, []);
 
   useEffect(() => {
@@ -449,6 +457,8 @@ export function FinancePage() {
                   balances={balances}
                   baseCurrency={currency}
                   todayRates={todayRates}
+                  hiddenAccounts={hiddenBalanceAccounts}
+                  onHiddenAccountsChange={saveHiddenBalanceAccounts}
                 />
                 <div className="finance-summary">
                   <div

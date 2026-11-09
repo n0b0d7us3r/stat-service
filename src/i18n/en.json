@@ -429,6 +429,11 @@
   "financeBalanceByAccount": "By account",
   "financeBalanceUnconverted": "Not counted (no rate): {amounts}",
   "financeNoAccounts": "No accounts yet",
+  "financeBalanceAccountsTitle": "Accounts in balance",
+  "financeBalanceAccountsHint": "Checked accounts are shown in the list. The current balance always includes all accounts.",
+  "financeBalanceEditAccounts": "Choose accounts",
+  "financeBalanceNothingSelected": "No accounts selected",
+  "financeBalanceSaveFailed": "Failed to save the account selection",
   "achievements": {
     "first_project": {
       "name": "Start somewhere",

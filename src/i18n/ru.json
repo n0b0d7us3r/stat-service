@@ -429,6 +429,11 @@
   "financeBalanceByAccount": "По счетам",
   "financeBalanceUnconverted": "Не учтено (нет курса): {amounts}",
   "financeNoAccounts": "Счетов пока нет",
+  "financeBalanceAccountsTitle": "Счета в балансе",
+  "financeBalanceAccountsHint": "Отмеченные счета показываются в списке. Текущий баланс всегда считается по всем счетам.",
+  "financeBalanceEditAccounts": "Выбрать счета",
+  "financeBalanceNothingSelected": "Счета не выбраны",
+  "financeBalanceSaveFailed": "Не удалось сохранить выбор счетов",
   "achievements": {
     "first_project": {
       "name": "Нужно с чего-то начинать",

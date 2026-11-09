@@ -88,6 +88,7 @@ const apiMessages: Record<string, MessageKey> = {
   'Некорректный период': 'financeLoadFailed',
   'Выберите иконку': 'financeCreateCategoryFailed',
   'Некорректная валюта': 'financeSaveEntryFailed',
+  'Некорректный список счетов': 'financeBalanceSaveFailed',
   'Укажите курс валюты': 'financeRateInvalid',
   'Выберите источник дохода': 'financeChooseSource',
   'Укажите название счёта': 'financeCategoryNameRequired',

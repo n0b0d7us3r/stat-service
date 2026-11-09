@@ -723,8 +723,8 @@ app.get('/api/settings', requireAuth, (req: AuthRequest, res) => {
 
 app.put('/api/settings', requireAuth, (req: AuthRequest, res) => {
   try {
-    const { baseCurrency } = req.body as Record<string, unknown>;
-    res.json({ settings: updateUserSettings(req.user!.id, { baseCurrency }) });
+    const { baseCurrency, hiddenBalanceAccounts } = req.body as Record<string, unknown>;
+    res.json({ settings: updateUserSettings(req.user!.id, { baseCurrency, hiddenBalanceAccounts }) });
   } catch (error) {
     if (error instanceof DbError) {
       res.status(400).json({ message: error.message });
