@@ -198,7 +198,7 @@ export function FinanceEntryModal({
           }}
         >
           <p className="finance-modal-hint">{missingCopy[missing].hint}</p>
-          <ModalActions onCancel={onClose} submitLabel={missingCopy[missing].action} />
+          <ModalActions onCancel={onClose} submitLabel={missingCopy[missing].action} submitFirst />
         </form>
       ) : (
         <form className="task-editor-form" onSubmit={handleSubmit}>
@@ -328,7 +328,7 @@ export function FinanceEntryModal({
             />
           </label>
 
-          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} />
+          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} submitFirst />
         </form>
       )}
     </Modal>

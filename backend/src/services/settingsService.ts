@@ -2,7 +2,7 @@ import { getUserDb } from '../db/userDb.js';
 import { queryAll, runStatement } from '../query.js';
 import { DbError } from './projectsService.js';
 
-export const FINANCE_CURRENCIES = ['BYN', 'USD', 'EUR', 'RUB', 'PLN', 'CNY'] as const;
+export const FINANCE_CURRENCIES = ['BYN', 'USD', 'RUB'] as const;
 
 export interface UserSettings {
   baseCurrency: string;

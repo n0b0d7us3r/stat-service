@@ -185,7 +185,7 @@ export function FinanceTransferModal({
           }}
         >
           <p className="finance-modal-hint">{t('financeTransferNeedAccounts')}</p>
-          <ModalActions onCancel={onClose} submitLabel={t('financeAccounts')} />
+          <ModalActions onCancel={onClose} submitLabel={t('financeAccounts')} submitFirst />
         </form>
       ) : (
         <form className="task-editor-form" onSubmit={handleSubmit}>
@@ -273,7 +273,7 @@ export function FinanceTransferModal({
             />
           </label>
 
-          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} />
+          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} submitFirst />
         </form>
       )}
     </Modal>

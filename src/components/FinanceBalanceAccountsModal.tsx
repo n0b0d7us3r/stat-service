@@ -75,7 +75,7 @@ export function FinanceBalanceAccountsModal({ options, hidden, onClose, onSave }
           </div>
         )}
         {error && <p className="tasks-error">{error}</p>}
-        <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} />
+        <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} submitFirst />
       </form>
     </Modal>
   );

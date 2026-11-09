@@ -2,7 +2,7 @@ import { dateLocaleTag, t } from '../i18n';
 import type { FinanceEntry, TodayRates } from '../types';
 import { formatLocalDate, parseLocalDate } from './date';
 
-export const FINANCE_CURRENCIES = ['BYN', 'USD', 'EUR', 'RUB', 'PLN', 'CNY'] as const;
+export const FINANCE_CURRENCIES = ['BYN', 'USD', 'RUB'] as const;
 export const DEFAULT_CURRENCY = 'BYN';
 
 export const FINANCE_COLORS = [
@@ -48,7 +48,7 @@ export function formatRate(rate: number): string {
 }
 
 /** От самой дорогой к самой дешёвой: курс показывается за 1 единицу более дорогой валюты. */
-const CURRENCY_STRENGTH = ['EUR', 'USD', 'BYN', 'PLN', 'CNY', 'RUB'];
+const CURRENCY_STRENGTH = ['USD', 'BYN', 'RUB'];
 
 function strengthRank(code: string): number {
   const index = CURRENCY_STRENGTH.indexOf(code);
