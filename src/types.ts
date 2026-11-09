@@ -185,21 +185,38 @@ export interface FinanceCategory {
   created_at: string;
 }
 
+export interface FinanceAccount {
+  id: number;
+  name: string;
+  color: string;
+  icon: string;
+  created_at: string;
+}
+
 export interface FinanceEntry {
   id: number;
   kind: FinanceEntryKind;
   amount_cents: number;
   currency: string;
   category_id: number | null;
+  account_id: number | null;
+  rate: number | null;
+  rate_currency: string | null;
   date: string;
   note: string;
   created_at: string;
 }
 
+export interface UserSettings {
+  baseCurrency: string;
+}
+
 export interface FinanceOverview {
   from: string;
   to: string;
+  baseCurrency: string;
   categories: FinanceCategory[];
+  accounts: FinanceAccount[];
   entries: FinanceEntry[];
 }
 

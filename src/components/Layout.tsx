@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, BarChart3, FolderKanban, ListTodo, StickyNote, Trophy, Wallet } from 'lucide-react';
+import { LogOut, BarChart3, FolderKanban, ListTodo, Settings, StickyNote, Trophy, Wallet } from 'lucide-react';
 import { getTaskBoard } from '../api/tasks';
 import { APP_NAME } from '../config/app';
 import { t } from '../i18n';
@@ -128,6 +128,10 @@ export function Layout({ children }: LayoutProps) {
           <NavLink to="/achievements" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Trophy size={20} />
             <span>{t('navAchievements')}</span>
+          </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <Settings size={20} />
+            <span>{t('navSettings')}</span>
           </NavLink>
 
           <button

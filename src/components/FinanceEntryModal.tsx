@@ -1,40 +1,95 @@
 import { useState } from 'react';
+import { Pencil } from 'lucide-react';
 import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { FinanceIconBadge } from './FinanceIconBadge';
+import type { FinanceCollectionMode } from './FinanceCategoryModal';
 import { ApiError } from '../api/client';
-import { createFinanceEntry } from '../api/finance';
-import type { FinanceCategory, FinanceEntry, FinanceEntryKind } from '../types';
-import { DEFAULT_CURRENCY, FINANCE_CURRENCIES } from '../utils/finance';
+import { createFinanceEntry, updateFinanceEntry } from '../api/finance';
+import type { FinanceAccount, FinanceCategory, FinanceEntry, FinanceEntryKind } from '../types';
+import { FINANCE_CURRENCIES, formatMoney } from '../utils/finance';
 import { t } from '../i18n';
 
 interface FinanceEntryModalProps {
   kind: FinanceEntryKind;
   categories: FinanceCategory[];
+  accounts: FinanceAccount[];
+  baseCurrency: string;
   defaultDate: string;
+  entry?: FinanceEntry;
   onClose: () => void;
   onSaved: (entry: FinanceEntry) => void;
-  onManageCategories: () => void;
+  onManage: (mode: FinanceCollectionMode) => void;
+}
+
+function initialId(items: Array<{ id: number }>, current: number | null | undefined): number | null {
+  if (current != null && items.some((item) => item.id === current)) return current;
+  return items.length === 1 ? items[0].id : null;
+}
+
+function ChoiceGroup<T extends FinanceCategory | FinanceAccount>({
+  name,
+  label,
+  items,
+  value,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  items: T[];
+  value: number | null;
+  onChange: (id: number) => void;
+}) {
+  return (
+    <div className="task-editor-field">
+      <span>{label}</span>
+      <div className="finance-category-picker" role="radiogroup" aria-label={label}>
+        {items.map((item) => (
+          <label key={item.id} className="finance-category-choice">
+            <input type="radio" name={name} checked={value === item.id} onChange={() => onChange(item.id)} />
+            <span>
+              <FinanceIconBadge icon={item.icon} color={item.color} size="sm" />
+              {item.name}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function FinanceEntryModal({
   kind,
   categories,
+  accounts,
+  baseCurrency,
   defaultDate,
+  entry,
   onClose,
   onSaved,
-  onManageCategories,
+  onManage,
 }: FinanceEntryModalProps) {
   const isExpense = kind === 'expense';
-  const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
-  const [date, setDate] = useState(defaultDate);
-  const [categoryId, setCategoryId] = useState<number | null>(categories.length === 1 ? categories[0].id : null);
-  const [note, setNote] = useState('');
+  const [amount, setAmount] = useState(() => (entry ? String(entry.amount_cents / 100) : ''));
+  const [currency, setCurrency] = useState(entry?.currency ?? baseCurrency);
+  const [rate, setRate] = useState(() => (
+    entry?.rate != null && entry.rate_currency === baseCurrency ? String(entry.rate) : ''
+  ));
+  const [date, setDate] = useState(entry?.date ?? defaultDate);
+  const [categoryId, setCategoryId] = useState(() => initialId(categories, entry?.category_id));
+  const [accountId, setAccountId] = useState(() => initialId(accounts, entry?.account_id));
+  const [note, setNote] = useState(entry?.note ?? '');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const chooseLabel = isExpense ? t('financeChooseCategory') : t('financeChooseSource');
+  const needsRate = currency !== baseCurrency;
+  const rateNumber = Number(rate.replace(',', '.'));
+  const amountNumber = Number(amount.replace(',', '.'));
+  const convertedPreview = needsRate && rateNumber > 0 && amountNumber > 0
+    ? formatMoney(Math.round(amountNumber * 100 * rateNumber), baseCurrency)
+    : null;
+
+  const missing: FinanceCollectionMode | null = categories.length === 0 ? kind : accounts.length === 0 ? 'account' : null;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -44,43 +99,70 @@ export function FinanceEntryModal({
       return;
     }
     if (categoryId == null) {
-      setError(chooseLabel);
+      setError(isExpense ? t('financeChooseCategory') : t('financeChooseSource'));
+      return;
+    }
+    if (accountId == null) {
+      setError(t('financeChooseAccount'));
+      return;
+    }
+    const rateValue = needsRate ? Number(rate.replace(',', '.')) : null;
+    if (rateValue !== null && (!Number.isFinite(rateValue) || rateValue <= 0)) {
+      setError(t('financeRateInvalid'));
       return;
     }
 
     setError('');
     setSaving(true);
 
+    const input = { amount: value, currency, categoryId, accountId, rate: rateValue, date, note };
+
     try {
-      onSaved(await createFinanceEntry({ kind, amount: value, currency, categoryId, date, note }));
+      onSaved(entry ? await updateFinanceEntry(entry.id, input) : await createFinanceEntry({ ...input, kind }));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeSaveEntryFailed'));
       setSaving(false);
     }
   };
 
+  const missingCopy = {
+    expense: { hint: t('financeNeedCategory'), action: t('financeCategories') },
+    income: { hint: t('financeNeedSource'), action: t('financeSources') },
+    account: { hint: t('financeNeedAccount'), action: t('financeAccounts') },
+  };
+
+  const title = entry
+    ? (isExpense ? t('financeEditExpenseTitle') : t('financeEditIncomeTitle'))
+    : (isExpense ? t('financeAddExpenseTitle') : t('financeAddIncomeTitle'));
+
   return (
     <Modal
-      title={isExpense ? t('financeAddExpenseTitle') : t('financeAddIncomeTitle')}
+      title={title}
       isOpen
       onClose={onClose}
-      className="glass-modal"
+      className={entry ? 'task-editor-modal glass-modal' : 'glass-modal'}
+      headerExtra={entry ? (
+        <button
+          type="button"
+          className="task-icon-btn task-editor-edit"
+          aria-pressed
+          aria-label={t('stopEditing')}
+          onClick={onClose}
+        >
+          <Pencil size={20} />
+        </button>
+      ) : undefined}
     >
-      {categories.length === 0 ? (
+      {missing ? (
         <form
           className="task-editor-form"
           onSubmit={(event) => {
             event.preventDefault();
-            onManageCategories();
+            onManage(missing);
           }}
         >
-          <p className="finance-modal-hint">
-            {isExpense ? t('financeNeedCategory') : t('financeNeedSource')}
-          </p>
-          <ModalActions
-            onCancel={onClose}
-            submitLabel={isExpense ? t('financeCategories') : t('financeSources')}
-          />
+          <p className="finance-modal-hint">{missingCopy[missing].hint}</p>
+          <ModalActions onCancel={onClose} submitLabel={missingCopy[missing].action} />
         </form>
       ) : (
         <form className="task-editor-form" onSubmit={handleSubmit}>
@@ -113,25 +195,44 @@ export function FinanceEntryModal({
             </label>
           </div>
 
-          <div className="task-editor-field">
-            <span>{isExpense ? t('financeCategory') : t('financeSource')}</span>
-            <div className="finance-category-picker" role="radiogroup" aria-label={chooseLabel}>
-              {categories.map((category) => (
-                <label key={category.id} className="finance-category-choice">
-                  <input
-                    type="radio"
-                    name="financeEntryCategory"
-                    checked={categoryId === category.id}
-                    onChange={() => setCategoryId(category.id)}
-                  />
-                  <span>
-                    <FinanceIconBadge icon={category.icon} color={category.color} size="sm" />
-                    {category.name}
-                  </span>
-                </label>
-              ))}
+          {needsRate && (
+            <div className="task-editor-field">
+              <span>{t('financeRate')}</span>
+              <div className="finance-rate-input">
+                <span>1 {currency} =</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="task-editor-input"
+                  value={rate}
+                  onChange={(event) => setRate(event.target.value.replace(/[^\d.,]/g, ''))}
+                  placeholder="0"
+                  aria-label={t('financeRate')}
+                  required
+                />
+                <span>{baseCurrency}</span>
+              </div>
+              {convertedPreview && (
+                <p className="finance-rate-preview">≈ {convertedPreview}</p>
+              )}
             </div>
-          </div>
+          )}
+
+          <ChoiceGroup
+            name="financeEntryCategory"
+            label={isExpense ? t('financeCategory') : t('financeSource')}
+            items={categories}
+            value={categoryId}
+            onChange={setCategoryId}
+          />
+
+          <ChoiceGroup
+            name="financeEntryAccount"
+            label={isExpense ? t('financeAccountFrom') : t('financeAccountTo')}
+            items={accounts}
+            value={accountId}
+            onChange={setAccountId}
+          />
 
           <label className="task-editor-field">
             <span>{t('financeDate')}</span>

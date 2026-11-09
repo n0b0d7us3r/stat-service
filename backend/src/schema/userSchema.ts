@@ -256,6 +256,39 @@ function migrateToV15(db: Database.Database): void {
   }
 }
 
+function migrateToV16(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      color TEXT NOT NULL,
+      icon TEXT NOT NULL DEFAULT 'card',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  if (!columnExists(db, 'finance_entries', 'account_id')) {
+    db.exec('ALTER TABLE finance_entries ADD COLUMN account_id INTEGER REFERENCES finance_accounts(id) ON DELETE SET NULL');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_finance_entries_account_id ON finance_entries(account_id)');
+}
+
+function migrateToV17(db: Database.Database): void {
+  if (!columnExists(db, 'finance_entries', 'rate')) {
+    db.exec('ALTER TABLE finance_entries ADD COLUMN rate REAL');
+  }
+  if (!columnExists(db, 'finance_entries', 'rate_currency')) {
+    db.exec('ALTER TABLE finance_entries ADD COLUMN rate_currency TEXT');
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+}
+
 export function applyUserDataSchema(db: Database.Database): void {
   let version = getSchemaVersion(db);
 
@@ -346,6 +379,18 @@ export function applyUserDataSchema(db: Database.Database): void {
   if (version < 15) {
     migrateToV15(db);
     version = 15;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 16) {
+    migrateToV16(db);
+    version = 16;
+    setSchemaVersion(db, version);
+  }
+
+  if (version < 17) {
+    migrateToV17(db);
+    version = 17;
     setSchemaVersion(db, version);
   }
 }

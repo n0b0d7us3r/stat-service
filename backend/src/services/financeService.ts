@@ -1,6 +1,8 @@
+import type Database from 'better-sqlite3';
 import { getUserDb } from '../db/userDb.js';
 import { queryAll, queryOne, runStatement } from '../query.js';
 import { DbError } from './projectsService.js';
+import { FINANCE_CURRENCIES, getUserSettings } from './settingsService.js';
 import { normalizeColor } from './tasksService.js';
 
 export type FinanceEntryKind = 'income' | 'expense';
@@ -14,12 +16,23 @@ export interface FinanceCategory {
   created_at: string;
 }
 
+export interface FinanceAccount {
+  id: number;
+  name: string;
+  color: string;
+  icon: string;
+  created_at: string;
+}
+
 export interface FinanceEntry {
   id: number;
   kind: FinanceEntryKind;
   amount_cents: number;
   currency: string;
   category_id: number | null;
+  account_id: number | null;
+  rate: number | null;
+  rate_currency: string | null;
   date: string;
   note: string;
   created_at: string;
@@ -28,18 +41,22 @@ export interface FinanceEntry {
 export interface FinanceOverview {
   from: string;
   to: string;
+  baseCurrency: string;
   categories: FinanceCategory[];
+  accounts: FinanceAccount[];
   entries: FinanceEntry[];
 }
 
-export const FINANCE_CURRENCIES = ['BYN', 'USD', 'EUR', 'RUB', 'PLN', 'CNY'] as const;
+const MAX_RATE = 1_000_000;
 
 const MAX_CATEGORY_NAME_LENGTH = 40;
 const MAX_NOTE_LENGTH = 200;
 const MAX_AMOUNT_CENTS = 100_000_000_000;
 
 const CATEGORY_COLUMNS = 'id, kind, name, color, icon, created_at';
-const ENTRY_COLUMNS = 'id, kind, amount_cents, currency, category_id, date, note, created_at';
+const ACCOUNT_COLUMNS = 'id, name, color, icon, created_at';
+const ENTRY_COLUMNS =
+  'id, kind, amount_cents, currency, category_id, account_id, rate, rate_currency, date, note, created_at';
 
 function normalizeKind(value: unknown): FinanceEntryKind {
   if (value !== 'income' && value !== 'expense') {
@@ -123,13 +140,69 @@ export function getFinanceOverview(userId: number, from: string, to: string): Fi
     db,
     `SELECT ${CATEGORY_COLUMNS} FROM finance_categories ORDER BY name COLLATE NOCASE ASC`,
   );
+  const accounts = queryAll<FinanceAccount>(
+    db,
+    `SELECT ${ACCOUNT_COLUMNS} FROM finance_accounts ORDER BY name COLLATE NOCASE ASC`,
+  );
   const entries = queryAll<FinanceEntry>(
     db,
     `SELECT ${ENTRY_COLUMNS} FROM finance_entries WHERE date BETWEEN ? AND ? ORDER BY date DESC, id DESC`,
     [start, end],
   );
 
-  return { from: start, to: end, categories, entries };
+  const { baseCurrency } = getUserSettings(userId);
+
+  return { from: start, to: end, baseCurrency, categories, accounts, entries };
+}
+
+export function createFinanceAccount(
+  userId: number,
+  input: { name?: unknown; color?: unknown; icon?: unknown },
+): FinanceAccount {
+  const db = getUserDb(userId);
+  const name = typeof input.name === 'string' ? input.name.trim() : '';
+  if (!name) {
+    throw new DbError('Укажите название счёта');
+  }
+  if (name.length > MAX_CATEGORY_NAME_LENGTH) {
+    throw new DbError('Название счёта слишком длинное');
+  }
+  const color = normalizeColor(typeof input.color === 'string' ? input.color : '', 'Выберите цвет раздела');
+  const icon = normalizeIcon(input.icon);
+  if (icon !== 'card' && icon !== 'cash') {
+    throw new DbError('Выберите иконку');
+  }
+
+  const existing = queryAll<{ name: string }>(db, 'SELECT name FROM finance_accounts');
+  if (existing.some((account) => account.name.localeCompare(name, 'ru', { sensitivity: 'accent' }) === 0)) {
+    throw new DbError('Такой счёт уже есть');
+  }
+
+  const result = db.prepare('INSERT INTO finance_accounts (name, color, icon) VALUES (?, ?, ?)').run(name, color, icon);
+  const account = queryOne<FinanceAccount>(
+    db,
+    `SELECT ${ACCOUNT_COLUMNS} FROM finance_accounts WHERE id = ?`,
+    [Number(result.lastInsertRowid)],
+  );
+  if (!account) {
+    throw new DbError('Не удалось создать счёт');
+  }
+  return account;
+}
+
+export function deleteFinanceAccount(userId: number, accountId: number): boolean {
+  const db = getUserDb(userId);
+  const existing = queryOne<{ id: number }>(db, 'SELECT id FROM finance_accounts WHERE id = ?', [accountId]);
+  if (!existing) {
+    return false;
+  }
+
+  db.transaction(() => {
+    runStatement(db, 'UPDATE finance_entries SET account_id = NULL WHERE account_id = ?', [accountId]);
+    runStatement(db, 'DELETE FROM finance_accounts WHERE id = ?', [accountId]);
+  })();
+
+  return true;
 }
 
 export function createFinanceCategory(
@@ -176,16 +249,33 @@ export function deleteFinanceCategory(userId: number, categoryId: number): boole
   return true;
 }
 
-export function createFinanceEntry(
-  userId: number,
-  input: { kind?: unknown; amount?: unknown; currency?: unknown; categoryId?: unknown; date?: unknown; note?: unknown },
-): FinanceEntry {
-  const db = getUserDb(userId);
-  const kind = normalizeKind(input.kind);
+interface FinanceEntryInput {
+  amount?: unknown;
+  currency?: unknown;
+  categoryId?: unknown;
+  accountId?: unknown;
+  rate?: unknown;
+  date?: unknown;
+  note?: unknown;
+}
+
+function normalizeEntryInput(userId: number, db: Database.Database, kind: FinanceEntryKind, input: FinanceEntryInput) {
   const amountCents = normalizeAmount(input.amount);
   const currency = normalizeCurrency(input.currency);
   const date = normalizeFinanceDate(input.date);
   const note = normalizeNote(input.note);
+
+  const { baseCurrency } = getUserSettings(userId);
+  let rate: number | null = null;
+  let rateCurrency: string | null = null;
+  if (currency !== baseCurrency) {
+    const value = typeof input.rate === 'string' ? Number(input.rate.replace(',', '.')) : input.rate;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > MAX_RATE) {
+      throw new DbError('Укажите курс валюты');
+    }
+    rate = Math.round(value * 1_000_000) / 1_000_000;
+    rateCurrency = baseCurrency;
+  }
 
   const categoryId = Number(input.categoryId);
   if (!Number.isInteger(categoryId) || categoryId <= 0) {
@@ -200,15 +290,53 @@ export function createFinanceEntry(
     throw new DbError('Раздел не найден');
   }
 
-  const result = db.prepare(
-    'INSERT INTO finance_entries (kind, amount_cents, currency, category_id, date, note) VALUES (?, ?, ?, ?, ?, ?)',
-  ).run(kind, amountCents, currency, categoryId, date, note);
+  const accountId = Number(input.accountId);
+  if (!Number.isInteger(accountId) || accountId <= 0) {
+    throw new DbError('Выберите счёт');
+  }
+  if (!queryOne<{ id: number }>(db, 'SELECT id FROM finance_accounts WHERE id = ?', [accountId])) {
+    throw new DbError('Счёт не найден');
+  }
 
-  const entry = queryOne<FinanceEntry>(
-    db,
-    `SELECT ${ENTRY_COLUMNS} FROM finance_entries WHERE id = ?`,
-    [Number(result.lastInsertRowid)],
-  );
+  return { amountCents, currency, categoryId, accountId, rate, rateCurrency, date, note };
+}
+
+function readEntry(db: Database.Database, entryId: number): FinanceEntry | null {
+  return queryOne<FinanceEntry>(db, `SELECT ${ENTRY_COLUMNS} FROM finance_entries WHERE id = ?`, [entryId]);
+}
+
+export function createFinanceEntry(userId: number, input: FinanceEntryInput & { kind?: unknown }): FinanceEntry {
+  const db = getUserDb(userId);
+  const kind = normalizeKind(input.kind);
+  const v = normalizeEntryInput(userId, db, kind, input);
+
+  const result = db.prepare(
+    `INSERT INTO finance_entries (kind, amount_cents, currency, category_id, account_id, rate, rate_currency, date, note)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(kind, v.amountCents, v.currency, v.categoryId, v.accountId, v.rate, v.rateCurrency, v.date, v.note);
+
+  const entry = readEntry(db, Number(result.lastInsertRowid));
+  if (!entry) {
+    throw new DbError('Не удалось сохранить операцию');
+  }
+  return entry;
+}
+
+export function updateFinanceEntry(userId: number, entryId: number, input: FinanceEntryInput): FinanceEntry {
+  const db = getUserDb(userId);
+  const existing = readEntry(db, entryId);
+  if (!existing) {
+    throw new DbError('Операция не найдена');
+  }
+  const v = normalizeEntryInput(userId, db, existing.kind, input);
+
+  db.prepare(
+    `UPDATE finance_entries
+     SET amount_cents = ?, currency = ?, category_id = ?, account_id = ?, rate = ?, rate_currency = ?, date = ?, note = ?
+     WHERE id = ?`,
+  ).run(v.amountCents, v.currency, v.categoryId, v.accountId, v.rate, v.rateCurrency, v.date, v.note, entryId);
+
+  const entry = readEntry(db, entryId);
   if (!entry) {
     throw new DbError('Не удалось сохранить операцию');
   }

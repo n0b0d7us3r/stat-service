@@ -3,25 +3,71 @@ import { Trash2 } from 'lucide-react';
 import { Modal } from './Modal';
 import { FinanceIconBadge } from './FinanceIconBadge';
 import { ApiError } from '../api/client';
-import { createFinanceCategory, deleteFinanceCategory } from '../api/finance';
-import type { FinanceCategory, FinanceEntryKind } from '../types';
+import {
+  createFinanceAccount,
+  createFinanceCategory,
+  deleteFinanceAccount,
+  deleteFinanceCategory,
+} from '../api/finance';
+import type { FinanceAccount, FinanceCategory } from '../types';
 import { FINANCE_COLORS } from '../utils/finance';
-import { FINANCE_ICONS } from '../utils/financeIcons';
-import { t } from '../i18n';
+import { ACCOUNT_ICONS, FINANCE_ICONS } from '../utils/financeIcons';
+import { t, type MessageKey } from '../i18n';
+
+export type FinanceCollectionMode = 'expense' | 'income' | 'account';
+
+type FinanceCollectionItem = FinanceCategory | FinanceAccount;
 
 interface FinanceCategoryModalProps {
-  kind: FinanceEntryKind;
-  categories: FinanceCategory[];
+  mode: FinanceCollectionMode;
+  items: FinanceCollectionItem[];
   onClose: () => void;
-  onCreated: (category: FinanceCategory) => void;
-  onDeleted: (categoryId: number) => void;
+  onCreated: (item: FinanceCollectionItem) => void;
+  onDeleted: (itemId: number) => void;
 }
 
-export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onDeleted }: FinanceCategoryModalProps) {
-  const isIncome = kind === 'income';
+const COPY: Record<FinanceCollectionMode, {
+  title: MessageKey;
+  list: MessageKey;
+  placeholder: MessageKey;
+  deleteHint: MessageKey;
+  color: number;
+  icon: string;
+}> = {
+  expense: {
+    title: 'financeCategoryManageTitle',
+    list: 'financeCategories',
+    placeholder: 'financeCategoryNamePlaceholder',
+    deleteHint: 'financeCategoryDeleteHint',
+    color: 5,
+    icon: 'cart',
+  },
+  income: {
+    title: 'financeSourceManageTitle',
+    list: 'financeSources',
+    placeholder: 'financeSourceNamePlaceholder',
+    deleteHint: 'financeSourceDeleteHint',
+    color: 3,
+    icon: 'wallet',
+  },
+  account: {
+    title: 'financeAccountManageTitle',
+    list: 'financeAccounts',
+    placeholder: 'financeAccountNamePlaceholder',
+    deleteHint: 'financeAccountDeleteHint',
+    color: 6,
+    icon: 'card',
+  },
+};
+
+export function FinanceCategoryModal({ mode, items, onClose, onCreated, onDeleted }: FinanceCategoryModalProps) {
+  const copy = COPY[mode];
+  const icons = mode === 'account'
+    ? FINANCE_ICONS.filter(({ key }) => (ACCOUNT_ICONS as readonly string[]).includes(key))
+    : FINANCE_ICONS;
   const [name, setName] = useState('');
-  const [color, setColor] = useState(FINANCE_COLORS[isIncome ? 3 : 5]);
-  const [icon, setIcon] = useState(isIncome ? 'wallet' : 'cart');
+  const [color, setColor] = useState(FINANCE_COLORS[copy.color]);
+  const [icon, setIcon] = useState(copy.icon);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -39,7 +85,10 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
     setSaving(true);
 
     try {
-      onCreated(await createFinanceCategory({ kind, name: trimmed, color, icon }));
+      const created = mode === 'account'
+        ? await createFinanceAccount({ name: trimmed, color, icon })
+        : await createFinanceCategory({ kind: mode, name: trimmed, color, icon });
+      onCreated(created);
       setName('');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeCreateCategoryFailed'));
@@ -48,13 +97,17 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
     }
   };
 
-  const handleDelete = async (categoryId: number) => {
+  const handleDelete = async (itemId: number) => {
     setError('');
-    setDeletingId(categoryId);
+    setDeletingId(itemId);
 
     try {
-      await deleteFinanceCategory(categoryId);
-      onDeleted(categoryId);
+      if (mode === 'account') {
+        await deleteFinanceAccount(itemId);
+      } else {
+        await deleteFinanceCategory(itemId);
+      }
+      onDeleted(itemId);
       setConfirmId(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeDeleteCategoryFailed'));
@@ -64,12 +117,7 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
   };
 
   return (
-    <Modal
-      title={isIncome ? t('financeSourceManageTitle') : t('financeCategoryManageTitle')}
-      isOpen
-      onClose={onClose}
-      className="glass-modal finance-category-modal"
-    >
+    <Modal title={t(copy.title)} isOpen onClose={onClose} className="glass-modal finance-category-modal">
       <div className="tag-manage-modal">
         {error && <p className="task-editor-error">{error}</p>}
 
@@ -81,7 +129,7 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
               className="task-editor-input finance-category-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={isIncome ? t('financeSourceNamePlaceholder') : t('financeCategoryNamePlaceholder')}
+              placeholder={t(copy.placeholder)}
               aria-label={t('name')}
               maxLength={40}
             />
@@ -92,7 +140,7 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
               <label key={preset} className="finance-color-option">
                 <input
                   type="radio"
-                  name="financeCategoryColor"
+                  name="financeCollectionColor"
                   value={preset}
                   checked={color === preset}
                   onChange={() => setColor(preset)}
@@ -102,12 +150,16 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
             ))}
           </div>
 
-          <div className="finance-icon-grid" role="radiogroup" aria-label={t('financeIcon')}>
-            {FINANCE_ICONS.map(({ key, Icon }) => (
+          <div
+            className={`finance-icon-grid${mode === 'account' ? ' finance-icon-grid-compact' : ''}`}
+            role="radiogroup"
+            aria-label={t('financeIcon')}
+          >
+            {icons.map(({ key, Icon }) => (
               <label key={key} className="finance-icon-option" title={key}>
                 <input
                   type="radio"
-                  name="financeCategoryIcon"
+                  name="financeCollectionIcon"
                   value={key}
                   checked={icon === key}
                   onChange={() => setIcon(key)}
@@ -124,34 +176,30 @@ export function FinanceCategoryModal({ kind, categories, onClose, onCreated, onD
           </button>
         </form>
 
-        {categories.length > 0 && (
-          <section aria-label={isIncome ? t('financeSources') : t('financeCategories')}>
-            <h3 className="tag-manage-section-title">
-              {isIncome ? t('financeSources') : t('financeCategories')}
-            </h3>
-            <p className="tag-manage-delete-hint">
-              {isIncome ? t('financeSourceDeleteHint') : t('financeCategoryDeleteHint')}
-            </p>
+        {items.length > 0 && (
+          <section aria-label={t(copy.list)}>
+            <h3 className="tag-manage-section-title">{t(copy.list)}</h3>
+            <p className="tag-manage-delete-hint">{t(copy.deleteHint)}</p>
             <ul className="finance-category-list">
-              {categories.map((category) => (
-                <li key={category.id} className="finance-category-row">
-                  <FinanceIconBadge icon={category.icon} color={category.color} size="sm" />
-                  <span className="finance-category-row-name">{category.name}</span>
-                  {confirmId === category.id ? (
+              {items.map((item) => (
+                <li key={item.id} className="finance-category-row">
+                  <FinanceIconBadge icon={item.icon} color={item.color} size="sm" />
+                  <span className="finance-category-row-name">{item.name}</span>
+                  {confirmId === item.id ? (
                     <button
                       type="button"
                       className="finance-category-confirm"
-                      disabled={deletingId === category.id}
-                      onClick={() => void handleDelete(category.id)}
+                      disabled={deletingId === item.id}
+                      onClick={() => void handleDelete(item.id)}
                     >
-                      {deletingId === category.id ? t('deleting') : t('delete')}
+                      {deletingId === item.id ? t('deleting') : t('delete')}
                     </button>
                   ) : (
                     <button
                       type="button"
                       className="finance-entry-delete"
-                      aria-label={`${t('delete')} ${category.name}`}
-                      onClick={() => setConfirmId(category.id)}
+                      aria-label={`${t('delete')} ${item.name}`}
+                      onClick={() => setConfirmId(item.id)}
                     >
                       <Trash2 size={16} />
                     </button>

@@ -6,6 +6,8 @@ import { clearSessionCookie, requireAuth, setSessionCookie, signSessionToken, ty
 import { syncUserAchievements, getUserAchievements } from './services/achievementsService.js';
 import {
   AuthError,
+  changeUserEmail,
+  changeUserPassword,
   loginUser,
   registerUser,
   seedInitialAdmin,
@@ -13,12 +15,15 @@ import {
 } from './services/authService.js';
 import { getDashboardMonthlyStats, getDashboardStats } from './services/dashboardService.js';
 import {
+  createFinanceAccount,
   createFinanceCategory,
   createFinanceEntry,
+  deleteFinanceAccount,
   deleteFinanceCategory,
   deleteFinanceEntry,
   getFinanceOverview,
   normalizeFinanceDate,
+  updateFinanceEntry,
 } from './services/financeService.js';
 import {
   getAllMarkedDays,
@@ -45,6 +50,7 @@ import {
   updateTask,
 } from './services/tasksService.js';
 import { readTaskDescriptionImage, saveTaskDescriptionImage } from './services/taskImagesService.js';
+import { getUserSettings, updateUserSettings } from './services/settingsService.js';
 
 const app = express();
 
@@ -105,6 +111,33 @@ app.post('/api/auth/verify-password', requireAuth, (req: AuthRequest, res) => {
   const { password } = req.body as { password?: string };
   const valid = verifyUserPassword(req.user!.id, password ?? '');
   res.json({ valid });
+});
+
+app.put('/api/auth/email', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { email, currentPassword } = req.body as Record<string, unknown>;
+    res.json({ user: changeUserEmail(req.user!.id, currentPassword, email) });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.put('/api/auth/password', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body as Record<string, unknown>;
+    changeUserPassword(req.user!.id, currentPassword, newPassword);
+    res.json({ ok: true });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
 });
 
 app.get('/api/projects', requireAuth, (req: AuthRequest, res) => {
@@ -532,9 +565,28 @@ app.get('/api/finance', requireAuth, (req: AuthRequest, res) => {
 
 app.post('/api/finance/entries', requireAuth, (req: AuthRequest, res) => {
   try {
-    const { kind, amount, currency, categoryId, date, note } = req.body as Record<string, unknown>;
-    const entry = createFinanceEntry(req.user!.id, { kind, amount, currency, categoryId, date, note });
+    const { kind, amount, currency, categoryId, accountId, rate, date, note } = req.body as Record<string, unknown>;
+    const entry = createFinanceEntry(req.user!.id, { kind, amount, currency, categoryId, accountId, rate, date, note });
     res.status(201).json({ entry });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.put('/api/finance/entries/:entryId', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const entryId = Number(req.params.entryId);
+    if (!Number.isInteger(entryId) || entryId <= 0) {
+      res.status(404).json({ message: 'Операция не найдена' });
+      return;
+    }
+    const { amount, currency, categoryId, accountId, rate, date, note } = req.body as Record<string, unknown>;
+    const entry = updateFinanceEntry(req.user!.id, entryId, { amount, currency, categoryId, accountId, rate, date, note });
+    res.json({ entry });
   } catch (error) {
     if (error instanceof DbError) {
       res.status(400).json({ message: error.message });
@@ -572,6 +624,47 @@ app.delete('/api/finance/categories/:categoryId', requireAuth, (req: AuthRequest
   const categoryId = Number(req.params.categoryId);
   if (!Number.isInteger(categoryId) || categoryId <= 0 || !deleteFinanceCategory(req.user!.id, categoryId)) {
     res.status(404).json({ message: 'Раздел не найден' });
+    return;
+  }
+
+  res.status(204).end();
+});
+
+app.get('/api/settings', requireAuth, (req: AuthRequest, res) => {
+  res.json({ settings: getUserSettings(req.user!.id) });
+});
+
+app.put('/api/settings', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { baseCurrency } = req.body as Record<string, unknown>;
+    res.json({ settings: updateUserSettings(req.user!.id, { baseCurrency }) });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.post('/api/finance/accounts', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const { name, color, icon } = req.body as Record<string, unknown>;
+    const account = createFinanceAccount(req.user!.id, { name, color, icon });
+    res.status(201).json({ account });
+  } catch (error) {
+    if (error instanceof DbError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete('/api/finance/accounts/:accountId', requireAuth, (req: AuthRequest, res) => {
+  const accountId = Number(req.params.accountId);
+  if (!Number.isInteger(accountId) || accountId <= 0 || !deleteFinanceAccount(req.user!.id, accountId)) {
+    res.status(404).json({ message: 'Счёт не найден' });
     return;
   }
 

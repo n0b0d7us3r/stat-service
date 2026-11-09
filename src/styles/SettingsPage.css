@@ -1,0 +1,148 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 48rem;
+}
+
+.settings-panel {
+  box-sizing: border-box;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.settings-panel-title {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.settings-row-text {
+  display: flex;
+  flex: 1 1 16rem;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings-row-label {
+  font-weight: 700;
+}
+
+.settings-row-hint {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.settings-status {
+  margin: 0.875rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.settings-segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+}
+
+.settings-segmented button {
+  min-width: 4rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+}
+
+.settings-segmented button + button {
+  border-left: 1px solid var(--border);
+}
+
+.settings-segmented button.is-active {
+  background: var(--primary-gradient);
+  color: #fff;
+}
+
+.settings-forms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.settings-form-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.settings-form .settings-row-hint {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-current-email {
+  color: var(--foreground);
+}
+
+.settings-form-status {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.settings-form-status.is-error {
+  color: #f87171;
+}
+
+.settings-form-status.is-success {
+  color: #34c759;
+}
+
+.settings-submit {
+  margin-top: auto;
+}
+
+@media (hover: hover) {
+  .settings-segmented button:not(.is-active):hover {
+    color: var(--foreground);
+  }
+}
+
+@media (max-width: 768px) {
+  .settings-forms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-segmented {
+    display: flex;
+    width: 100%;
+  }
+
+  .settings-segmented button {
+    flex: 1 1 0;
+  }
+}

@@ -39,6 +39,21 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 }
 
+export async function changeEmail(email: string, currentPassword: string): Promise<User> {
+  const { user } = await apiFetch<{ user: User }>('/auth/email', {
+    method: 'PUT',
+    body: JSON.stringify({ email, currentPassword }),
+  });
+  return user;
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await apiFetch('/auth/password', {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
 export async function verifyUserPassword(_userId: number, password: string): Promise<boolean> {
   const { valid } = await apiFetch<{ valid: boolean }>('/auth/verify-password', {
     method: 'POST',

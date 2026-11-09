@@ -1,7 +1,7 @@
 import { SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD } from '../config.js';
 import { hashPassword, verifyPassword } from '../crypto.js';
 import { getAuthDb, type AuthUserRow } from '../db/authDb.js';
-import { createUserDatabase } from '../db/userDb.js';
+import { createUserDatabase, getUserDb } from '../db/userDb.js';
 import { queryExists, queryOne } from '../query.js';
 
 export class AuthError extends Error {
@@ -106,6 +106,55 @@ export function verifyUserPassword(userId: number, password: string): boolean {
   }
 
   return verifyPassword(password, row.password_hash, row.password_salt);
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_EMAIL_LENGTH = 254;
+
+function assertCurrentPassword(userId: number, password: unknown): void {
+  if (typeof password !== 'string' || !verifyUserPassword(userId, password)) {
+    throw new AuthError('Неверный текущий пароль');
+  }
+}
+
+export function changeUserEmail(userId: number, currentPassword: unknown, rawEmail: unknown): PublicUser {
+  assertCurrentPassword(userId, currentPassword);
+
+  const email = typeof rawEmail === 'string' ? normalizeEmail(rawEmail) : '';
+  if (!email || email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) {
+    throw new AuthError('Некорректный email');
+  }
+
+  const authDb = getAuthDb();
+  const current = getUserById(userId);
+  if (current?.email === email) {
+    throw new AuthError('Это ваш текущий email');
+  }
+  if (queryExists(authDb, 'SELECT id FROM users WHERE email = ? AND id != ?', [email, userId])) {
+    throw new AuthError('Пользователь с таким email уже существует');
+  }
+
+  authDb.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, userId);
+  getUserDb(userId).prepare('UPDATE users SET email = ? WHERE id = ?').run(email, userId);
+
+  const user = getUserById(userId);
+  if (!user) {
+    throw new AuthError('Сессия недействительна');
+  }
+  return user;
+}
+
+export function changeUserPassword(userId: number, currentPassword: unknown, newPassword: unknown): void {
+  assertCurrentPassword(userId, currentPassword);
+
+  if (typeof newPassword !== 'string' || newPassword.length < 6) {
+    throw new AuthError('Пароль должен содержать минимум 6 символов');
+  }
+
+  const { hash, salt } = hashPassword(newPassword);
+  getAuthDb()
+    .prepare('UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?')
+    .run(hash, salt, userId);
 }
 
 export async function seedInitialAdmin(): Promise<void> {

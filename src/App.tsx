@@ -10,6 +10,7 @@ import { AchievementsPage } from './pages/AchievementsPage';
 import { NotesPage } from './pages/NotesPage';
 import { TasksPage } from './pages/TasksPage';
 import { FinancePage } from './pages/FinancePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { Starfield } from './components/Starfield';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
             <Route path="/finance" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

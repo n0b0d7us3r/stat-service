@@ -37,6 +37,27 @@ export function formatMoney(cents: number, currency: string): string {
   return `${amountFormatter.format(cents / 100)} ${currency}`;
 }
 
+const rateFormatter = new Intl.NumberFormat(dateLocaleTag, {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 6,
+});
+
+export function formatRate(rate: number): string {
+  return rateFormatter.format(rate);
+}
+
+/** Сумма операции в основной валюте или null, если курса к ней нет. */
+export function toBaseCents(
+  entry: { amount_cents: number; currency: string; rate: number | null; rate_currency: string | null },
+  baseCurrency: string,
+): number | null {
+  if (entry.currency === baseCurrency) return entry.amount_cents;
+  if (entry.rate != null && entry.rate_currency === baseCurrency) {
+    return Math.round(entry.amount_cents * entry.rate);
+  }
+  return null;
+}
+
 export function formatAmountCompact(cents: number): string {
   return compactFormatter.format(cents / 100);
 }

@@ -7,7 +7,24 @@ export function resolveLocale(value: string | undefined): Locale {
   return value?.trim().toLowerCase() === 'ru' ? 'ru' : 'en';
 }
 
-export const locale: Locale = resolveLocale(import.meta.env.VITE_LOCALE);
+const LOCALE_STORAGE_KEY = 'locale';
+
+function readStoredLocale(): string | null {
+  try {
+    return localStorage.getItem(LOCALE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export const locale: Locale = resolveLocale(readStoredLocale() ?? import.meta.env.VITE_LOCALE);
+
+/** Строки переводятся при загрузке модулей, поэтому смена языка перезагружает страницу. */
+export function setLocale(next: Locale): void {
+  if (next === locale) return;
+  localStorage.setItem(LOCALE_STORAGE_KEY, next);
+  window.location.reload();
+}
 
 export const dateLocaleTag = locale === 'ru' ? 'ru-RU' : 'en-US';
 
@@ -28,7 +45,7 @@ export function t(key: MessageKey, vars?: Record<string, string | number>): stri
 const apiMessages: Record<string, MessageKey> = {
   'Email и пароль обязательны': 'loginFailed',
   'Пароль должен содержать минимум 6 символов': 'passwordTooShort',
-  'Пользователь с таким email уже существует': 'registerFailed',
+  'Пользователь с таким email уже существует': 'emailTaken',
   'Не удалось создать пользователя': 'registerFailed',
   'Неверный email или пароль': 'loginInvalid',
   'Требуется авторизация': 'checkingSession',
@@ -71,7 +88,14 @@ const apiMessages: Record<string, MessageKey> = {
   'Некорректный период': 'financeLoadFailed',
   'Выберите иконку': 'financeCreateCategoryFailed',
   'Некорректная валюта': 'financeSaveEntryFailed',
+  'Укажите курс валюты': 'financeRateInvalid',
   'Выберите источник дохода': 'financeChooseSource',
+  'Укажите название счёта': 'financeCategoryNameRequired',
+  'Название счёта слишком длинное': 'financeCategoryNameRequired',
+  'Такой счёт уже есть': 'financeCreateCategoryFailed',
+  'Не удалось создать счёт': 'financeCreateCategoryFailed',
+  'Выберите счёт': 'financeChooseAccount',
+  'Счёт не найден': 'financeChooseAccount',
   'Укажите название раздела': 'financeCategoryNameRequired',
   'Название раздела слишком длинное': 'financeCategoryNameRequired',
   'Выберите цвет раздела': 'financeCreateCategoryFailed',
@@ -86,6 +110,9 @@ const apiMessages: Record<string, MessageKey> = {
   'Выберите раздел расходов': 'financeChooseCategory',
   'Не удалось сохранить операцию': 'financeSaveEntryFailed',
   'Операция не найдена': 'financeDeleteEntryFailed',
+  'Неверный текущий пароль': 'settingsWrongPassword',
+  'Некорректный email': 'settingsEmailInvalid',
+  'Это ваш текущий email': 'settingsEmailSame',
 };
 
 export function localizeApiMessage(message: string): string {

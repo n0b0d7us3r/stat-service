@@ -137,6 +137,8 @@ export const FINANCE_ICONS: Array<{ key: string; Icon: LucideIcon }> = [
   { key: 'leaf', Icon: Leaf },
 ];
 
+export const ACCOUNT_ICONS = ['card', 'cash'] as const;
+
 const iconByKey = new Map(FINANCE_ICONS.map((item) => [item.key, item.Icon]));
 
 export function financeIcon(key: string): LucideIcon {
