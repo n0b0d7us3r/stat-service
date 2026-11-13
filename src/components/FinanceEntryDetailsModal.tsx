@@ -5,7 +5,7 @@ import { FinanceIconBadge } from './FinanceIconBadge';
 import { dateLocaleTag, t } from '../i18n';
 import type { FinanceAccount, FinanceEntry, TodayRates } from '../types';
 import { parseLocalDate } from '../utils/date';
-import { formatMoney, formatRateQuote, toBaseCents, todayRatesSourceLabel } from '../utils/finance';
+import { formatMoney, formatRateQuote, toBaseCents } from '../utils/finance';
 
 interface FinanceEntryDetailsModalProps {
   entry: FinanceEntry;
@@ -75,7 +75,7 @@ export function FinanceEntryDetailsModal({
           <span>{t('financeRateFloating')}</span>
           <span className="finance-rate-source">
             {todayRate && todayRates
-              ? `${formatRateQuote(entry.currency, baseCurrency, todayRate)} · ${todayRatesSourceLabel(todayRates, entry.currency)}`
+              ? formatRateQuote(entry.currency, baseCurrency, todayRate)
               : t('financeRateTodayMissing')}
           </span>
         </span>

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Archive, ArrowDown, ArrowUp, ChevronsUp, FolderClosed, ListTodo, Minus, Pencil, Tag as TagIcon } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Archive, ArrowDown, ArrowUp, ChevronsUp, FolderClosed, ListTodo, Minus, Pencil, Tag as TagIcon, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
@@ -13,11 +13,11 @@ import { TaskFolders } from '../components/TaskFolders';
 import { TaskActivityCalendar } from '../components/TaskActivityCalendar';
 import { APP_NAME } from '../config/app';
 import { ApiError } from '../api/client';
-import { createFolder, deleteFolder, deleteTask, getTaskBoard, updateTask } from '../api/tasks';
+import { createFolder, deleteTask, getTaskBoard, updateTask } from '../api/tasks';
 import type { Folder, Tag, Task, TaskPriority, TaskSortMode } from '../types';
 import { formatLocalDate } from '../utils/date';
 import { dateLocaleTag, t } from '../i18n';
-import { notifyTaskBoardChanged } from '../utils/taskBoardEvents';
+import { notifyTaskBoardChanged, TASK_BOARD_CHANGED } from '../utils/taskBoardEvents';
 import { compareTasks, formatTagName, isTaskOverdue, priorityLabel } from '../utils/taskUi';
 import '../styles/TasksPage.css';
 
@@ -44,6 +44,34 @@ function formatCompletedAt(value: string): string {
   return label === value ? value : t('completedOn', { label });
 }
 
+function completionDayKey(completedAt: string | null): string {
+  if (!completedAt) return '';
+  const datePart = completedAt.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : '';
+}
+
+function groupCompletedByDay(tasks: Task[]): Array<{ day: string; tasks: Task[] }> {
+  const byDay = new Map<string, Task[]>();
+  const undated: Task[] = [];
+  for (const task of tasks) {
+    const day = completionDayKey(task.completed_at);
+    if (!day) {
+      undated.push(task);
+      continue;
+    }
+    const list = byDay.get(day) ?? [];
+    list.push(task);
+    byDay.set(day, list);
+  }
+  const groups = [...byDay.entries()]
+    .sort(([dayA], [dayB]) => dayB.localeCompare(dayA))
+    .map(([day, dayTasks]) => ({ day, tasks: dayTasks }));
+  if (undated.length > 0) {
+    groups.push({ day: '', tasks: undated });
+  }
+  return groups;
+}
+
 export function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -64,7 +92,6 @@ export function TasksPage() {
     foldersPanelObserver.current = observer;
   }, []);
   const [foldersModalOpen, setFoldersModalOpen] = useState(false);
-  const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sort, setSort] = useState<TaskSortMode>('created');
@@ -112,6 +139,19 @@ export function TasksPage() {
   }, []);
 
   useEffect(() => {
+    const refresh = () => void loadBoard();
+    window.addEventListener(TASK_BOARD_CHANGED, refresh);
+    return () => window.removeEventListener(TASK_BOARD_CHANGED, refresh);
+  }, [loadBoard]);
+
+  useEffect(() => {
+    if (openFolderId != null && !folders.some((folder) => folder.id === openFolderId)) {
+      setOpenFolderId(null);
+      setFolderMotion(null);
+    }
+  }, [folders, openFolderId]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     void loadBoard()
@@ -155,6 +195,7 @@ export function TasksPage() {
       }
       return b.id - a.id;
     });
+  const completedByDay = useMemo(() => groupCompletedByDay(completedTasks), [completedTasks]);
 
   const openCreate = () => {
     setEditorTask(null);
@@ -270,34 +311,6 @@ export function TasksPage() {
   const handleCreateFolder = async (name: string) => {
     const folder = await createFolder(name);
     setFolders((current) => [...current, folder].sort((a, b) => a.name.localeCompare(b.name, dateLocaleTag)));
-  };
-
-  const handleDeleteFolder = async () => {
-    if (!folderToDelete || pendingTaskId !== null) return;
-    const folderId = folderToDelete.id;
-    setPendingTaskId(-folderId);
-    setError('');
-    try {
-      await deleteFolder(folderId);
-      setFolders((current) => current.filter((folder) => folder.id !== folderId));
-      setTasks((current) => current.map((task) => (
-        task.folder_id === folderId ? { ...task, folder_id: null } : task
-      )));
-      if (openFolderId === folderId) {
-        if (folderCloseTimer.current) {
-          window.clearTimeout(folderCloseTimer.current);
-          folderCloseTimer.current = null;
-        }
-        setOpenFolderId(null);
-        setFolderMotion(null);
-      }
-      setFolderToDelete(null);
-      notifyTaskBoardChanged();
-    } catch (err) {
-      setError(errorText(err, t('folderDeleteFailed')));
-    } finally {
-      setPendingTaskId(null);
-    }
   };
 
   const openFolderFromList = (folderId: number) => {
@@ -423,14 +436,14 @@ export function TasksPage() {
           {openFolder && (
             <div className="tasks-folder-bar">
               <span className="tasks-folder-bar-name">{openFolder.name}</span>
-              <div className="tasks-folder-bar-actions">
-                <button type="button" className="tasks-folder-delete" onClick={() => setFolderToDelete(openFolder)}>
-                  {t('delete')}
-                </button>
-                <button type="button" className="tasks-folder-close" onClick={closeOpenFolder}>
-                  {t('close')}
-                </button>
-              </div>
+              <button
+                type="button"
+                className="tasks-folder-close"
+                onClick={closeOpenFolder}
+                aria-label={t('close')}
+              >
+                <X size={22} strokeWidth={2.25} />
+              </button>
             </div>
           )}
           <div className="tasks-groups">
@@ -465,14 +478,26 @@ export function TasksPage() {
             {showCompleted && completedTasks.length > 0 && (
               <section className="tasks-list" aria-label={t('completedTasks')}>
                 <h2 className="tasks-section-title">{t('completedSection')}</h2>
-                {completedTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    pending={pendingTaskId === task.id}
-                    onToggle={handleToggle}
-                    onEdit={openEdit}
-                  />
+                {completedByDay.map((group) => (
+                  <div key={group.day || 'undated'} className="tasks-completed-day">
+                    <div className="tasks-completed-day-head">
+                      <p className="tasks-completed-day-label">
+                        {group.day ? formatTaskDate(group.day) : t('completedDateUnknown')}
+                      </p>
+                      <hr className="tasks-completed-day-rule" />
+                    </div>
+                    <div className="tasks-completed-day-list">
+                      {group.tasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          pending={pendingTaskId === task.id}
+                          onToggle={handleToggle}
+                          onEdit={openEdit}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </section>
             )}
@@ -569,36 +594,6 @@ export function TasksPage() {
           <button type="button" className="modal-action-cancel task-folders-close" onClick={() => setFoldersModalOpen(false)}>
             {t('close')}
           </button>
-        </Modal>
-      )}
-
-      {folderToDelete && (
-        <Modal
-          title={t('deleteFolder')}
-          isOpen
-          onClose={() => {
-            if (pendingTaskId !== null) return;
-            setFolderToDelete(null);
-          }}
-        >
-          <form
-            className="task-delete-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleDeleteFolder();
-            }}
-          >
-            <p>{t('deleteFolderConfirm', { name: folderToDelete.name })}</p>
-            <ModalActions
-              onCancel={() => {
-                if (pendingTaskId !== null) return;
-                setFolderToDelete(null);
-              }}
-              submitLabel={t('delete')}
-              pending={pendingTaskId !== null}
-              pendingLabel={t('deleting')}
-            />
-          </form>
         </Modal>
       )}
 

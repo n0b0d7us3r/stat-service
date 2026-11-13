@@ -113,6 +113,47 @@
   color: var(--primary-dark);
 }
 
+.tasks-completed-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.tasks-completed-day-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  align-self: flex-start;
+  box-sizing: border-box;
+  width: 30%;
+  max-width: 100%;
+  min-width: 0;
+  padding-top: 0.75rem;
+}
+
+.tasks-completed-day-label {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tasks-completed-day-rule {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.tasks-completed-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .tasks-placeholder {
   margin: 0;
   color: var(--muted);
@@ -288,6 +329,10 @@
   }
 
   .tasks-workspace-main .task-card {
+    width: 100%;
+  }
+
+  .tasks-workspace-main .tasks-completed-day-head {
     width: 100%;
   }
 
@@ -865,6 +910,10 @@
 
 @media (max-width: 1100px) {
   .task-card {
+    width: 100%;
+  }
+
+  .tasks-completed-day-head {
     width: 100%;
   }
 }

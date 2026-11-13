@@ -162,30 +162,46 @@
 }
 
 .tasks-folder-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: center;
   margin-bottom: 0.75rem;
-  padding: 0.7rem 0.85rem;
+  padding: 0.7rem 2.75rem;
   border: 1px solid var(--border);
   background: transparent;
 }
 
-.tasks-folder-bar-actions {
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.45rem;
-}
-
 .tasks-folder-bar-name {
-  min-width: 0;
+  width: 100%;
   font-weight: 800;
+  text-align: center;
   overflow-wrap: anywhere;
 }
 
-.tasks-folder-close,
-.tasks-folder-delete,
+.tasks-folder-close {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+@media (hover: hover) {
+  .tasks-folder-close:hover {
+    color: var(--muted);
+    border-color: transparent;
+  }
+}
+
 .task-folders-close {
   border: 1px solid var(--border);
   background: transparent;
@@ -193,17 +209,7 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-}
-
-.tasks-folder-close,
-.tasks-folder-delete,
-.task-folders-close {
   padding: 0.45rem 0.8rem;
-}
-
-.tasks-folder-delete {
-  border-color: #f87171;
-  color: #f87171;
 }
 
 .task-folders-close {
@@ -234,14 +240,8 @@
 @media (hover: hover) {
   .task-folder-open:hover,
   .task-folder-add:hover,
-  .tasks-folder-close:hover,
   .task-folders-close:hover {
     border-color: var(--foreground);
-  }
-
-  .tasks-folder-delete:hover {
-    border-color: #f87171;
-    background: rgba(248, 113, 113, 0.08);
   }
 }
 

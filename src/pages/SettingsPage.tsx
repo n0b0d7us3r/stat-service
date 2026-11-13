@@ -3,14 +3,18 @@ import { Checkbox } from '../components/Checkbox';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { SortSelect } from '../components/SortSelect';
+import { Modal } from '../components/Modal';
+import { ModalActions } from '../components/ModalActions';
 import { ApiError } from '../api/client';
 import { changeEmail, changePassword } from '../api/auth';
+import { deleteFolder, getTaskBoard } from '../api/tasks';
 import { getUserSettings, updateUserSettings } from '../api/settings';
 import { clearRateOverride, getTodayRates, refreshTodayRates, setRateOverride } from '../api/finance';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
-import { locale, setLocale, t, type Locale } from '../i18n';
-import type { TodayRates, UserSettings } from '../types';
+import { dateLocaleTag, locale, setLocale, t, type Locale } from '../i18n';
+import type { Folder, TodayRates, UserSettings } from '../types';
+import { notifyTaskBoardChanged } from '../utils/taskBoardEvents';
 import {
   FINANCE_CURRENCIES,
   displayRateToStored,
@@ -303,6 +307,121 @@ function FinanceSettings() {
   );
 }
 
+function TaskFoldersSettings() {
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [selected, setSelected] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const loadFolders = () => {
+    setLoading(true);
+    void getTaskBoard()
+      .then((board) => {
+        const list = [...board.folders].sort((a, b) => a.name.localeCompare(b.name, dateLocaleTag));
+        setFolders(list);
+        setSelected((current) => (list.some((folder) => String(folder.id) === current) ? current : ''));
+        setError('');
+      })
+      .catch((err) => setError(errorText(err, t('loadTasksFailed'))))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadFolders();
+  }, []);
+
+  const selectedFolder = folders.find((folder) => String(folder.id) === selected) ?? null;
+
+  const handleDelete = async () => {
+    if (!selectedFolder || pending) return;
+    setPending(true);
+    setError('');
+    try {
+      await deleteFolder(selectedFolder.id);
+      setConfirmOpen(false);
+      setSelected('');
+      loadFolders();
+      notifyTaskBoardChanged();
+    } catch (err) {
+      setError(errorText(err, t('folderDeleteFailed')));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+  <>
+    <section className="settings-panel">
+      <h2 className="settings-panel-title">{t('settingsTasks')}</h2>
+      <div className="settings-row settings-row-stack">
+        <div className="settings-row-text">
+          <span className="settings-row-label">{t('settingsTaskFolders')}</span>
+          <span className="settings-row-hint">{t('settingsTaskFoldersHint')}</span>
+        </div>
+        {error && <p className="tasks-error">{error}</p>}
+        {loading ? (
+          <p className="settings-status">{t('settingsLoading')}</p>
+        ) : folders.length === 0 ? (
+          <p className="settings-status">{t('settingsTaskFoldersEmpty')}</p>
+        ) : (
+          <div className="settings-folder-delete-row">
+            <SortSelect
+              label={t('folder')}
+              value={selected}
+              options={[
+                { value: '', label: '—' },
+                ...folders.map((folder) => ({ value: String(folder.id), label: folder.name })),
+              ]}
+              onChange={setSelected}
+            />
+            <button
+              type="button"
+              className="modal-action-cancel settings-folder-delete-btn"
+              disabled={!selectedFolder || pending}
+              onClick={() => setConfirmOpen(true)}
+            >
+              {t('delete')}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+
+    {confirmOpen && selectedFolder && (
+      <Modal
+        title={t('deleteFolder')}
+        isOpen
+        onClose={() => {
+          if (pending) return;
+          setConfirmOpen(false);
+        }}
+      >
+        <form
+          className="task-delete-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleDelete();
+          }}
+        >
+          <p>{t('deleteFolderConfirm', { name: selectedFolder.name })}</p>
+          <ModalActions
+            onCancel={() => {
+              if (pending) return;
+              setConfirmOpen(false);
+            }}
+            submitLabel={t('delete')}
+            pending={pending}
+            pendingLabel={t('deleting')}
+          />
+        </form>
+      </Modal>
+    )}
+  </>
+  );
+}
+
 function LanguageSettings() {
   return (
     <section className="settings-panel">
@@ -480,6 +599,7 @@ export function SettingsPage() {
         <PageTitle>{t('settingsTitle')}</PageTitle>
 
         <LanguageSettings />
+        <TaskFoldersSettings />
         <FinanceSettings />
 
         <section className="settings-panel">

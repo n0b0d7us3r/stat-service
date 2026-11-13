@@ -20,7 +20,6 @@ import {
   formatRateQuote,
   rateQuote,
   storedRateToDisplay,
-  todayRatesSourceLabel,
 } from '../utils/finance';
 import { t } from '../i18n';
 
@@ -261,7 +260,6 @@ export function FinanceEntryModal({
                   {todayRate && todayRates ? (
                     <>
                       {t('financeRateToday')}: <strong>{formatRateQuote(currency, baseCurrency, todayRate)}</strong>
-                      <span className="finance-rate-source">{todayRatesSourceLabel(todayRates, currency)}</span>
                     </>
                   ) : t('financeRateTodayMissing')}
                 </p>
