@@ -66,6 +66,14 @@
   display: contents;
 }
 
+.tasks-filter-section .tasks-completed-toggle {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
 .tasks-page .sort-select-control {
   background-color: color-mix(in srgb, var(--card) 42%, transparent);
   -webkit-backdrop-filter: blur(14px);
@@ -84,7 +92,7 @@
   justify-content: center;
   gap: 0.5rem;
   border: 1px solid var(--border);
-  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  background-color: transparent;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   color: var(--foreground);
@@ -97,7 +105,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .tasks-create-btn:hover {
     filter: brightness(1.12);
   }
@@ -531,6 +539,10 @@
   position: static;
   width: 2.25rem;
   height: 2.25rem;
+  border: none;
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .task-card-tag {
@@ -582,7 +594,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .task-card-title:hover {
     color: var(--primary-dark);
   }
@@ -623,7 +635,7 @@
   cursor: default;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .task-editor-archive:hover:not(:disabled) {
     border-color: var(--primary);
     color: var(--primary-dark);
@@ -650,7 +662,7 @@
   opacity: 0.7;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .task-editor-delete:hover:not(:disabled) {
     background: #f87171;
     color: #fff;
@@ -686,13 +698,15 @@
   width: 2.75rem;
   height: 2.75rem;
   flex-shrink: 0;
-  border: 1px solid var(--border);
+  border: none;
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   color: var(--foreground);
 }
 
 .task-editor-edit[aria-pressed='true'] {
-  color: var(--foreground);
-  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .task-editor-management {
@@ -956,10 +970,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    width: 100%;
-  }
-
-  .tasks-filter-section .tasks-completed-toggle {
     width: 100%;
   }
 

@@ -101,7 +101,7 @@
   }
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .note-card:hover {
     border-color: var(--primary);
   }

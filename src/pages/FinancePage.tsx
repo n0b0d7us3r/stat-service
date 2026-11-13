@@ -197,15 +197,10 @@ export function FinancePage() {
     [accounts],
   );
 
-  const enabledCurrencySet = useMemo(() => new Set(enabledCurrencies), [enabledCurrencies]);
-
   const { inCurrency, unconvertedCount } = useMemo(() => {
     const converted: FinanceEntry[] = [];
     let skipped = 0;
     for (const entry of accountEntries) {
-      if (entry.currency !== currency && !enabledCurrencySet.has(entry.currency)) {
-        continue;
-      }
       const cents = toBaseCents(entry, currency, todayRates);
       if (cents === null) {
         skipped += 1;
@@ -214,7 +209,7 @@ export function FinancePage() {
       }
     }
     return { inCurrency: converted, unconvertedCount: skipped };
-  }, [accountEntries, currency, enabledCurrencySet, todayRates]);
+  }, [accountEntries, currency, todayRates]);
   const incomeInCurrency = useMemo(() => inCurrency.filter((entry) => entry.kind === 'income'), [inCurrency]);
   const expenseInCurrency = useMemo(() => inCurrency.filter((entry) => entry.kind === 'expense'), [inCurrency]);
 

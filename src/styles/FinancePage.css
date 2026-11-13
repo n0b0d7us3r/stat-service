@@ -1151,7 +1151,7 @@
   text-transform: uppercase;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .finance-add-btn-income:hover {
     background: rgba(52, 199, 89, 0.1);
   }

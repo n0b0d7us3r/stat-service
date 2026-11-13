@@ -48,7 +48,7 @@
   line-height: 1;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .projects-create-open-btn:hover {
     filter: brightness(1.12);
   }
@@ -192,7 +192,7 @@
   stroke-linejoin: miter;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .project-card-main:hover {
     background: var(--card-hover);
   }

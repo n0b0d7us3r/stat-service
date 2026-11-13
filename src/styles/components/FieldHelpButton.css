@@ -21,7 +21,7 @@
   color: var(--foreground);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .field-help-btn:hover {
     color: var(--foreground);
   }

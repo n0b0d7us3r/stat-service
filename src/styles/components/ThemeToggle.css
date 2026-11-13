@@ -12,7 +12,7 @@
   border-radius: 0; /* Сохраняем строгий стиль проекта */
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .theme-toggle-btn:hover {
     border-color: var(--primary);
   }

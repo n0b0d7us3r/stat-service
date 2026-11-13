@@ -128,8 +128,10 @@
   background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--scrollbar-thumb-hover);
+@media (hover: hover) and (min-width: 769px) {
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
 }
 
 ::-webkit-scrollbar-button {

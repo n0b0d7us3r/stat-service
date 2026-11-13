@@ -48,7 +48,7 @@
   cursor: not-allowed;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .app-pagination-btn:not(:disabled):hover {
     border-color: var(--primary);
     color: var(--primary-dark);

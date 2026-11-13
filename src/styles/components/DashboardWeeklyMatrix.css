@@ -68,7 +68,7 @@
   white-space: nowrap;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .dashboard-week-matrix-project-btn:hover {
     color: var(--primary-dark);
   }

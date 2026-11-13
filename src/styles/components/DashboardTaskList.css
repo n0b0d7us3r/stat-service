@@ -69,7 +69,7 @@
   opacity: 0.72;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .dashboard-task-list-item:hover {
     border-color: var(--primary);
   }

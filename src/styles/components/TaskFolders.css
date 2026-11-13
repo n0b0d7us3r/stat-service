@@ -190,20 +190,11 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid var(--border);
-  background-color: color-mix(in srgb, var(--card) 42%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  border: none;
+  background-color: transparent;
   color: var(--muted);
   cursor: pointer;
   transform: translateY(-50%);
-}
-
-@media (hover: hover) {
-  .tasks-folder-close:hover {
-    color: var(--muted);
-    border-color: transparent;
-  }
 }
 
 .task-folders-close {
@@ -243,7 +234,7 @@
   }
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .task-folder-open:hover,
   .task-folder-add:hover,
   .task-folders-close:hover {

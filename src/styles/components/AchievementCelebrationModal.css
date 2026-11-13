@@ -54,7 +54,7 @@
   box-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .achievement-celebration-btn:hover {
     filter: brightness(1.05);
   }

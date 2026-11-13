@@ -52,7 +52,7 @@
   transition: color 0.2s ease;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .checkbox-wrapper:hover .checkbox-label-text {
     color: var(--foreground);
   }

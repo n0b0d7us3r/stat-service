@@ -18,11 +18,4 @@
     line-height: 1.3;
   }
 
-  .app-filter-section .dashboard-collapsible-panel {
-    transition: none;
-  }
-
-  .app-filter-section .dashboard-collapsible-toggle-icon {
-    transition: none;
-  }
 }

@@ -59,7 +59,7 @@
   color: var(--muted);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .project-toolbar-edit:hover {
     border-color: var(--primary-dark);
   }
@@ -236,7 +236,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .project-delete-submit-btn:hover:not(:disabled) {
     background: rgba(248, 113, 113, 0.08);
   }

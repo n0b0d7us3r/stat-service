@@ -98,7 +98,7 @@ aside.collapsed .sidebar-toggle-btn svg {
   transform: rotate(180deg);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .sidebar-toggle-btn:hover {
     background-color: var(--primary-dark);
   }
@@ -127,7 +127,7 @@ aside nav {
   letter-spacing: 0.025em;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .nav-item:hover,
   .logout-btn:hover {
     background: var(--primary-soft);

@@ -116,7 +116,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .dashboard-project-row:hover {
     background: var(--card-hover);
   }
@@ -270,7 +270,7 @@
   text-decoration: none;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .dashboard-achievements-link:hover {
     text-decoration: underline;
   }

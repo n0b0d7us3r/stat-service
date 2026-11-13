@@ -100,7 +100,7 @@
   margin-top: 0.5rem;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .settings-panel-help-btn:hover {
     color: var(--foreground);
   }
@@ -350,7 +350,7 @@
   cursor: not-allowed;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .settings-locale-switch:not(.is-on):hover {
     border-color: var(--foreground);
   }
@@ -361,6 +361,33 @@
 }
 
 @media (max-width: 768px) {
+  .settings-finance-fields > .settings-row:has(.settings-base-currency-select) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .settings-finance-fields > .settings-row:has(.settings-base-currency-select) .settings-row-text {
+    flex: none;
+    width: 100%;
+  }
+
+  .settings-base-currency-select {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+  }
+
+  .settings-base-currency-select .sort-select-control {
+    width: 100%;
+    max-width: none;
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    min-height: 2.75rem;
+  }
+
   .settings-rates-actions > button {
     width: 100%;
   }

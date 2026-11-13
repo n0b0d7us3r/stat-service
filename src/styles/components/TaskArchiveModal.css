@@ -119,7 +119,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .task-archive-close-btn:hover {
     border-color: var(--foreground);
   }
@@ -184,7 +184,7 @@
   cursor: not-allowed;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .tag-manage-delete-btn:hover:not(:disabled) {
     background: rgba(248, 113, 113, 0.08);
   }

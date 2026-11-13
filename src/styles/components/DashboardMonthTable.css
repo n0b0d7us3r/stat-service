@@ -178,7 +178,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .dashboard-month-row:hover {
     background: var(--card-hover);
   }

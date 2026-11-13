@@ -161,7 +161,7 @@
   }
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .task-activity-calendar-cell:not(.task-activity-calendar-cell-empty):hover {
     outline: 1px solid var(--foreground);
     outline-offset: 1px;

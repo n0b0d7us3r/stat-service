@@ -31,7 +31,7 @@
   flex-shrink: 0;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .calendar-nav-btn:hover {
     border-color: var(--primary-dark);
     color: var(--primary-dark);
@@ -209,13 +209,13 @@
   outline: none;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .project-calendar-editing .calendar-day-interactive:hover {
     border-color: var(--primary-dark);
   }
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .project-calendar-readonly .calendar-day-selectable:hover {
     border-color: var(--primary-dark);
   }

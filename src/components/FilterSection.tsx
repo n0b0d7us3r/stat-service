@@ -47,9 +47,15 @@ export const FilterSection = forwardRef<FilterSectionHandle, FilterSectionProps>
   const [expanded, setExpanded] = useState(() => getInitialExpanded(defaultExpandedOnMobile));
 
   const collapse = useCallback(() => {
-    if (isMobileViewport()) {
-      setExpanded(false);
+    if (!isMobileViewport()) {
+      return;
     }
+
+    // Сворачиваем после применения фильтра в следующем кадре, чтобы не сливать
+    // обновление содержимого и смену `expanded` в один коммит (иначе анимация не играет).
+    requestAnimationFrame(() => {
+      setExpanded(false);
+    });
   }, []);
 
   useImperativeHandle(ref, () => ({ collapse }), [collapse]);

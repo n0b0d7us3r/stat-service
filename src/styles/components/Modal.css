@@ -197,7 +197,7 @@
   cursor: default;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 769px) {
   .modal-action-submit:hover:not(:disabled) {
     filter: brightness(1.12);
   }
