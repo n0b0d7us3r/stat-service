@@ -41,6 +41,7 @@ import type {
 import { formatLocalDate, parseLocalDate } from '../utils/date';
 import {
   DEFAULT_CURRENCY,
+  FINANCE_CURRENCIES,
   formatMoney,
   formatPeriod,
   monthPeriod,
@@ -94,6 +95,7 @@ export function FinancePage() {
   const [transfers, setTransfers] = useState<FinanceTransfer[]>([]);
   const [balances, setBalances] = useState<FinanceBalance[]>([]);
   const [hiddenBalanceAccounts, setHiddenBalanceAccounts] = useState<string[]>([]);
+  const [enabledCurrencies, setEnabledCurrencies] = useState<string[]>([...FINANCE_CURRENCIES]);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState<number | null>(null);
   const [editingTransfer, setEditingTransfer] = useState(false);
@@ -110,6 +112,7 @@ export function FinancePage() {
       setTransfers(overview.transfers);
       setBalances(overview.balances);
       setHiddenBalanceAccounts(overview.hiddenBalanceAccounts);
+      setEnabledCurrencies(overview.enabledCurrencies?.length ? overview.enabledCurrencies : [...FINANCE_CURRENCIES]);
       setError('');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeLoadFailed'));
@@ -632,6 +635,7 @@ export function FinancePage() {
           categories={categories.filter((category) => category.kind === entryKind)}
           accounts={accounts}
           baseCurrency={currency}
+          currencies={enabledCurrencies}
           todayRates={todayRates}
           defaultDate={defaultEntryDate}
           onClose={() => setEntryKind(null)}
@@ -660,6 +664,7 @@ export function FinancePage() {
         <FinanceTransferModal
           accounts={accounts}
           baseCurrency={currency}
+          currencies={enabledCurrencies}
           defaultDate={defaultEntryDate}
           onClose={() => setTransferModalOpen(false)}
           onSaved={handleTransferSaved}
@@ -674,6 +679,7 @@ export function FinancePage() {
         <FinanceTransferModal
           accounts={accounts}
           baseCurrency={currency}
+          currencies={enabledCurrencies}
           defaultDate={selectedTransfer.date}
           transfer={selectedTransfer}
           onClose={() => setEditingTransfer(false)}
@@ -701,6 +707,7 @@ export function FinancePage() {
           categories={categories.filter((category) => category.kind === selectedEntry.kind)}
           accounts={accounts}
           baseCurrency={currency}
+          currencies={enabledCurrencies}
           todayRates={todayRates}
           defaultDate={selectedEntry.date}
           entry={selectedEntry}

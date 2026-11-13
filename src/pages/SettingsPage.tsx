@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Checkbox } from '../components/Checkbox';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { SortSelect } from '../components/SortSelect';
@@ -32,12 +33,13 @@ function errorText(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
 }
 
-function TodayRatesSettings({ todayRates, onChange }: {
+function TodayRatesSettings({ todayRates, enabledCurrencies, onChange }: {
   todayRates: TodayRates;
+  enabledCurrencies: string[];
   onChange: (next: TodayRates) => void;
 }) {
   const base = todayRates.base;
-  const currencies = FINANCE_CURRENCIES.filter((code) => code !== base);
+  const currencies = enabledCurrencies.filter((code) => code !== base);
   const [values, setValues] = useState<Record<string, string>>(() => manualValues(todayRates));
   const [pending, setPending] = useState<'save' | 'reset' | 'refresh' | null>(null);
   const [status, setStatus] = useState<FormStatus>(null);
@@ -166,7 +168,12 @@ function FinanceSettings() {
   useEffect(() => {
     Promise.all([getUserSettings(), getTodayRates()])
       .then(([nextSettings, nextRates]) => {
-        setSettings(nextSettings);
+        setSettings({
+          ...nextSettings,
+          enabledCurrencies: nextSettings.enabledCurrencies?.length
+            ? nextSettings.enabledCurrencies
+            : [...FINANCE_CURRENCIES],
+        });
         setTodayRates(nextRates);
       })
       .catch((err) => setError(errorText(err, t('settingsLoadFailed'))));
@@ -181,6 +188,28 @@ function FinanceSettings() {
     setError('');
     try {
       setSettings(await updateUserSettings({ baseCurrency }));
+      setTodayRates(await getTodayRates());
+      setSaved(true);
+    } catch (err) {
+      setSettings(previous);
+      setError(errorText(err, t('settingsSaveFailed')));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEnabledCurrencyChange = async (code: string, enabled: boolean) => {
+    if (!settings || code === settings.baseCurrency) return;
+    const previous = settings;
+    const enabledCurrencies = enabled
+      ? [...new Set([...settings.enabledCurrencies, code])]
+      : settings.enabledCurrencies.filter((item) => item !== code);
+    setSettings({ ...settings, enabledCurrencies });
+    setSaving(true);
+    setSaved(false);
+    setError('');
+    try {
+      setSettings(await updateUserSettings({ enabledCurrencies }));
       setTodayRates(await getTodayRates());
       setSaved(true);
     } catch (err) {
@@ -207,9 +236,26 @@ function FinanceSettings() {
             <SortSelect
               label={t('financeCurrency')}
               value={settings.baseCurrency}
-              options={FINANCE_CURRENCIES.map((code) => ({ value: code, label: code }))}
+              options={settings.enabledCurrencies.map((code) => ({ value: code, label: code }))}
               onChange={(value) => void handleCurrencyChange(value)}
             />
+          </div>
+          <div className="settings-row settings-row-stack">
+            <div className="settings-row-text">
+              <span className="settings-row-label">{t('settingsEnabledCurrencies')}</span>
+              <span className="settings-row-hint">{t('settingsEnabledCurrenciesHint')}</span>
+            </div>
+            <div className="settings-currencies-list" role="group" aria-label={t('settingsEnabledCurrencies')}>
+              {FINANCE_CURRENCIES.map((code) => (
+                <Checkbox
+                  key={code}
+                  label={code}
+                  checked={settings.enabledCurrencies.includes(code)}
+                  disabled={saving || code === settings.baseCurrency}
+                  onChange={(checked) => void handleEnabledCurrencyChange(code, checked)}
+                />
+              ))}
+            </div>
           </div>
           {(saving || saved) && (
             <p className="settings-status">{saving ? t('settingsSaving') : t('settingsSaved')}</p>
@@ -218,6 +264,7 @@ function FinanceSettings() {
             <TodayRatesSettings
               key={todayRates.base}
               todayRates={todayRates}
+              enabledCurrencies={settings.enabledCurrencies}
               onChange={setTodayRates}
             />
           )}

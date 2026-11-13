@@ -121,7 +121,7 @@ export function FinanceCategoryModal({ mode, items, onClose, onCreated, onDelete
       <div className="tag-manage-modal">
         {error && <p className="task-editor-error">{error}</p>}
 
-        <form className="task-editor-form tag-manage-create" onSubmit={handleCreate}>
+        <form id="finance-category-create-form" className="task-editor-form tag-manage-create" onSubmit={handleCreate}>
           <div className="finance-category-preview">
             <FinanceIconBadge icon={icon} color={color} size="lg" />
             <input
@@ -170,10 +170,6 @@ export function FinanceCategoryModal({ mode, items, onClose, onCreated, onDelete
               </label>
             ))}
           </div>
-
-          <button type="submit" className="modal-action-submit" disabled={saving}>
-            {saving ? t('creating') : t('create')}
-          </button>
         </form>
 
         {items.length > 0 && (
@@ -210,9 +206,19 @@ export function FinanceCategoryModal({ mode, items, onClose, onCreated, onDelete
           </section>
         )}
 
-        <button type="button" className="modal-action-cancel tag-manage-close" onClick={onClose}>
-          {t('close')}
-        </button>
+        <div className="modal-actions">
+          <button
+            type="submit"
+            form="finance-category-create-form"
+            className="modal-action-submit"
+            disabled={saving}
+          >
+            {saving ? t('creating') : t('create')}
+          </button>
+          <button type="button" className="modal-action-cancel tag-manage-close" onClick={onClose}>
+            {t('close')}
+          </button>
+        </div>
       </div>
     </Modal>
   );

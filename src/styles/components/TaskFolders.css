@@ -97,14 +97,15 @@
 
 .task-folder-create-actions {
   display: flex;
-  gap: 0.45rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
 }
 
 .task-folder-create-actions .modal-action-cancel,
 .task-folder-submit {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .task-folder-submit {

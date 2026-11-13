@@ -15,7 +15,6 @@ import type {
   TodayRates,
 } from '../types';
 import {
-  FINANCE_CURRENCIES,
   displayRateToStored,
   formatMoney,
   formatRateQuote,
@@ -30,6 +29,7 @@ interface FinanceEntryModalProps {
   categories: FinanceCategory[];
   accounts: FinanceAccount[];
   baseCurrency: string;
+  currencies: string[];
   todayRates: TodayRates | null;
   defaultDate: string;
   entry?: FinanceEntry;
@@ -79,6 +79,7 @@ export function FinanceEntryModal({
   categories,
   accounts,
   baseCurrency,
+  currencies,
   todayRates,
   defaultDate,
   entry,
@@ -86,6 +87,10 @@ export function FinanceEntryModal({
   onSaved,
   onManage,
 }: FinanceEntryModalProps) {
+  const currencyOptions = [...new Set([
+    ...currencies,
+    ...(entry?.currency ? [entry.currency] : []),
+  ])];
   const isExpense = kind === 'expense';
   const [amount, setAmount] = useState(() => (entry ? String(entry.amount_cents / 100) : ''));
   const [currency, setCurrency] = useState(entry?.currency ?? baseCurrency);
@@ -198,7 +203,7 @@ export function FinanceEntryModal({
           }}
         >
           <p className="finance-modal-hint">{missingCopy[missing].hint}</p>
-          <ModalActions onCancel={onClose} submitLabel={missingCopy[missing].action} submitFirst />
+          <ModalActions onCancel={onClose} submitLabel={missingCopy[missing].action} />
         </form>
       ) : (
         <form className="task-editor-form" onSubmit={handleSubmit}>
@@ -227,7 +232,7 @@ export function FinanceEntryModal({
                   setRate('');
                 }}
               >
-                {FINANCE_CURRENCIES.map((code) => (
+                {currencyOptions.map((code) => (
                   <option key={code} value={code}>{code}</option>
                 ))}
               </select>
@@ -328,7 +333,7 @@ export function FinanceEntryModal({
             />
           </label>
 
-          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} submitFirst />
+          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} />
         </form>
       )}
     </Modal>

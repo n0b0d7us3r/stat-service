@@ -142,7 +142,7 @@ export function FinancePeriodModal({ period, onClose, onApply }: FinancePeriodMo
           {to === null ? t('financePeriodPickEnd') : formatPeriod(draft)}
         </p>
 
-        <ModalActions onCancel={onClose} submitLabel={t('financePeriodApply')} submitFirst />
+        <ModalActions onCancel={onClose} submitLabel={t('financePeriodApply')} />
       </form>
     </Modal>
   );

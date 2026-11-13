@@ -250,6 +250,8 @@ export interface UserSettings {
   baseCurrency: string;
   /** Счета, скрытые в списке баланса: id счёта или 'none' для операций без счёта. */
   hiddenBalanceAccounts: string[];
+  /** Валюты, доступные в выпадающих списках финансов. */
+  enabledCurrencies: string[];
 }
 
 export interface FinanceOverview {
@@ -257,6 +259,7 @@ export interface FinanceOverview {
   to: string;
   baseCurrency: string;
   hiddenBalanceAccounts: string[];
+  enabledCurrencies: string[];
   todayRates: TodayRates;
   transfers: FinanceTransfer[];
   balances: FinanceBalance[];

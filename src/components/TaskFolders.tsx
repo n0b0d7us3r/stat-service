@@ -83,11 +83,11 @@ export function TaskFolders({
           />
           {error && <p className="task-folder-error">{error}</p>}
           <div className="task-folder-create-actions">
-            <button type="button" className="modal-action-cancel" onClick={closeCreate}>
-              {t('close')}
-            </button>
             <button type="submit" className="task-folder-submit" disabled={pending}>
               {t('createFolder')}
+            </button>
+            <button type="button" className="modal-action-cancel" onClick={closeCreate}>
+              {t('close')}
             </button>
           </div>
         </form>

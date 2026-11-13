@@ -47,6 +47,7 @@ export interface FinanceOverview {
   to: string;
   baseCurrency: string;
   hiddenBalanceAccounts: string[];
+  enabledCurrencies: string[];
   todayRates: TodayRates;
   categories: FinanceCategory[];
   accounts: FinanceAccount[];
@@ -139,12 +140,16 @@ function normalizeIcon(value: unknown): string {
   return value;
 }
 
-function normalizeCurrency(value: unknown): string {
+function normalizeCurrency(value: unknown, allowed: readonly string[]): string {
   if (value === undefined || value === null || value === '') {
-    return 'BYN';
+    const fallback = allowed.includes('BYN') ? 'BYN' : allowed[0];
+    if (!fallback) {
+      throw new DbError('Некорректная валюта');
+    }
+    return fallback;
   }
   const currency = String(value).trim().toUpperCase();
-  if (!(FINANCE_CURRENCIES as readonly string[]).includes(currency)) {
+  if (!(FINANCE_CURRENCIES as readonly string[]).includes(currency) || !allowed.includes(currency)) {
     throw new DbError('Некорректная валюта');
   }
   return currency;
@@ -211,12 +216,13 @@ export function getFinanceOverview(userId: number, from: string, to: string): Fi
     [start, end],
   );
 
-  const { baseCurrency, hiddenBalanceAccounts } = getUserSettings(userId);
+  const { baseCurrency, hiddenBalanceAccounts, enabledCurrencies } = getUserSettings(userId);
 
   return {
     from: start,
     to: end,
     baseCurrency,
+    enabledCurrencies,
     hiddenBalanceAccounts,
     todayRates: getTodayRates(userId),
     categories,
@@ -336,11 +342,11 @@ interface FinanceEntryInput {
 
 function normalizeEntryInput(userId: number, db: Database.Database, kind: FinanceEntryKind, input: FinanceEntryInput) {
   const amountCents = normalizeAmount(input.amount);
-  const currency = normalizeCurrency(input.currency);
+  const { baseCurrency, enabledCurrencies } = getUserSettings(userId);
+  const currency = normalizeCurrency(input.currency, enabledCurrencies);
   const date = normalizeFinanceDate(input.date);
   const note = normalizeNote(input.note);
 
-  const { baseCurrency } = getUserSettings(userId);
   let rate: number | null = null;
   let rateCurrency: string | null = null;
   let rateMode: FinanceRateMode = 'fixed';
@@ -472,7 +478,7 @@ function normalizeFee(value: unknown): number {
   return cents;
 }
 
-function normalizeTransferInput(db: Database.Database, input: FinanceTransferInput) {
+function normalizeTransferInput(userId: number, db: Database.Database, input: FinanceTransferInput) {
   const fromAccountId = requireAccount(db, input.fromAccountId);
   const toAccountId = requireAccount(db, input.toAccountId);
   if (fromAccountId === toAccountId) {
@@ -482,8 +488,9 @@ function normalizeTransferInput(db: Database.Database, input: FinanceTransferInp
   const amountCents = normalizeAmount(input.amount);
   const toAmountCents = normalizeAmount(input.toAmount);
   const feeCents = normalizeFee(input.fee);
-  const currency = normalizeCurrency(input.currency);
-  const toCurrency = normalizeCurrency(input.toCurrency ?? input.currency);
+  const { enabledCurrencies } = getUserSettings(userId);
+  const currency = normalizeCurrency(input.currency, enabledCurrencies);
+  const toCurrency = normalizeCurrency(input.toCurrency ?? input.currency, enabledCurrencies);
   const date = normalizeFinanceDate(input.date);
   const note = normalizeNote(input.note);
 
@@ -520,7 +527,7 @@ function readTransfer(db: Database.Database, transferId: number): FinanceTransfe
 
 export function createFinanceTransfer(userId: number, input: FinanceTransferInput): FinanceTransfer {
   const db = getUserDb(userId);
-  const v = normalizeTransferInput(db, input);
+  const v = normalizeTransferInput(userId, db, input);
   const result = db.prepare(
     `INSERT INTO finance_transfers
        (from_account_id, to_account_id, amount_cents, currency, to_amount_cents, to_currency, rate, fee_cents, date, note)
@@ -542,7 +549,7 @@ export function updateFinanceTransfer(userId: number, transferId: number, input:
   if (!readTransfer(db, transferId)) {
     throw new DbError('Перевод не найден');
   }
-  const v = normalizeTransferInput(db, input);
+  const v = normalizeTransferInput(userId, db, input);
   db.prepare(
     `UPDATE finance_transfers
      SET from_account_id = ?, to_account_id = ?, amount_cents = ?, currency = ?,

@@ -74,7 +74,7 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
       <div className="tag-manage-modal">
         {error && <p className="task-editor-error">{error}</p>}
 
-        <form className="task-editor-form tag-manage-create" onSubmit={handleCreate}>
+        <form id="tag-manage-create-form" className="task-editor-form tag-manage-create" onSubmit={handleCreate}>
           <h3 className="tag-manage-section-title">{t('createTag')}</h3>
 
           <label className="task-editor-field">
@@ -110,10 +110,6 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
               ))}
             </div>
           </div>
-
-          <button type="submit" className="modal-action-submit" disabled={saving}>
-            {saving ? t('creating') : t('create')}
-          </button>
         </form>
 
         <section className="tag-manage-delete" aria-labelledby="tag-delete-heading">
@@ -149,9 +145,19 @@ export function TagManageModal({ tags, onClose, onCreated, onDeleted }: TagManag
           </button>
         </section>
 
-        <button type="button" className="modal-action-cancel tag-manage-close" onClick={onClose}>
-          {t('close')}
-        </button>
+        <div className="modal-actions">
+          <button
+            type="submit"
+            form="tag-manage-create-form"
+            className="modal-action-submit"
+            disabled={saving}
+          >
+            {saving ? t('creating') : t('create')}
+          </button>
+          <button type="button" className="modal-action-cancel tag-manage-close" onClick={onClose}>
+            {t('close')}
+          </button>
+        </div>
       </div>
     </Modal>
   );

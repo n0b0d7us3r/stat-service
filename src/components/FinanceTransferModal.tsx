@@ -6,11 +6,12 @@ import { ApiError } from '../api/client';
 import { createFinanceTransfer, updateFinanceTransfer } from '../api/finance';
 import { t } from '../i18n';
 import type { FinanceAccount, FinanceTransfer } from '../types';
-import { FINANCE_CURRENCIES, formatTransferRateQuote } from '../utils/finance';
+import { formatTransferRateQuote } from '../utils/finance';
 
 interface FinanceTransferModalProps {
   accounts: FinanceAccount[];
   baseCurrency: string;
+  currencies: string[];
   defaultDate: string;
   transfer?: FinanceTransfer;
   onClose: () => void;
@@ -46,12 +47,18 @@ function moneyNumber(cents: number): number {
 export function FinanceTransferModal({
   accounts,
   baseCurrency,
+  currencies,
   defaultDate,
   transfer,
   onClose,
   onSaved,
   onManageAccounts,
 }: FinanceTransferModalProps) {
+  const currencyOptions = [...new Set([
+    ...currencies,
+    ...(transfer?.currency ? [transfer.currency] : []),
+    ...(transfer?.to_currency ? [transfer.to_currency] : []),
+  ])];
   const [fromAccountId, setFromAccountId] = useState(() => accountIdOrNull(accounts, transfer?.from_account_id));
   const [toAccountId, setToAccountId] = useState(() => accountIdOrNull(accounts, transfer?.to_account_id));
   const [amount, setAmount] = useState(() => (transfer ? String(transfer.amount_cents / 100) : ''));
@@ -151,7 +158,7 @@ export function FinanceTransferModal({
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
-        {FINANCE_CURRENCIES.map((code) => (
+        {currencyOptions.map((code) => (
           <option key={code} value={code}>{code}</option>
         ))}
       </select>
@@ -185,7 +192,7 @@ export function FinanceTransferModal({
           }}
         >
           <p className="finance-modal-hint">{t('financeTransferNeedAccounts')}</p>
-          <ModalActions onCancel={onClose} submitLabel={t('financeAccounts')} submitFirst />
+          <ModalActions onCancel={onClose} submitLabel={t('financeAccounts')} />
         </form>
       ) : (
         <form className="task-editor-form" onSubmit={handleSubmit}>
@@ -273,7 +280,7 @@ export function FinanceTransferModal({
             />
           </label>
 
-          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} submitFirst />
+          <ModalActions onCancel={onClose} submitLabel={t('save')} pending={saving} />
         </form>
       )}
     </Modal>
