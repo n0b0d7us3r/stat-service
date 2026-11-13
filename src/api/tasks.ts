@@ -1,4 +1,4 @@
-import type { Folder, Tag, Task, TaskPriority } from '../types';
+import type { Achievement, Folder, Tag, Task, TaskPriority } from '../types';
 import { API_BASE, ApiError, apiFetch, parseError } from './client';
 
 export interface TaskBoard {
@@ -62,12 +62,12 @@ export async function updateTask(
     tagIds?: number[];
     folderId?: number | null;
   },
-): Promise<Task> {
-  const { task } = await apiFetch<{ task: Task }>(`/tasks/${taskId}`, {
+): Promise<{ task: Task; newlyEarned: Achievement[] }> {
+  const { task, newlyEarned = [] } = await apiFetch<{ task: Task; newlyEarned?: Achievement[] }>(`/tasks/${taskId}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
   });
-  return task;
+  return { task, newlyEarned };
 }
 
 export async function deleteTask(taskId: number): Promise<void> {

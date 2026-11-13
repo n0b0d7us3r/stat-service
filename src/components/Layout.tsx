@@ -8,6 +8,8 @@ import { useAuth } from '../context/AuthContext';
 import { formatLocalDate } from '../utils/date';
 import { sidebarTaskScore } from '../utils/taskUi';
 import { TASK_BOARD_CHANGED } from '../utils/taskBoardEvents';
+import { mobileHeaderTitleForPath } from '../utils/mobileHeaderTitle';
+import { useMobileHeaderTitleContext } from '../context/MobileHeaderTitleContext';
 import { SidebarToggle } from './SidebarToggle';
 // import { ThemeToggle } from './ThemeToggle';
 import '../styles/components/Layout.css';
@@ -21,8 +23,12 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { overrideTitle, subtitle: headerSubtitle } = useMobileHeaderTitleContext();
 
   const [todayScore, setTodayScore] = useState<{ completed: number; total: number } | null>(null);
+  const [isMobileHeader, setIsMobileHeader] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+  ));
 
   useEffect(() => {
     if (!user) {
@@ -57,6 +63,31 @@ export function Layout({ children }: LayoutProps) {
 
   const displayedAppName = APP_NAME.length > 19 ? `${APP_NAME.substring(0, 19)}...` : APP_NAME;
 
+  const mobilePageTitle = (() => {
+    if (location.pathname === '/tasks') {
+      return t('tasksTitle');
+    }
+    const staticTitle = mobileHeaderTitleForPath(location.pathname);
+    return overrideTitle ?? staticTitle ?? '';
+  })();
+
+  const mobilePageSubtitle = (() => {
+    if (location.pathname === '/tasks') {
+      return todayScore
+        ? `[ ${todayScore.completed} / ${todayScore.total} ]`
+        : '[ – / – ]';
+    }
+    return headerSubtitle ?? '';
+  })();
+
+  const desktopScoreText = todayScore
+    ? `[ ${todayScore.completed} / ${todayScore.total} ]`
+    : '[ – / – ]';
+
+  const logoSubAria = !isMobileHeader && todayScore
+    ? t('todayScoreLabel', { completed: todayScore.completed, total: todayScore.total })
+    : undefined;
+
   useEffect(() => {
     if (window.innerWidth <= 768 && !isCollapsed) {
       setIsCollapsed(true);
@@ -70,13 +101,14 @@ export function Layout({ children }: LayoutProps) {
   };
 
   useEffect(() => {
-    const media = window.matchMedia('(min-width: 769px)');
-    const keepExpanded = () => {
-      if (media.matches) setIsCollapsed(false);
+    const desktop = window.matchMedia('(min-width: 769px)');
+    const syncLayout = () => {
+      setIsMobileHeader(!desktop.matches);
+      if (desktop.matches) setIsCollapsed(false);
     };
-    keepExpanded();
-    media.addEventListener('change', keepExpanded);
-    return () => media.removeEventListener('change', keepExpanded);
+    syncLayout();
+    desktop.addEventListener('change', syncLayout);
+    return () => desktop.removeEventListener('change', syncLayout);
   }, []);
 
   const handleLogout = () => {
@@ -88,17 +120,29 @@ export function Layout({ children }: LayoutProps) {
       <aside className={isCollapsed ? 'collapsed' : ''}>
         <div className="sidebar-header">
           <div className="sidebar-logo-container">
-            <div className="logo-brand">{displayedAppName}</div>
-            <div
-              className="logo-sub"
-              aria-label={todayScore
-                ? t('todayScoreLabel', { completed: todayScore.completed, total: todayScore.total })
-                : undefined}
-            >
-              {todayScore ? `[ ${todayScore.completed} / ${todayScore.total} ]` : '[ – / – ]'}
-            </div>
+            {isMobileHeader ? (
+              <>
+                {user && mobilePageTitle && (
+                  <div className="logo-brand layout-mobile-page-title">{mobilePageTitle}</div>
+                )}
+                {user && mobilePageSubtitle && (
+                  <div className="logo-sub layout-mobile-page-sub" aria-live="polite">
+                    {mobilePageSubtitle}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="logo-brand">{displayedAppName}</div>
+                {user && (
+                  <div className="logo-sub" aria-label={logoSubAria}>
+                    {desktopScoreText}
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="sidebar-header-actions">
             {/* <ThemeToggle theme={theme} toggleTheme={toggleTheme} /> */}
             <SidebarToggle isCollapsed={isCollapsed} onClick={toggleSidebar} />
           </div>

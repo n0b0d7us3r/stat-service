@@ -51,6 +51,7 @@
   "nextPage": "Следующая страница",
   "pages": "Страницы",
   "sort": "Сортировка",
+  "filter": "Фильтр",
   "name": "Название",
   "description": "Описание",
   "priority": "Приоритет",
@@ -146,6 +147,7 @@
   "notePlaceholder": "Запишите заметку по этому дню...",
   "view": "Просмотр",
   "tasksTitle": "Задачи",
+  "tasksSummaryToggle": "Сводка по задачам",
   "tasksLoading": "Загрузка задач...",
   "tasksSummary": "Активных: {active} · Выполненных: {completed}",
   "tasksSummaryArchive": "Активных: {active} · Выполненных: {completed} · В архиве: {archived}",
@@ -358,6 +360,7 @@
   "financeUnconverted": "Операции без курса к {currency} не учтены в статистике: {count}",
   "navSettings": "Настройки",
   "settingsTitle": "Настройки",
+  "settingsHintButton": "Показать подсказку",
   "settingsLoading": "Загрузка настроек…",
   "settingsLoadFailed": "Не удалось загрузить настройки",
   "settingsSaveFailed": "Не удалось сохранить настройки",
@@ -379,6 +382,8 @@
   "emailTaken": "Пользователь с таким email уже существует",
   "settingsLanguage": "Язык",
   "settingsInterfaceLanguage": "Язык интерфейса",
+  "settingsLocaleRu": "Русский",
+  "settingsLocaleEn": "English",
   "settingsLanguageHint": "Сохраняется в этом браузере. Страница перезагрузится.",
   "settingsAccount": "Аккаунт",
   "settingsChangeEmail": "Смена email",
@@ -495,6 +500,18 @@
     "stay_long": {
       "name": "Ты со мной надолго?",
       "description": "Продолжайте ставить отметки в любом проекте в течение двух месяцев."
+    },
+    "tasks_completed_10": {
+      "name": "Десятка",
+      "description": "Выполните 10 задач."
+    },
+    "tasks_day_3": {
+      "name": "Продуктивный день",
+      "description": "Выполните 3 задачи за один день."
+    },
+    "balance_usd_300": {
+      "name": "Триста",
+      "description": "Достигните текущего баланса от 300 USD в пересчёте."
     }
   }
 }

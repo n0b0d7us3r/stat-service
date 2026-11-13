@@ -2,15 +2,17 @@ import { useCallback, useEffect, useState } from 'react';
 import { StickyNote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
+import { FilterSection } from '../components/FilterSection';
 import { PageTitle } from '../components/PageTitle';
 import { Pagination } from '../components/Pagination';
-import { SortSelect } from '../components/SortSelect';
 import { APP_NAME } from '../config/app';
 import { getNotes, NOTES_PAGE_SIZE } from '../api/notes';
 import type { DayNoteListItem, NotesListResult, NotesSortMode } from '../types';
 import { parseLocalDate } from '../utils/date';
+import { useMobileHeaderSubtitle } from '../context/MobileHeaderTitleContext';
 import { dateLocaleTag, t } from '../i18n';
 import '../styles/NotesPage.css';
+import '../styles/components/DashboardMonthTable.css';
 
 function formatNoteDate(dateKey: string): string {
   const label = parseLocalDate(dateKey).toLocaleDateString(dateLocaleTag, {
@@ -60,6 +62,8 @@ export function NotesPage() {
   const totalPages = result?.totalPages ?? 0;
   const showPagination = totalPages > 1;
 
+  useMobileHeaderSubtitle(loading ? t('loading') : t('notesTotal', { count: total }));
+
   return (
     <Layout>
       <div className="notes-page">
@@ -69,14 +73,23 @@ export function NotesPage() {
             subtitle={loading ? t('loading') : t('notesTotal', { count: total })}
           />
 
-          <SortSelect
-            value={sort}
-            options={[
-              { value: 'date', label: t('byDay') },
-              { value: 'project', label: t('byProject') },
-            ]}
-            onChange={handleSortChange}
-          />
+          <FilterSection className="notes-filter-section">
+            <div className="dashboard-month-toolbar notes-filter-toolbar">
+              <div className="dashboard-month-filters">
+                <label className="dashboard-month-filter">
+                  <select
+                    className="dashboard-month-filter-select"
+                    value={sort}
+                    aria-label={t('sort')}
+                    onChange={(event) => handleSortChange(event.target.value as NotesSortMode)}
+                  >
+                    <option value="date">{t('byDay')}</option>
+                    <option value="project">{t('byProject')}</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </FilterSection>
         </div>
 
         {loading && notes.length === 0 ? (

@@ -299,7 +299,8 @@ app.patch('/api/tasks/:taskId', requireAuth, (req, res) => {
             res.status(404).json({ message: 'Задача не найдена' });
             return;
         }
-        res.json({ task });
+        const newlyEarned = syncUserAchievements(req.user.id);
+        res.json({ task, newlyEarned });
     }
     catch (error) {
         if (error instanceof DbError) {

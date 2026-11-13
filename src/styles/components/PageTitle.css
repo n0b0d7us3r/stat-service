@@ -14,3 +14,13 @@
   font-size: 0.875rem;
   margin-top: 0;
 }
+
+@media (max-width: 768px) {
+  .page-title-block > .page-title {
+    display: none;
+  }
+
+  .page-title-block:not(:has(.page-subtitle)) {
+    display: none;
+  }
+}

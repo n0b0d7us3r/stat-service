@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Archive, ArrowDown, ArrowUp, ChevronsUp, FolderClosed, ListTodo, Minus, Pencil, Tag as TagIcon, X } from 'lucide-react';
+import { Archive, ChevronDown, ChevronUp, ChevronsUp, FolderClosed, ListTodo, Minus, Pencil, Tag as TagIcon, X } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
@@ -19,6 +19,7 @@ import { formatLocalDate } from '../utils/date';
 import { dateLocaleTag, t } from '../i18n';
 import { notifyTaskBoardChanged, TASK_BOARD_CHANGED } from '../utils/taskBoardEvents';
 import { compareTasks, formatTagName, isTaskOverdue, priorityLabel } from '../utils/taskUi';
+import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
 import '../styles/TasksPage.css';
 
 function errorText(error: unknown, fallback: string): string {
@@ -107,6 +108,7 @@ export function TasksPage() {
   const [mobileLayout, setMobileLayout] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
   ));
+  const { showAchievements } = useAchievementCelebration();
 
   const loadBoard = useCallback(async () => {
     const board = await getTaskBoard();
@@ -235,8 +237,9 @@ export function TasksPage() {
     )));
 
     try {
-      const updated = await updateTask(task.id, { completed: nextCompleted });
+      const { task: updated, newlyEarned } = await updateTask(task.id, { completed: nextCompleted });
       setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      showAchievements(newlyEarned);
       notifyTaskBoardChanged();
     } catch (err) {
       setTasks((current) => current.map((item) => (item.id === task.id ? task : item)));
@@ -296,7 +299,7 @@ export function TasksPage() {
     setError('');
 
     try {
-      const updated = await updateTask(task.id, { archived: true });
+      const { task: updated } = await updateTask(task.id, { archived: true });
       setTasks((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       setEditorOpen(false);
       setEditorTask(null);
@@ -350,29 +353,39 @@ export function TasksPage() {
     <Layout>
       <div className="tasks-page">
         <div className="tasks-page-intro">
-          <div
-            className={`page-title-block tasks-page-title${
-              mobileSummaryOpen ? ' tasks-page-title--summary-open' : ''
-            }`}
-          >
-            <h1 className="page-title">
-              {mobileLayout ? (
-                <button
-                  type="button"
-                  className="tasks-page-title-toggle"
-                  aria-expanded={mobileSummaryOpen}
-                  onClick={() => setMobileSummaryOpen((open) => !open)}
-                >
-                  {t('tasksTitle')}
-                </button>
-              ) : (
-                t('tasksTitle')
+          {taskSummaryText && (
+            <div
+              className={`page-title-block tasks-page-title${
+                mobileSummaryOpen ? ' tasks-page-title--summary-open' : ''
+              }`}
+            >
+              {!mobileLayout && (
+                <h1 className="page-title">{t('tasksTitle')}</h1>
               )}
-            </h1>
-            {taskSummaryText && (
-              <p className="page-subtitle">{taskSummaryText}</p>
-            )}
-          </div>
+              {mobileLayout ? (
+                <>
+                  <button
+                    type="button"
+                    className="tasks-page-summary-toggle"
+                    aria-expanded={mobileSummaryOpen}
+                    onClick={() => setMobileSummaryOpen((open) => !open)}
+                  >
+                    {t('tasksSummaryToggle')}
+                  </button>
+                  {mobileSummaryOpen && (
+                    <p className="page-subtitle">{taskSummaryText}</p>
+                  )}
+                </>
+              ) : (
+                <p className="page-subtitle">{taskSummaryText}</p>
+              )}
+            </div>
+          )}
+          {!taskSummaryText && !mobileLayout && (
+            <div className="page-title-block tasks-page-title">
+              <h1 className="page-title">{t('tasksTitle')}</h1>
+            </div>
+          )}
           <div className="tasks-controls">
             <button type="button" className="tasks-create-btn" onClick={openCreate}>
               <span>{t('createTask')}</span>
@@ -623,9 +636,9 @@ interface TaskCardProps {
 }
 
 const PRIORITY_ICONS = {
-  1: ArrowDown,
+  1: ChevronDown,
   2: Minus,
-  3: ArrowUp,
+  3: ChevronUp,
   4: ChevronsUp,
 } as const;
 

@@ -3,7 +3,10 @@ import { queryAll, queryExists, runStatement } from '../query.js';
 import { addDays, computeStreaks, formatLocalDate, getTodayKey, parseLocalDate } from '../utils/date.js';
 import { getAllGoalDays } from './goalsService.js';
 import { getAllMarkedDays, getProjectStats } from './marksService.js';
+import { getTodayRates } from './exchangeRatesService.js';
+import { getFinanceBalances } from './financeService.js';
 import { getProjectsByUser } from './projectsService.js';
+import { getUserSettings } from './settingsService.js';
 const DEFAULT_ACHIEVEMENTS = [
     { code: 'first_project', name: 'Нужно с чего-то начинать', description: 'Создайте первый проект.', criteria_type: 'project_count', threshold: 1, project_type: 'calendar' },
     { code: 'week_streak', name: 'Недельный забег', description: 'Отметьте 7 дней подряд в любом проекте типа «Календарь».', criteria_type: 'streak', threshold: 7, project_type: 'calendar' },
@@ -16,6 +19,16 @@ const DEFAULT_ACHIEVEMENTS = [
     { code: 'perfectionist', name: 'Перфецкионист', description: 'Отметьте все дни месяца в проекте типа «Календарь».', criteria_type: 'month_progress', threshold: 100, project_type: 'calendar' },
     { code: 'goal_streak_10', name: 'Целеустремлённый', description: 'Выполните 10 целей подряд в одном проекте типа «Цели».', criteria_type: 'goal_streak', threshold: 10, project_type: 'calendar' },
     { code: 'stay_long', name: 'Ты со мной надолго?', description: 'Продолжайте ставить отметки в любом проекте в течение двух месяцев.', criteria_type: 'global_streak', threshold: 60, project_type: 'calendar' },
+    { code: 'tasks_completed_10', name: 'Десятка', description: 'Выполните 10 задач.', criteria_type: 'tasks_completed_total', threshold: 10, project_type: 'calendar' },
+    { code: 'tasks_day_3', name: 'Продуктивный день', description: 'Выполните 3 задачи за один день.', criteria_type: 'tasks_completed_day', threshold: 3, project_type: 'calendar' },
+    {
+        code: 'balance_usd_300',
+        name: 'Триста',
+        description: 'Достигните текущего баланса от 300 USD в пересчёте.',
+        criteria_type: 'balance_usd',
+        threshold: 300,
+        project_type: 'calendar',
+    },
 ];
 const CRITERIA_SORT_ORDER = {
     project_count: 1,
@@ -25,6 +38,9 @@ const CRITERIA_SORT_ORDER = {
     note_count: 5,
     weekend_marked: 6,
     month_progress: 7,
+    tasks_completed_total: 8,
+    tasks_completed_day: 9,
+    balance_usd: 10,
 };
 function mapCriteriaType(value) {
     if (value === 'project_count'
@@ -32,7 +48,10 @@ function mapCriteriaType(value) {
         || value === 'note_count'
         || value === 'weekend_marked'
         || value === 'goal_streak'
-        || value === 'global_streak') {
+        || value === 'global_streak'
+        || value === 'tasks_completed_total'
+        || value === 'tasks_completed_day'
+        || value === 'balance_usd') {
         return value;
     }
     return 'streak';
@@ -150,6 +169,65 @@ function getGlobalLongestMarkStreak(userId) {
     const markedDates = [...getUserMarkedDates(userId)];
     return computeStreaks(markedDates).longestStreak;
 }
+function getCompletedTaskCount(userId) {
+    const rows = queryAll(getUserDb(userId), `
+      SELECT COUNT(*) AS total
+      FROM tasks
+      WHERE completed = 1
+    `, []);
+    return rows[0]?.total ?? 0;
+}
+function crossRateToBase(todayRates, from, to) {
+    const inBase = (code) => (code === todayRates.base ? 1 : todayRates.rates[code]);
+    const fromRate = inBase(from);
+    const toRate = inBase(to);
+    return fromRate && toRate ? fromRate / toRate : undefined;
+}
+/** Текущий баланс в основной валюте — как блок «Текущий баланс» в финансах (только включённые валюты). */
+function getCurrentBalanceBaseCents(userId) {
+    const { baseCurrency, enabledCurrencies } = getUserSettings(userId);
+    const enabled = new Set(enabledCurrencies);
+    const todayRates = getTodayRates(userId);
+    let total = 0;
+    for (const balance of getFinanceBalances(userId)) {
+        if (balance.currency === baseCurrency) {
+            total += balance.cents;
+            continue;
+        }
+        if (!enabled.has(balance.currency)) {
+            continue;
+        }
+        const rate = crossRateToBase(todayRates, balance.currency, baseCurrency);
+        if (rate) {
+            total += Math.round(balance.cents * rate);
+        }
+    }
+    return total;
+}
+function getCurrentBalanceUsdCents(userId) {
+    const { baseCurrency } = getUserSettings(userId);
+    const baseTotal = getCurrentBalanceBaseCents(userId);
+    const todayRates = getTodayRates(userId);
+    if (baseCurrency === 'USD') {
+        return baseTotal;
+    }
+    const rate = crossRateToBase(todayRates, baseCurrency, 'USD');
+    if (!rate) {
+        return null;
+    }
+    return Math.round(baseTotal * rate);
+}
+function getMaxTasksCompletedInOneDay(userId) {
+    const rows = queryAll(getUserDb(userId), `
+      SELECT COUNT(*) AS total
+      FROM tasks
+      WHERE completed = 1
+        AND completed_at IS NOT NULL
+        AND TRIM(completed_at) != ''
+      GROUP BY substr(completed_at, 1, 10)
+    `, []);
+    return rows.reduce((max, row) => Math.max(max, row.total), 0);
+}
 function isAchievementEarned(userId, achievement) {
     switch (achievement.criteria_type) {
         case 'project_count':
@@ -164,6 +242,14 @@ function isAchievementEarned(userId, achievement) {
             return getBestGoalCompletionStreak(userId) >= achievement.streak_days;
         case 'global_streak':
             return getGlobalLongestMarkStreak(userId) >= achievement.streak_days;
+        case 'tasks_completed_total':
+            return getCompletedTaskCount(userId) >= achievement.streak_days;
+        case 'tasks_completed_day':
+            return getMaxTasksCompletedInOneDay(userId) >= achievement.streak_days;
+        case 'balance_usd': {
+            const usdCents = getCurrentBalanceUsdCents(userId);
+            return usdCents !== null && usdCents >= achievement.streak_days * 100;
+        }
         case 'streak':
         default:
             return getBestLongestStreakForType(userId, achievement.project_type) >= achievement.streak_days;

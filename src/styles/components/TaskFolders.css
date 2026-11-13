@@ -169,7 +169,9 @@
   margin-bottom: 0.75rem;
   padding: 0.7rem 2.75rem;
   border: 1px solid var(--border);
-  background: transparent;
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .tasks-folder-bar-name {
@@ -188,8 +190,10 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--muted);
   cursor: pointer;
   transform: translateY(-50%);
@@ -204,7 +208,9 @@
 
 .task-folders-close {
   border: 1px solid var(--border);
-  background: transparent;
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--foreground);
   font: inherit;
   font-weight: 700;

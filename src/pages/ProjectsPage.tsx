@@ -7,6 +7,7 @@ import { CreateProjectModal } from '../components/CreateProjectModal';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
+import { useMobileHeaderSubtitle } from '../context/MobileHeaderTitleContext';
 import { getProjectsByUser } from '../api/projects';
 import type { Project } from '../types';
 import { projectTypeLabel, t } from '../i18n';
@@ -28,6 +29,8 @@ export function ProjectsPage() {
     document.title = `${t('projectsTitle')} | ${APP_NAME}`;
     reloadProjects();
   }, [reloadProjects]);
+
+  useMobileHeaderSubtitle(t('notesTotal', { count: projects.length }));
 
   const handleCreated = (project: Project) => {
     setIsModalOpen(false);

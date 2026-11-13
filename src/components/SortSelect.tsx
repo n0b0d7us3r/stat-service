@@ -11,6 +11,7 @@ interface SortSelectProps<T extends string> {
   options: Array<SortOption<T>>;
   onChange: (value: T) => void;
   label?: string;
+  className?: string;
 }
 
 export function SortSelect<T extends string>({
@@ -18,9 +19,10 @@ export function SortSelect<T extends string>({
   options,
   onChange,
   label = t('sort'),
+  className,
 }: SortSelectProps<T>) {
   return (
-    <label className="sort-select">
+    <label className={['sort-select', className].filter(Boolean).join(' ')}>
       <span>{label}</span>
       <select
         className="sort-select-control"

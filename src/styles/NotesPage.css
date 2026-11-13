@@ -11,8 +11,23 @@
 }
 
 @media (max-width: 768px) {
-  .notes-page-header .sort-select {
-    justify-content: flex-start;
+  .notes-page-header .page-title-block {
+    display: none;
+  }
+
+}
+
+.notes-filter-toolbar {
+  margin: 0;
+}
+
+@media (min-width: 769px) {
+  .notes-filter-section .dashboard-collapsible-title {
+    margin-bottom: 0.75rem;
+  }
+
+  .notes-page-header .dashboard-month-filter-select {
+    min-width: 10rem;
   }
 }
 
@@ -107,15 +122,13 @@
 }
 
 .note-card-date {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .note-card-content-wrap {
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--border);
-  background: var(--background);
+  padding: 0;
 }
 
 .note-card-content {
@@ -123,7 +136,7 @@
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: var(--muted);
+  color: var(--foreground);
   white-space: pre-wrap;
   word-break: break-word;
 }

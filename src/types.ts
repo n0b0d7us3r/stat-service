@@ -14,7 +14,10 @@ export type AchievementCriteriaType =
   | 'note_count'
   | 'weekend_marked'
   | 'goal_streak'
-  | 'global_streak';
+  | 'global_streak'
+  | 'tasks_completed_total'
+  | 'tasks_completed_day'
+  | 'balance_usd';
 
 export interface Project {
   id: number;

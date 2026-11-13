@@ -207,6 +207,37 @@ export function formatPeriod(period: FinancePeriod): string {
   return `${fromLabel} – ${toLabel}`;
 }
 
+/** Короткая подпись периода для узких кнопок (мобилка). */
+export function formatPeriodCompact(period: FinancePeriod): string {
+  const from = parseLocalDate(period.from);
+  const to = parseLocalDate(period.to);
+  const sameYear = from.getFullYear() === to.getFullYear();
+  const isWholeMonth = from.getDate() === 1
+    && to.getDate() === new Date(to.getFullYear(), to.getMonth() + 1, 0).getDate()
+    && sameYear
+    && from.getMonth() === to.getMonth();
+
+  if (isWholeMonth) {
+    return from.toLocaleDateString(dateLocaleTag, { month: 'short', year: 'numeric' });
+  }
+  if (period.from === period.to) {
+    return from.toLocaleDateString(dateLocaleTag, { day: 'numeric', month: 'short', year: '2-digit' });
+  }
+
+  const monthChunk = from.toLocaleDateString(dateLocaleTag, { month: 'short', year: sameYear ? undefined : '2-digit' });
+  if (sameYear && from.getMonth() === to.getMonth()) {
+    return `${from.getDate()}–${to.getDate()} ${monthChunk}`.trim();
+  }
+
+  const fromLabel = from.toLocaleDateString(dateLocaleTag, { day: 'numeric', month: 'short' });
+  const toLabel = to.toLocaleDateString(dateLocaleTag, {
+    day: 'numeric',
+    month: 'short',
+    ...(sameYear ? {} : { year: '2-digit' }),
+  });
+  return `${fromLabel}–${toLabel}`;
+}
+
 export interface FinanceBucket {
   key: string;
   label: string;

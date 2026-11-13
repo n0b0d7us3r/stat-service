@@ -13,6 +13,7 @@ import { getProjectStats } from '../api/marks';
 import { deleteProject, getProjectById } from '../api/projects';
 import type { Achievement, Project, ProjectStats as ProjectStatsData } from '../types';
 import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
+import { useMobileHeaderTitle } from '../context/MobileHeaderTitleContext';
 import { t } from '../i18n';
 import { parseLocalDate } from '../utils/date';
 import '../styles/ProjectPage.css';
@@ -40,6 +41,8 @@ export function ProjectPage() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  useMobileHeaderTitle(project?.name ?? null);
 
   const loadStats = useCallback((year: number, month: number) => {
     if (!Number.isFinite(projectId)) return;

@@ -12,12 +12,14 @@ import { TasksPage } from './pages/TasksPage';
 import { FinancePage } from './pages/FinancePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { Starfield } from './components/Starfield';
+import { MobileHeaderTitleProvider } from './context/MobileHeaderTitleContext';
 
 export default function App() {
   return (
     <>
       <Starfield />
       <div className="app-content">
+        <MobileHeaderTitleProvider>
         <Router>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -39,6 +41,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
+        </MobileHeaderTitleProvider>
       </div>
     </>
   );

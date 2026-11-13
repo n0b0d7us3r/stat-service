@@ -18,6 +18,7 @@ import {
   TRANSFER_COLOR,
   transferListAmount,
 } from '../components/FinanceTransferDetailsModal';
+import { FilterSection } from '../components/FilterSection';
 import { SortSelect } from '../components/SortSelect';
 import { ApiError } from '../api/client';
 import {
@@ -27,6 +28,8 @@ import {
   getFinanceOverview,
 } from '../api/finance';
 import { updateUserSettings } from '../api/settings';
+import { useAchievementCelebration } from '../context/AchievementCelebrationContext';
+import { useMobileHeaderSubtitle } from '../context/MobileHeaderTitleContext';
 import { APP_NAME } from '../config/app';
 import { dateLocaleTag, t } from '../i18n';
 import type {
@@ -44,6 +47,7 @@ import {
   FINANCE_CURRENCIES,
   formatMoney,
   formatPeriod,
+  formatPeriodCompact,
   monthPeriod,
   periodBuckets,
   toBaseCents,
@@ -100,6 +104,7 @@ export function FinancePage() {
   const [selectedTransferId, setSelectedTransferId] = useState<number | null>(null);
   const [editingTransfer, setEditingTransfer] = useState(false);
   const [deletingTransferId, setDeletingTransferId] = useState<number | null>(null);
+  const { celebrateAchievements } = useAchievementCelebration();
 
   const loadPeriod = useCallback(async (target: FinancePeriod) => {
     try {
@@ -217,6 +222,17 @@ export function FinancePage() {
     [accounts, balances, currency, enabledCurrencies, todayRates],
   );
 
+  const balanceTotalCents = useMemo(
+    () => balanceRows.reduce((sum, row) => sum + row.baseCents, 0),
+    [balanceRows],
+  );
+
+  const mobileBalanceSubtitle = loaded
+    ? `${balanceTotalCents < 0 ? '−' : ''}${formatMoney(Math.abs(balanceTotalCents), currency)}`
+    : null;
+
+  useMobileHeaderSubtitle(mobileBalanceSubtitle);
+
   const totals = useMemo(() => {
     const income = sumCents(incomeInCurrency);
     const expense = sumCents(expenseInCurrency);
@@ -275,6 +291,7 @@ export function FinancePage() {
   const handleEntrySaved = (entry: FinanceEntry) => {
     setEntryKind(null);
     void refreshBalances();
+    void celebrateAchievements();
     if (entry.date < period.from || entry.date > period.to) return;
     setEntries((current) => [entry, ...current].sort((a, b) => (
       b.date.localeCompare(a.date) || b.id - a.id
@@ -284,6 +301,7 @@ export function FinancePage() {
   const handleEntryUpdated = (entry: FinanceEntry) => {
     setEditingSelected(false);
     void refreshBalances();
+    void celebrateAchievements();
     const inPeriod = entry.date >= period.from && entry.date <= period.to;
     if (!inPeriod) setSelectedEntryId(null);
     setEntries((current) => {
@@ -305,6 +323,7 @@ export function FinancePage() {
       setEntries((current) => current.filter((item) => item.id !== entry.id));
       setSelectedEntryId(null);
       void refreshBalances();
+      void celebrateAchievements();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeDeleteEntryFailed'));
     } finally {
@@ -316,6 +335,7 @@ export function FinancePage() {
     setTransferModalOpen(false);
     setEditingTransfer(false);
     void refreshBalances();
+    void celebrateAchievements();
     const inPeriod = transfer.date >= period.from && transfer.date <= period.to;
     if (!inPeriod) setSelectedTransferId(null);
     setTransfers((current) => {
@@ -336,6 +356,7 @@ export function FinancePage() {
       setTransfers((current) => current.filter((item) => item.id !== transfer.id));
       setSelectedTransferId(null);
       void refreshBalances();
+      void celebrateAchievements();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('financeDeleteTransferFailed'));
     } finally {
@@ -383,68 +404,87 @@ export function FinancePage() {
 
   return (
     <Layout>
-      <div className="finance-page">
+      <div className="finance-page" data-finance-tab={tab}>
         <div className="finance-page-intro">
           <PageTitle title={t('financeTitle')} />
-          {loaded && (
-            <div className="finance-balance-intro-mobile">
-              <FinanceBalanceTotal rows={balanceRows} baseCurrency={currency} />
-            </div>
-          )}
 
           <div className="finance-toolbar">
             <SortSelect<FinanceTab>
+              className="finance-toolbar-tab"
               label={t('financeShow')}
               value={tab}
               options={TABS.map((value) => ({ value, label: tabLabel(value) }))}
               onChange={setTab}
             />
 
-            {accounts.length > 0 && (
-              <SortSelect
-                label={t('financeAccount')}
-                value={accountFilterValue}
-                options={accountOptions}
-                onChange={setAccountFilter}
-              />
-            )}
+            <FilterSection className="finance-filter-section">
+              <div className="finance-toolbar-filters">
+                <button
+                  type="button"
+                  className="finance-period-btn"
+                  title={formatPeriod(period)}
+                  onClick={() => setPeriodOpen(true)}
+                >
+                  <CalendarRange size={18} strokeWidth={2.25} aria-hidden="true" />
+                  <span className="finance-period-btn-label finance-period-btn-label--full">{formatPeriod(period)}</span>
+                  <span className="finance-period-btn-label finance-period-btn-label--compact">
+                    {formatPeriodCompact(period)}
+                  </span>
+                </button>
 
-            <button type="button" className="finance-period-btn" onClick={() => setPeriodOpen(true)}>
-              <CalendarRange size={18} strokeWidth={2.25} />
-              <span>{formatPeriod(period)}</span>
-            </button>
-
+                {accounts.length > 0 && (
+                  <SortSelect
+                    className="finance-toolbar-account"
+                    label={t('financeAccount')}
+                    value={accountFilterValue}
+                    options={accountOptions}
+                    onChange={setAccountFilter}
+                  />
+                )}
+              </div>
+            </FilterSection>
           </div>
 
+          {loaded && (
+            <div className="finance-balance-intro-mobile">
+              <FinanceBalanceTotal rows={balanceRows} baseCurrency={currency} />
+            </div>
+          )}
+
           <div className="finance-controls">
-            {tab !== 'expense' && (
+            <div className="finance-controls-ops">
+              {tab !== 'expense' && (
+                <button
+                  type="button"
+                  className="finance-add-btn finance-add-btn-income"
+                  aria-label={t('financeAddIncome')}
+                  onClick={() => setEntryKind('income')}
+                >
+                  <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
+                  <span className="finance-add-btn-label">{t('financeAddIncome')}</span>
+                </button>
+              )}
+              {tab !== 'income' && (
+                <button
+                  type="button"
+                  className="finance-add-btn finance-add-btn-expense"
+                  aria-label={t('financeAddExpense')}
+                  onClick={() => setEntryKind('expense')}
+                >
+                  <Minus size={18} strokeWidth={2.5} aria-hidden="true" />
+                  <span className="finance-add-btn-label">{t('financeAddExpense')}</span>
+                </button>
+              )}
               <button
                 type="button"
-                className="finance-add-btn finance-add-btn-income"
-                onClick={() => setEntryKind('income')}
+                className="finance-add-btn finance-add-btn-transfer"
+                aria-label={t('financeTransfer')}
+                onClick={() => setTransferModalOpen(true)}
               >
-                <Plus size={18} strokeWidth={2.5} />
-                <span>{t('financeAddIncome')}</span>
+                <ArrowLeftRight size={18} strokeWidth={2.5} aria-hidden="true" />
+                <span className="finance-add-btn-label">{t('financeTransfer')}</span>
               </button>
-            )}
-            {tab !== 'income' && (
-              <button
-                type="button"
-                className="finance-add-btn finance-add-btn-expense"
-                onClick={() => setEntryKind('expense')}
-              >
-                <Minus size={18} strokeWidth={2.5} />
-                <span>{t('financeAddExpense')}</span>
-              </button>
-            )}
-            <button
-              type="button"
-              className="finance-add-btn finance-add-btn-transfer"
-              onClick={() => setTransferModalOpen(true)}
-            >
-              <ArrowLeftRight size={18} strokeWidth={2.5} />
-              <span>{t('financeTransfer')}</span>
-            </button>
+            </div>
             {tab !== 'all' && (
               <button type="button" className="tasks-tag-create-btn finance-manage-btn" onClick={() => setManageMode(tab)}>
                 <Layers size={18} strokeWidth={2.25} />
@@ -453,7 +493,7 @@ export function FinancePage() {
             )}
             <button
               type="button"
-              className="tasks-tag-create-btn finance-manage-btn"
+              className="tasks-tag-create-btn finance-manage-btn finance-manage-btn-accounts"
               onClick={() => setManageMode('account')}
             >
               <CreditCard size={18} strokeWidth={2.25} />

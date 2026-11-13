@@ -22,6 +22,17 @@
   gap: 0.75rem 1rem;
 }
 
+.finance-toolbar-filters {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.finance-controls-ops {
+  display: contents;
+}
+
 .finance-manage-btn {
   min-width: 10.5rem;
 }
@@ -68,6 +79,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  box-sizing: border-box;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--foreground);
@@ -75,6 +88,17 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.finance-period-btn-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-period-btn-label--compact {
+  display: none;
 }
 
 .finance-period-btn span::first-letter {
@@ -965,6 +989,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 7rem;
   gap: 0.75rem;
+  align-items: end;
+}
+
+.finance-amount-row .finance-currency-field {
+  justify-content: flex-end;
 }
 
 .finance-category-picker {
@@ -1156,6 +1185,67 @@
   }
 }
 
+@media (min-width: 769px) {
+  .finance-toolbar-tab {
+    display: inline-flex;
+  }
+
+  .finance-toolbar-account {
+    display: inline-flex;
+  }
+
+  .finance-toolbar-account > span {
+    display: none;
+  }
+
+  .finance-controls-ops {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.75rem 1rem;
+  }
+
+  .finance-controls-ops .finance-add-btn {
+    box-sizing: border-box;
+    flex: 0 0 12.75rem;
+    width: 12.75rem;
+    min-width: 12.75rem;
+    max-width: 12.75rem;
+    justify-content: center;
+  }
+
+  html:lang(ru) .finance-controls-ops .finance-add-btn {
+    flex-basis: 14.5rem;
+    width: 14.5rem;
+    min-width: 14.5rem;
+    max-width: 14.5rem;
+  }
+
+  .finance-controls .tasks-tag-create-btn {
+    width: auto;
+  }
+
+  .finance-filter-section .dashboard-collapsible-toggle {
+    display: none;
+  }
+
+  .finance-filter-section .dashboard-collapsible-title {
+    display: none;
+  }
+
+  .finance-filter-section .dashboard-collapsible-panel {
+    display: block;
+    margin: 0;
+    opacity: 1;
+    max-height: none;
+  }
+
+  .finance-filter-section.app-filter-section {
+    width: auto;
+    flex: 0 1 auto;
+  }
+}
+
 @media (max-width: 768px) {
   .finance-balance-intro-mobile {
     display: block;
@@ -1186,15 +1276,61 @@
     order: 1;
   }
 
-  .finance-toolbar .sort-select {
-    justify-content: flex-start;
+  .finance-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .finance-toolbar-tab {
+    display: flex;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .finance-toolbar-tab .sort-select-control {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 2.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .finance-filter-section {
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+    padding-top: 1.25rem;
+  }
+
+  .finance-toolbar-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .finance-toolbar-filters .finance-period-btn,
+  .finance-toolbar-filters .finance-toolbar-account {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .finance-toolbar-account {
+    display: flex;
+    justify-content: stretch;
+    width: 100%;
+    min-width: 0;
   }
 
   .finance-toolbar .sort-select > span {
     display: none;
   }
 
-  .finance-toolbar .sort-select-control {
+  .finance-toolbar-account .sort-select-control {
     flex: 1 1 auto;
     width: 100%;
     min-height: 2.75rem;
@@ -1202,13 +1338,70 @@
   }
 
   .finance-period-btn {
-    flex: 1 1 auto;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    min-height: 2.75rem;
+  }
+
+  .finance-period-btn-label--full {
+    display: none;
+  }
+
+  .finance-period-btn-label--compact {
+    display: inline;
+  }
+
+  .finance-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .finance-page[data-finance-tab='all'] .finance-manage-btn-accounts {
+    display: none;
+  }
+
+  .finance-controls-ops {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .finance-controls-ops .finance-add-btn {
+    box-sizing: border-box;
+    flex: 0 0 calc(50% - 0.25rem);
+    width: calc(50% - 0.25rem);
+    min-width: 0;
+    padding: 0.9rem 0.5rem;
     justify-content: center;
   }
 
-  .finance-controls .finance-add-btn,
+  .finance-controls-ops .finance-add-btn-label {
+    display: none;
+  }
+
+  .finance-controls-ops:has(.finance-add-btn-income):has(.finance-add-btn-expense):has(.finance-add-btn-transfer) {
+    gap: 1rem;
+    justify-content: space-between;
+  }
+
+  .finance-controls-ops:has(.finance-add-btn-income):has(.finance-add-btn-expense):has(.finance-add-btn-transfer)
+    .finance-add-btn {
+    flex: 1 1 0;
+    width: auto;
+    max-width: none;
+  }
+
   .finance-controls .tasks-tag-create-btn {
     flex: 1 1 auto;
+    width: 100%;
   }
 
   .finance-chart-bars {

@@ -1,0 +1,20 @@
+.app-filter-section {
+  width: 100%;
+}
+
+.app-filter-section .dashboard-collapsible-title.dashboard-section-title {
+  text-transform: none;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 768px) {
+  .app-filter-section .dashboard-collapsible-toggle {
+    text-transform: none;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+}

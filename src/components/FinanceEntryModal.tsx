@@ -221,10 +221,10 @@ export function FinanceEntryModal({
                 required
               />
             </label>
-            <label className="task-editor-field">
-              <span>{t('financeCurrency')}</span>
+            <label className="task-editor-field finance-currency-field">
               <select
                 className="task-editor-select"
+                aria-label={t('financeCurrency')}
                 value={currency}
                 onChange={(event) => {
                   setCurrency(event.target.value);

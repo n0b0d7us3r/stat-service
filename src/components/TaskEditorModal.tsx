@@ -58,14 +58,14 @@ export function TaskEditorModal({
 
     try {
       const saved = task
-        ? await updateTask(task.id, {
+        ? (await updateTask(task.id, {
           title,
           description,
           priority,
           dueDate: dueDate || null,
           tagIds,
           folderId: selectedFolderId,
-        })
+        })).task
         : await createTask({
           title,
           description,

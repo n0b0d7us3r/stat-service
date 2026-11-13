@@ -34,7 +34,7 @@ export function TaskArchiveModal({
     setError('');
 
     try {
-      const updated = await updateTask(task.id, { archived: false });
+      const { task: updated } = await updateTask(task.id, { archived: false });
       onTaskUpdated(updated);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('restoreFailed'));

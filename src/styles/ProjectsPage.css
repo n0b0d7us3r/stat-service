@@ -63,6 +63,12 @@
   color: var(--muted);
 }
 
+@media (max-width: 768px) {
+  .projects-list-section .projects-section-title {
+    display: none;
+  }
+}
+
 .projects-list {
   display: flex;
   flex-direction: column;

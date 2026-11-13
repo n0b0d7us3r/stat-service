@@ -424,7 +424,8 @@ app.patch('/api/tasks/:taskId', requireAuth, (req: AuthRequest, res) => {
       return;
     }
 
-    res.json({ task });
+    const newlyEarned = syncUserAchievements(req.user!.id);
+    res.json({ task, newlyEarned });
   } catch (error) {
     if (error instanceof DbError) {
       res.status(400).json({ message: error.message });

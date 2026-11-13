@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
+import '../styles/components/DashboardCollapsibleSection.css';
 
 const MOBILE_BREAKPOINT = 768;
 

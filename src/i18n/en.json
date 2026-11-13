@@ -51,6 +51,7 @@
   "nextPage": "Next page",
   "pages": "Pages",
   "sort": "Sort",
+  "filter": "Filter",
   "name": "Name",
   "description": "Description",
   "priority": "Priority",
@@ -146,6 +147,7 @@
   "notePlaceholder": "Write a note for this day...",
   "view": "View",
   "tasksTitle": "Tasks",
+  "tasksSummaryToggle": "Task summary",
   "tasksLoading": "Loading tasks...",
   "tasksSummary": "Active: {active} · Completed: {completed}",
   "tasksSummaryArchive": "Active: {active} · Completed: {completed} · Archived: {archived}",
@@ -358,6 +360,7 @@
   "financeUnconverted": "Operations without a rate to {currency} are not counted in statistics: {count}",
   "navSettings": "Settings",
   "settingsTitle": "Settings",
+  "settingsHintButton": "Show help",
   "settingsLoading": "Loading settings…",
   "settingsLoadFailed": "Failed to load settings",
   "settingsSaveFailed": "Failed to save settings",
@@ -379,6 +382,8 @@
   "emailTaken": "A user with this email already exists",
   "settingsLanguage": "Language",
   "settingsInterfaceLanguage": "Interface language",
+  "settingsLocaleRu": "Russian",
+  "settingsLocaleEn": "English",
   "settingsLanguageHint": "Saved in this browser. The page will reload.",
   "settingsAccount": "Account",
   "settingsChangeEmail": "Change email",
@@ -495,6 +500,18 @@
     "stay_long": {
       "name": "In it for the long run?",
       "description": "Keep marking any project for two months."
+    },
+    "tasks_completed_10": {
+      "name": "Ten down",
+      "description": "Complete 10 tasks."
+    },
+    "tasks_day_3": {
+      "name": "Productive day",
+      "description": "Complete 3 tasks in one day."
+    },
+    "balance_usd_300": {
+      "name": "Three hundred",
+      "description": "Reach a current balance of at least 300 USD equivalent."
     }
   }
 }

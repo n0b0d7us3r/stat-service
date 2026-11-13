@@ -2,25 +2,108 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 48rem;
+  max-width: 72rem;
+  width: 100%;
+}
+
+.settings-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .settings-page-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-panel-span-2 {
+    grid-column: 1 / -1;
+  }
 }
 
 .settings-panel {
+  position: relative;
   box-sizing: border-box;
   padding: 1rem 1.125rem;
   border: 1px solid var(--border);
   background-color: color-mix(in srgb, var(--card) 42%, transparent);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+  overflow: visible;
+}
+
+.settings-panel-head {
+  position: relative;
+  margin-bottom: 1rem;
+  z-index: 2;
 }
 
 .settings-panel-title {
-  margin: 0 0 1rem;
+  margin: 0 2.25rem 0 0;
   font-size: 0.9375rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
+}
+
+.settings-panel-help-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.settings-panel-help-btn.is-open {
+  color: var(--foreground);
+}
+
+.settings-panel-help-popover {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 4;
+  box-sizing: border-box;
+  width: auto;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.settings-panel-head:has(.settings-panel-help-btn.is-open) {
+  z-index: 5;
+}
+
+.settings-panel-help-popover p {
+  margin: 0;
+}
+
+.settings-panel-help-popover p + p {
+  margin-top: 0.5rem;
+}
+
+@media (hover: hover) {
+  .settings-panel-help-btn:hover {
+    color: var(--foreground);
+  }
 }
 
 .settings-row {
@@ -33,6 +116,16 @@
 
 .settings-row-stack {
   align-items: flex-start;
+}
+
+.settings-finance-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.settings-base-currency-select > span {
+  display: none;
 }
 
 .settings-currencies-list {
@@ -127,40 +220,61 @@
   min-width: 12rem;
 }
 
-.settings-segmented {
-  display: inline-flex;
-  box-sizing: border-box;
-  width: 12rem;
-  height: 2.5rem;
-  border: 1px solid var(--border);
+.settings-locale-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
 }
 
-.settings-segmented button {
-  flex: 1 1 0;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 800;
+.settings-locale-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-locale-toggle-label {
+  font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 0 0.75rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.settings-locale-switch {
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 2.75rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  background-color: var(--background);
   cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.settings-segmented button + button {
-  border-left: 1px solid var(--border);
+.settings-locale-switch.is-on {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
 }
 
-.settings-segmented button.is-active {
-  background: var(--primary-gradient);
-  color: #fff;
+.settings-locale-switch-knob {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: 1.125rem;
+  background-color: var(--muted);
+  pointer-events: none;
+  transition: left 0.2s ease, right 0.2s ease, background-color 0.2s ease;
 }
 
-.settings-forms {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem 2rem;
+.settings-locale-switch.is-on .settings-locale-switch-knob {
+  left: auto;
+  right: 2px;
+  background-color: var(--primary);
 }
 
 .settings-form {
@@ -168,12 +282,6 @@
   flex-direction: column;
   gap: 0.875rem;
   min-width: 0;
-}
-
-.settings-form-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
 }
 
 .settings-form .settings-row-hint {
@@ -202,21 +310,37 @@
   margin-top: auto;
 }
 
-.settings-folder-delete-row {
+.settings-folder-delete {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.75rem 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
   width: 100%;
 }
 
-.settings-folder-delete-row .sort-select {
-  flex: 1 1 14rem;
+.settings-folder-delete-select {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 0;
+}
+
+.settings-folder-delete-select > span {
+  display: none;
+}
+
+.settings-folder-delete-select .sort-select-control {
+  width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
+  box-sizing: border-box;
 }
 
 .settings-folder-delete-btn {
-  width: auto;
-  min-width: 8rem;
+  width: 100%;
+  box-sizing: border-box;
   border-color: #f87171;
   color: #f87171;
 }
@@ -227,25 +351,16 @@
 }
 
 @media (hover: hover) {
-  .settings-segmented button:not(.is-active):hover {
+  .settings-locale-switch:not(.is-on):hover {
+    border-color: var(--foreground);
+  }
+
+  .settings-locale-toggle-row:hover .settings-locale-toggle-label {
     color: var(--foreground);
   }
 }
 
 @media (max-width: 768px) {
-  .settings-forms {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .settings-segmented {
-    display: flex;
-    width: 100%;
-  }
-
-  .settings-segmented button {
-    flex: 1 1 0;
-  }
-
   .settings-rates-actions > button {
     width: 100%;
   }

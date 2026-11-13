@@ -76,7 +76,21 @@
 }
 
 .achievement-card-locked {
+  box-sizing: border-box;
+  min-height: 6.25rem;
+  align-items: center;
   opacity: 0.72;
+}
+
+.achievement-card-locked .achievement-card-body {
+  justify-content: center;
+}
+
+.achievement-card-locked .achievement-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .achievement-card-locked .achievement-card-icon {
@@ -86,6 +100,12 @@
 .achievement-card-locked .achievement-card-title,
 .achievement-card-locked .achievement-card-description {
   color: var(--muted);
+}
+
+@media (max-width: 768px) {
+  .achievements-page .page-title-block {
+    display: none;
+  }
 }
 
 @media (min-width: 769px) {

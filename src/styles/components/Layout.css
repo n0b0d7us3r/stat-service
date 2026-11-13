@@ -67,6 +67,12 @@ aside.collapsed {
   letter-spacing: 0.08em;
 }
 
+.layout-mobile-page-title {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 1.25rem;
+}
+
 .sidebar-toggle-btn {
   flex-shrink: 0;
   width: 40px;
@@ -226,13 +232,34 @@ aside.collapsed .nav-item {
     border-bottom: 1px solid var(--border);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
-    justify-content: flex-start;
-    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0 1rem;
+    box-sizing: border-box;
+  }
+
+  .sidebar-logo-container {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .layout-mobile-page-title {
+    margin-bottom: 0.4rem;
+  }
+
+  .layout-mobile-page-sub.logo-sub {
+    font-size: 0.875rem;
+    margin-top: 0.05rem;
+    line-height: 1.2;
+  }
+
+  .sidebar-header-actions {
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   .sidebar-toggle-btn {
-    order: -1;
     box-shadow: none;
   }
 
@@ -282,7 +309,7 @@ aside.collapsed .nav-item {
 
   aside.collapsed .sidebar-header {
     padding: 0 1rem;
-    justify-content: flex-start;
+    justify-content: space-between;
     height: 73px;
   }
 }

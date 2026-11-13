@@ -1,4 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { CircleHelp } from 'lucide-react';
 import { Checkbox } from '../components/Checkbox';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
@@ -37,6 +39,58 @@ function errorText(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
 }
 
+function SettingsPanelHelp({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`settings-panel-help-btn${open ? ' is-open' : ''}`}
+      aria-expanded={open}
+      aria-label={t('settingsHintButton')}
+      onClick={() => onOpenChange(!open)}
+    >
+      <CircleHelp size={17} strokeWidth={2} aria-hidden="true" />
+    </button>
+  );
+}
+
+function SettingsPanelTitle({ children, hint }: { children: string; hint?: ReactNode }) {
+  const [hintOpen, setHintOpen] = useState(false);
+  const hintRootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hintOpen) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!hintRootRef.current?.contains(event.target as Node)) {
+        setHintOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [hintOpen]);
+
+  return (
+    <div className="settings-panel-head" ref={hint != null ? hintRootRef : undefined}>
+      <h2 className="settings-panel-title">{children}</h2>
+      {hint != null && (
+        <>
+          <SettingsPanelHelp open={hintOpen} onOpenChange={setHintOpen} />
+          {hintOpen && (
+            <div className="settings-panel-help-popover" role="tooltip">
+              {hint}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function MarketRatesPanel({ todayRates, onChange }: { todayRates: TodayRates; onChange: (next: TodayRates) => void }) {
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<FormStatus>(null);
@@ -56,9 +110,12 @@ function MarketRatesPanel({ todayRates, onChange }: { todayRates: TodayRates; on
 
   return (
     <section className="settings-panel">
-      <h2 className="settings-panel-title">{t('settingsMarketRates')}</h2>
+      <SettingsPanelTitle
+        hint={<p>{t('settingsMarketRatesHint')}</p>}
+      >
+        {t('settingsMarketRates')}
+      </SettingsPanelTitle>
       <div className="settings-row-text">
-        <span className="settings-row-hint">{t('settingsMarketRatesHint')}</span>
         {todayRates.market ? (
           <span className="settings-row-hint">{todayRatesSourceLabel({ ...todayRates, manual: [] }, '')}</span>
         ) : (
@@ -119,12 +176,10 @@ function CustomRatesPanel({ todayRates, onChange }: { todayRates: TodayRates; on
 
   return (
     <section className="settings-panel">
-      <h2 className="settings-panel-title">{t('settingsCustomRates')}</h2>
+      <SettingsPanelTitle hint={<p>{t('settingsCustomRatesHint')}</p>}>
+        {t('settingsCustomRates')}
+      </SettingsPanelTitle>
       <form className="settings-rates settings-rates-embedded" onSubmit={handleSave}>
-        <div className="settings-row-text">
-          <span className="settings-row-hint">{t('settingsCustomRatesHint')}</span>
-        </div>
-
         <div className="settings-rates-list">
           {currencies.map((code) => {
             const quote = rateQuote(code, base);
@@ -256,39 +311,49 @@ function FinanceSettings() {
   return (
     <>
       <section className="settings-panel">
-        <h2 className="settings-panel-title">{t('settingsFinance')}</h2>
+        <SettingsPanelTitle
+          hint={(
+            <>
+              <p>{t('settingsBaseCurrencyHint')}</p>
+              <p>{t('settingsEnabledCurrenciesHint')}</p>
+            </>
+          )}
+        >
+          {t('settingsFinance')}
+        </SettingsPanelTitle>
         {error && <p className="tasks-error">{error}</p>}
         {!settings ? (
           !error && <p className="settings-status">{t('settingsLoading')}</p>
         ) : (
           <>
-            <div className="settings-row">
-              <div className="settings-row-text">
-                <span className="settings-row-label">{t('settingsBaseCurrency')}</span>
-                <span className="settings-row-hint">{t('settingsBaseCurrencyHint')}</span>
+            <div className="settings-finance-fields">
+              <div className="settings-row">
+                <div className="settings-row-text">
+                  <span className="settings-row-label">{t('settingsBaseCurrency')}</span>
+                </div>
+                <SortSelect
+                  className="settings-base-currency-select"
+                  label={t('settingsBaseCurrency')}
+                  value={settings.baseCurrency}
+                  options={settings.enabledCurrencies.map((code) => ({ value: code, label: code }))}
+                  onChange={(value) => void handleCurrencyChange(value)}
+                />
               </div>
-              <SortSelect
-                label={t('financeCurrency')}
-                value={settings.baseCurrency}
-                options={settings.enabledCurrencies.map((code) => ({ value: code, label: code }))}
-                onChange={(value) => void handleCurrencyChange(value)}
-              />
-            </div>
-            <div className="settings-row settings-row-stack">
-              <div className="settings-row-text">
-                <span className="settings-row-label">{t('settingsEnabledCurrencies')}</span>
-                <span className="settings-row-hint">{t('settingsEnabledCurrenciesHint')}</span>
-              </div>
-              <div className="settings-currencies-list" role="group" aria-label={t('settingsEnabledCurrencies')}>
-                {FINANCE_CURRENCIES.map((code) => (
-                  <Checkbox
-                    key={code}
-                    label={code}
-                    checked={settings.enabledCurrencies.includes(code)}
-                    disabled={saving || code === settings.baseCurrency}
-                    onChange={(checked) => void handleEnabledCurrencyChange(code, checked)}
-                  />
-                ))}
+              <div className="settings-row settings-row-stack">
+                <div className="settings-row-text">
+                  <span className="settings-row-label">{t('settingsEnabledCurrencies')}</span>
+                </div>
+                <div className="settings-currencies-list" role="group" aria-label={t('settingsEnabledCurrencies')}>
+                  {FINANCE_CURRENCIES.map((code) => (
+                    <Checkbox
+                      key={code}
+                      label={code}
+                      checked={settings.enabledCurrencies.includes(code)}
+                      disabled={saving || code === settings.baseCurrency}
+                      onChange={(checked) => void handleEnabledCurrencyChange(code, checked)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
             {(saving || saved) && (
@@ -352,22 +417,20 @@ function TaskFoldersSettings() {
   };
 
   return (
-  <>
-    <section className="settings-panel">
-      <h2 className="settings-panel-title">{t('settingsTasks')}</h2>
-      <div className="settings-row settings-row-stack">
-        <div className="settings-row-text">
-          <span className="settings-row-label">{t('settingsTaskFolders')}</span>
-          <span className="settings-row-hint">{t('settingsTaskFoldersHint')}</span>
-        </div>
+    <>
+      <section className="settings-panel">
+        <SettingsPanelTitle hint={<p>{t('settingsTaskFoldersHint')}</p>}>
+          {t('settingsTaskFolders')}
+        </SettingsPanelTitle>
         {error && <p className="tasks-error">{error}</p>}
         {loading ? (
           <p className="settings-status">{t('settingsLoading')}</p>
         ) : folders.length === 0 ? (
           <p className="settings-status">{t('settingsTaskFoldersEmpty')}</p>
         ) : (
-          <div className="settings-folder-delete-row">
+          <div className="settings-folder-delete">
             <SortSelect
+              className="settings-folder-delete-select"
               label={t('folder')}
               value={selected}
               options={[
@@ -386,64 +449,96 @@ function TaskFoldersSettings() {
             </button>
           </div>
         )}
-      </div>
-    </section>
+      </section>
 
-    {confirmOpen && selectedFolder && (
-      <Modal
-        title={t('deleteFolder')}
-        isOpen
-        onClose={() => {
-          if (pending) return;
-          setConfirmOpen(false);
+      {confirmOpen && selectedFolder && (
+        <TaskFolderDeleteModal
+          folder={selectedFolder}
+          pending={pending}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={() => void handleDelete()}
+        />
+      )}
+    </>
+  );
+}
+
+function TaskFolderDeleteModal({
+  folder,
+  pending,
+  onClose,
+  onConfirm,
+}: {
+  folder: Folder;
+  pending: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return createPortal(
+    <Modal
+      title={t('deleteFolder')}
+      isOpen
+      onClose={() => {
+        if (pending) return;
+        onClose();
+      }}
+    >
+      <form
+        className="task-delete-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm();
         }}
       >
-        <form
-          className="task-delete-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleDelete();
+        <p>{t('deleteFolderConfirm', { name: folder.name })}</p>
+        <ModalActions
+          onCancel={() => {
+            if (pending) return;
+            onClose();
           }}
-        >
-          <p>{t('deleteFolderConfirm', { name: selectedFolder.name })}</p>
-          <ModalActions
-            onCancel={() => {
-              if (pending) return;
-              setConfirmOpen(false);
-            }}
-            submitLabel={t('delete')}
-            pending={pending}
-            pendingLabel={t('deleting')}
-          />
-        </form>
-      </Modal>
-    )}
-  </>
+          submitLabel={t('delete')}
+          pending={pending}
+          pendingLabel={t('deleting')}
+        />
+      </form>
+    </Modal>,
+    document.body,
   );
+}
+
+function localeLabel(value: Locale): string {
+  return value === 'ru' ? t('settingsLocaleRu') : t('settingsLocaleEn');
 }
 
 function LanguageSettings() {
   return (
     <section className="settings-panel">
-      <h2 className="settings-panel-title">{t('settingsLanguage')}</h2>
-      <div className="settings-row">
+      <SettingsPanelTitle hint={<p>{t('settingsLanguageHint')}</p>}>
+        {t('settingsLanguage')}
+      </SettingsPanelTitle>
+      <div className="settings-row settings-row-stack">
         <div className="settings-row-text">
           <span className="settings-row-label">{t('settingsInterfaceLanguage')}</span>
-          <span className="settings-row-hint">{t('settingsLanguageHint')}</span>
         </div>
-        <div className="settings-segmented" role="radiogroup" aria-label={t('settingsInterfaceLanguage')}>
-          {LOCALES.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={locale === option.value}
-              className={locale === option.value ? 'is-active' : ''}
-              onClick={() => setLocale(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="settings-locale-toggles" role="radiogroup" aria-label={t('settingsInterfaceLanguage')}>
+          {LOCALES.map((option) => {
+            const active = locale === option.value;
+            return (
+              <div key={option.value} className="settings-locale-toggle-row">
+                <span className="settings-locale-toggle-label">{localeLabel(option.value)}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={active}
+                  aria-label={localeLabel(option.value)}
+                  className={`settings-locale-switch${active ? ' is-on' : ''}`}
+                  onClick={() => setLocale(option.value)}
+                >
+                  <span className="settings-locale-switch-knob" aria-hidden="true" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -475,7 +570,6 @@ function EmailForm() {
 
   return (
     <form className="settings-form" onSubmit={(event) => void handleSubmit(event)}>
-      <h3 className="settings-form-title">{t('settingsChangeEmail')}</h3>
       {user && (
         <p className="settings-row-hint">
           {t('settingsCurrentEmail')}: <strong className="settings-current-email">{user.email}</strong>
@@ -545,7 +639,6 @@ function PasswordForm() {
 
   return (
     <form className="settings-form" onSubmit={(event) => void handleSubmit(event)}>
-      <h3 className="settings-form-title">{t('settingsChangePassword')}</h3>
       <label className="task-editor-field">
         <span>{t('settingsCurrentPassword')}</span>
         <input
@@ -598,17 +691,19 @@ export function SettingsPage() {
       <div className="settings-page">
         <PageTitle>{t('settingsTitle')}</PageTitle>
 
-        <LanguageSettings />
-        <TaskFoldersSettings />
-        <FinanceSettings />
-
-        <section className="settings-panel">
-          <h2 className="settings-panel-title">{t('settingsAccount')}</h2>
-          <div className="settings-forms">
+        <div className="settings-page-grid">
+          <LanguageSettings />
+          <TaskFoldersSettings />
+          <FinanceSettings />
+          <section className="settings-panel">
+            <SettingsPanelTitle>{t('settingsChangeEmail')}</SettingsPanelTitle>
             <EmailForm />
+          </section>
+          <section className="settings-panel">
+            <SettingsPanelTitle>{t('settingsChangePassword')}</SettingsPanelTitle>
             <PasswordForm />
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     </Layout>
   );

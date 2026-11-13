@@ -150,11 +150,11 @@ export function FinanceTransferModal({
     </label>
   );
 
-  const currencySelect = (label: string, value: string, onChange: (code: string) => void) => (
-    <label className="task-editor-field">
-      <span>{label}</span>
+  const currencySelect = (ariaLabel: string, value: string, onChange: (code: string) => void) => (
+    <label className="task-editor-field finance-currency-field">
       <select
         className="task-editor-select"
+        aria-label={ariaLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >

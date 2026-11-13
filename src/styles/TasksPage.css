@@ -10,17 +10,19 @@
   gap: 1rem;
 }
 
-.tasks-page-title-toggle {
+.tasks-page-summary-toggle {
   margin: 0;
   padding: 0;
   border: none;
   background: transparent;
   font: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
   cursor: pointer;
   text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 @media (max-width: 768px) {
@@ -64,6 +66,12 @@
   display: contents;
 }
 
+.tasks-page .sort-select-control {
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
 .tasks-create-btn {
   white-space: nowrap;
 }
@@ -76,7 +84,9 @@
   justify-content: center;
   gap: 0.5rem;
   border: 1px solid var(--border);
-  background: transparent;
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--foreground);
   padding: 0.75rem 1.25rem;
   font: inherit;
@@ -460,7 +470,7 @@
 }
 
 .task-priority-icon-3 {
-  color: var(--primary);
+  color: #ef4444;
 }
 
 .task-priority-icon-4 {
@@ -564,8 +574,10 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--muted);
   cursor: pointer;
 }
@@ -594,7 +606,9 @@
   box-sizing: border-box;
   margin-top: 0.25rem;
   border: 1px solid var(--border);
-  background: transparent;
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--foreground);
   padding: 0.75rem 1rem;
   font: inherit;
@@ -619,7 +633,9 @@
 .task-editor-delete {
   margin-top: 0.25rem;
   border: 1px solid var(--border);
-  background: transparent;
+  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   color: var(--muted);
   cursor: default;
 }

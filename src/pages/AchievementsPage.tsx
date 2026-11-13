@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
 import { APP_NAME } from '../config/app';
 import { useAuth } from '../context/AuthContext';
+import { useMobileHeaderSubtitle } from '../context/MobileHeaderTitleContext';
 import { getUserAchievements } from '../api/achievements';
 import type { UserAchievementView } from '../types';
 import { achievementDescription, achievementName, dateLocaleTag, t } from '../i18n';
 import '../styles/AchievementsPage.css';
+
+function parseEarnedAt(value: string): number {
+  return new Date(`${value.replace(' ', 'T')}Z`).getTime();
+}
 
 function formatEarnedDate(value: string): string {
   return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString(dateLocaleTag, {
@@ -32,7 +37,34 @@ export function AchievementsPage() {
     void getUserAchievements(user.id).then(setAchievements);
   }, [user]);
 
+  const sortedAchievements = useMemo(() => {
+    return [...achievements].sort((a, b) => {
+      if (a.earned !== b.earned) {
+        return a.earned ? -1 : 1;
+      }
+
+      if (a.earned && b.earned) {
+        const aTime = a.earned_at ? parseEarnedAt(a.earned_at) : 0;
+        const bTime = b.earned_at ? parseEarnedAt(b.earned_at) : 0;
+        if (bTime !== aTime) {
+          return bTime - aTime;
+        }
+      }
+
+      return achievementName(a.code, a.name).localeCompare(
+        achievementName(b.code, b.name),
+        dateLocaleTag,
+      );
+    });
+  }, [achievements]);
+
   const earnedCount = achievements.filter((item) => item.earned).length;
+  const progressSubtitle = t('achievementsProgress', {
+    earned: earnedCount,
+    total: achievements.length,
+  });
+
+  useMobileHeaderSubtitle(progressSubtitle);
 
   return (
     <Layout>
@@ -43,7 +75,7 @@ export function AchievementsPage() {
         />
 
         <div className="achievements-list">
-          {achievements.map((achievement) => (
+          {sortedAchievements.map((achievement) => (
             <article
               key={achievement.id}
               className={`achievement-card app-border-card ${achievement.earned ? 'achievement-card-earned' : 'achievement-card-locked'}`}
@@ -54,7 +86,11 @@ export function AchievementsPage() {
 
               <div className="achievement-card-body">
                 <h2 className="achievement-card-title">{achievementName(achievement.code, achievement.name)}</h2>
-                <p className="achievement-card-description">{achievementDescription(achievement.code, achievement.description)}</p>
+                {achievement.earned && (
+                  <p className="achievement-card-description">
+                    {achievementDescription(achievement.code, achievement.description)}
+                  </p>
+                )}
 
                 {achievement.earned && achievement.earned_at && (
                   <p className="achievement-card-earned-at">
