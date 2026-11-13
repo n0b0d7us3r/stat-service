@@ -230,9 +230,15 @@
 }
 
 .finance-balance-amount-native {
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.finance-balance-currency-excluded {
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .finance-summary-card {
@@ -1180,10 +1186,6 @@
 
   .finance-summary-with-balance > .finance-balance-accounts {
     order: 1;
-  }
-
-  .finance-balance-amount-native {
-    display: flex;
   }
 
   .finance-toolbar .sort-select {

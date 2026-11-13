@@ -105,21 +105,21 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         <nav>
-          <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <FolderKanban size={20} />
-            <span>{t('navProjects')}</span>
-          </NavLink>
           <NavLink to="/tasks" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <ListTodo size={20} />
             <span>{t('navTasks')}</span>
           </NavLink>
-          <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-            <BarChart3 size={20} />
-            <span>{t('navStats')}</span>
-          </NavLink>
           <NavLink to="/finance" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <Wallet size={20} />
             <span>{t('navFinance')}</span>
+          </NavLink>
+          <NavLink to="/projects" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <FolderKanban size={20} />
+            <span>{t('navProjects')}</span>
+          </NavLink>
+          <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <BarChart3 size={20} />
+            <span>{t('navStats')}</span>
           </NavLink>
           <NavLink to="/notes" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <StickyNote size={20} />

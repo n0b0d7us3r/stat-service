@@ -14,10 +14,12 @@ export interface AccountBalance {
   baseCents: number;
   /** Остатки во всех валютах счёта без пересчёта. */
   native: Array<{ currency: string; cents: number }>;
-  /** Остатки в неосновных валютах. */
+  /** Остатки в неосновных валютах, учитываемых в итоге. */
   foreign: Array<{ currency: string; cents: number }>;
-  /** Остатки, которые не удалось пересчитать: нет курса. */
+  /** Включённые валюты, которые не пересчитаны в итог (нет курса). */
   unconverted: Array<{ currency: string; cents: number }>;
+  /** Отключённые валюты: видны на счёте, но не в общем балансе. */
+  excluded: Array<{ currency: string; cents: number }>;
 }
 
 const NO_ACCOUNT = { name: '', icon: 'list', color: '#8e8e93' };
@@ -50,6 +52,7 @@ export function accountBalances(
       native: [],
       foreign: [],
       unconverted: [],
+      excluded: [],
     });
   }
 
@@ -64,6 +67,7 @@ export function accountBalances(
         native: [],
         foreign: [],
         unconverted: [],
+        excluded: [],
       });
     }
     const row = rows.get(key)!;
@@ -73,6 +77,7 @@ export function accountBalances(
       continue;
     }
     if (!enabled.has(balance.currency)) {
+      row.excluded.push({ currency: balance.currency, cents: balance.cents });
       continue;
     }
     row.foreign.push({ currency: balance.currency, cents: balance.cents });
@@ -114,6 +119,50 @@ interface FinanceBalanceAccountsProps {
   onHiddenAccountsChange: (hidden: string[]) => Promise<void>;
 }
 
+function accountAmounts(row: AccountBalance, baseCurrency: string) {
+  const onlyExcluded =
+    row.baseCents === 0 && row.foreign.length === 0 && row.unconverted.length === 0 && row.excluded.length > 0;
+  return (
+    <>
+      {!onlyExcluded && (
+        <span
+          className={`finance-balance-amount finance-balance-amount-base ${
+            row.baseCents < 0 ? 'finance-amount-expense' : ''
+          }`}
+        >
+          {signed(row.baseCents, baseCurrency)}
+          {row.foreign.length > 0 && (
+            <span className="finance-entry-converted">
+              ({row.foreign.map((item) => signed(item.cents, item.currency)).join(', ')})
+            </span>
+          )}
+        </span>
+      )}
+      <span className="finance-balance-amount finance-balance-amount-native">
+        {row.native.length === 0 ? (
+          signed(0, baseCurrency)
+        ) : (
+          row.native.map((item) => (
+            <span
+              key={item.currency}
+              className={[
+                item.cents < 0 ? 'finance-amount-expense' : '',
+                row.excluded.some((excluded) => excluded.currency === item.currency)
+                  ? 'finance-balance-currency-excluded'
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              {signed(item.cents, item.currency)}
+            </span>
+          ))
+        )}
+      </span>
+    </>
+  );
+}
+
 export function FinanceBalanceAccounts({
   rows,
   baseCurrency,
@@ -148,29 +197,7 @@ export function FinanceBalanceAccounts({
               <li key={row.key} className="finance-balance-row">
                 <FinanceIconBadge icon={row.icon} color={row.color} size="sm" />
                 <span className="finance-balance-name">{row.name}</span>
-                <span
-                  className={`finance-balance-amount finance-balance-amount-base ${
-                    row.baseCents < 0 ? 'finance-amount-expense' : ''
-                  }`}
-                >
-                  {signed(row.baseCents, baseCurrency)}
-                  {row.foreign.length > 0 && (
-                    <span className="finance-entry-converted">
-                      ({row.foreign.map((item) => signed(item.cents, item.currency)).join(', ')})
-                    </span>
-                  )}
-                </span>
-                <span className="finance-balance-amount finance-balance-amount-native">
-                  {row.native.length === 0 ? (
-                    signed(0, baseCurrency)
-                  ) : (
-                    row.native.map((item) => (
-                      <span key={item.currency} className={item.cents < 0 ? 'finance-amount-expense' : ''}>
-                        {signed(item.cents, item.currency)}
-                      </span>
-                    ))
-                  )}
-                </span>
+                {accountAmounts(row, baseCurrency)}
               </li>
             ))}
           </ul>
