@@ -74,6 +74,23 @@
   border-top: 1px solid var(--border);
 }
 
+.settings-rates-embedded {
+  margin-top: 0.75rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.settings-market-rates-actions {
+  margin-top: 0.75rem;
+}
+
+.settings-rate-code {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
 .settings-rates > .settings-row-text {
   flex: none;
 }

@@ -56,6 +56,7 @@ import {
 import { readTaskDescriptionImage, saveTaskDescriptionImage } from './services/taskImagesService.js';
 import { getUserSettings, updateUserSettings } from './services/settingsService.js';
 import {
+  clearCustomRates,
   getTodayRates,
   refreshMarketRates,
   setRateOverride,
@@ -697,6 +698,7 @@ app.get('/api/finance/rates', requireAuth, (req: AuthRequest, res) => {
 
 app.post('/api/finance/rates/refresh', requireAuth, async (req: AuthRequest, res) => {
   await refreshMarketRates();
+  clearCustomRates(req.user!.id);
   res.json({ rates: getTodayRates(req.user!.id) });
 });
 
@@ -723,8 +725,15 @@ app.get('/api/settings', requireAuth, (req: AuthRequest, res) => {
 
 app.put('/api/settings', requireAuth, (req: AuthRequest, res) => {
   try {
+    const userId = req.user!.id;
+    const before = getUserSettings(userId);
     const { baseCurrency, hiddenBalanceAccounts, enabledCurrencies } = req.body as Record<string, unknown>;
-    res.json({ settings: updateUserSettings(req.user!.id, { baseCurrency, hiddenBalanceAccounts, enabledCurrencies }) });
+    const settings = updateUserSettings(userId, { baseCurrency, hiddenBalanceAccounts, enabledCurrencies });
+    if (enabledCurrencies !== undefined) {
+      const added = settings.enabledCurrencies.some((code) => !before.enabledCurrencies.includes(code));
+      if (added) void refreshMarketRates();
+    }
+    res.json({ settings });
   } catch (error) {
     if (error instanceof DbError) {
       res.status(400).json({ message: error.message });

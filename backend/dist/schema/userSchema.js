@@ -186,6 +186,97 @@ function migrateToV13(db) {
     }
     db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_folder_id ON tasks(folder_id)');
 }
+function migrateToV14(db) {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      color TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT NOT NULL CHECK (kind IN ('income', 'expense')),
+      amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+      category_id INTEGER REFERENCES finance_categories(id) ON DELETE SET NULL,
+      date TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_finance_entries_date ON finance_entries(date)');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_finance_entries_category_id ON finance_entries(category_id)');
+}
+function migrateToV15(db) {
+    if (!columnExists(db, 'finance_categories', 'kind')) {
+        db.exec("ALTER TABLE finance_categories ADD COLUMN kind TEXT NOT NULL DEFAULT 'expense' CHECK (kind IN ('income', 'expense'))");
+    }
+    if (!columnExists(db, 'finance_categories', 'icon')) {
+        db.exec("ALTER TABLE finance_categories ADD COLUMN icon TEXT NOT NULL DEFAULT 'list'");
+    }
+    if (!columnExists(db, 'finance_entries', 'currency')) {
+        db.exec("ALTER TABLE finance_entries ADD COLUMN currency TEXT NOT NULL DEFAULT 'BYN'");
+    }
+}
+function migrateToV16(db) {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      color TEXT NOT NULL,
+      icon TEXT NOT NULL DEFAULT 'card',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+    if (!columnExists(db, 'finance_entries', 'account_id')) {
+        db.exec('ALTER TABLE finance_entries ADD COLUMN account_id INTEGER REFERENCES finance_accounts(id) ON DELETE SET NULL');
+    }
+    db.exec('CREATE INDEX IF NOT EXISTS idx_finance_entries_account_id ON finance_entries(account_id)');
+}
+function migrateToV17(db) {
+    if (!columnExists(db, 'finance_entries', 'rate')) {
+        db.exec('ALTER TABLE finance_entries ADD COLUMN rate REAL');
+    }
+    if (!columnExists(db, 'finance_entries', 'rate_currency')) {
+        db.exec('ALTER TABLE finance_entries ADD COLUMN rate_currency TEXT');
+    }
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+}
+function migrateToV19(db) {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS finance_transfers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      from_account_id INTEGER REFERENCES finance_accounts(id) ON DELETE SET NULL,
+      to_account_id INTEGER REFERENCES finance_accounts(id) ON DELETE SET NULL,
+      amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+      currency TEXT NOT NULL,
+      to_amount_cents INTEGER NOT NULL CHECK (to_amount_cents > 0),
+      to_currency TEXT NOT NULL,
+      rate REAL,
+      date TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_finance_transfers_date ON finance_transfers(date)');
+}
+function migrateToV20(db) {
+    if (!columnExists(db, 'finance_transfers', 'fee_cents')) {
+        db.exec('ALTER TABLE finance_transfers ADD COLUMN fee_cents INTEGER NOT NULL DEFAULT 0');
+    }
+}
+function migrateToV18(db) {
+    if (!columnExists(db, 'finance_entries', 'rate_mode')) {
+        db.exec("ALTER TABLE finance_entries ADD COLUMN rate_mode TEXT NOT NULL DEFAULT 'fixed'");
+    }
+}
 export function applyUserDataSchema(db) {
     let version = getSchemaVersion(db);
     if (version < 1) {
@@ -251,6 +342,41 @@ export function applyUserDataSchema(db) {
     if (version < 13) {
         migrateToV13(db);
         version = 13;
+        setSchemaVersion(db, version);
+    }
+    if (version < 14) {
+        migrateToV14(db);
+        version = 14;
+        setSchemaVersion(db, version);
+    }
+    if (version < 15) {
+        migrateToV15(db);
+        version = 15;
+        setSchemaVersion(db, version);
+    }
+    if (version < 16) {
+        migrateToV16(db);
+        version = 16;
+        setSchemaVersion(db, version);
+    }
+    if (version < 17) {
+        migrateToV17(db);
+        version = 17;
+        setSchemaVersion(db, version);
+    }
+    if (version < 18) {
+        migrateToV18(db);
+        version = 18;
+        setSchemaVersion(db, version);
+    }
+    if (version < 19) {
+        migrateToV19(db);
+        version = 19;
+        setSchemaVersion(db, version);
+    }
+    if (version < 20) {
+        migrateToV20(db);
+        version = 20;
         setSchemaVersion(db, version);
     }
 }

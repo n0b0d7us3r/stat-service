@@ -243,6 +243,10 @@ export interface TodayRates {
   /** Сколько основной валюты за 1 единицу валюты. */
   rates: Record<string, number>;
   manual: string[];
+  /** Рыночный курс к основной валюте (без кастомных). */
+  marketRates: Record<string, number>;
+  /** Сохранённые кастомные курсы (до обновления с биржи). */
+  customRates: Record<string, number>;
   market: { source: 'myfin' | 'nbrb'; fetchedAt: string } | null;
 }
 

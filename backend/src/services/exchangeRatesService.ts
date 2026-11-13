@@ -3,7 +3,6 @@ import path from 'node:path';
 import { DATA_DIR } from '../config.js';
 import { getUserDb } from '../db/userDb.js';
 import { queryOne, runStatement } from '../query.js';
-import { getTodayKey } from '../utils/date.js';
 import { DbError } from './projectsService.js';
 import { FINANCE_CURRENCIES, getUserSettings } from './settingsService.js';
 
@@ -18,14 +17,17 @@ interface MarketRatesCache {
 
 export interface TodayRates {
   base: string;
-  /** Сколько основной валюты за 1 единицу валюты; ручной курс имеет приоритет. */
+  /** Сколько основной валюты за 1 единицу валюты; кастомный курс имеет приоритет. */
   rates: Record<string, number>;
   manual: string[];
+  /** Рыночный курс к основной валюте (без кастомных). */
+  marketRates: Record<string, number>;
+  /** Сохранённые кастомные курсы (до обновления с биржи). */
+  customRates: Record<string, number>;
   market: { source: MarketRateSource; fetchedAt: string } | null;
 }
 
-interface RateOverride {
-  date: string;
+interface CustomRatesStore {
   base: string;
   rates: Record<string, number>;
 }
@@ -116,25 +118,32 @@ async function fetchFromNbrb(): Promise<Record<string, number>> {
 
 const REQUIRED_CODES = FINANCE_CURRENCIES.filter((code) => code !== 'BYN');
 
+function mergeMarketRates(previous: Record<string, number> | undefined, fresh: Record<string, number>): Record<string, number> {
+  return pickSupported({ ...(previous ?? {}), ...fresh });
+}
+
 async function doRefresh(): Promise<MarketRatesCache | null> {
+  const previous = loadCache();
   const sources: Array<[MarketRateSource, () => Promise<Record<string, number>>]> = [
     ['nbrb', fetchFromNbrb],
     ['myfin', fetchFromMyfin],
   ];
+  let best: MarketRatesCache | null = previous;
   for (const [source, load] of sources) {
     try {
-      const rates = await load();
-      if (REQUIRED_CODES.every((code) => code in rates)) {
-        const next = { source, fetchedAt: new Date().toISOString(), rates };
-        saveCache(next);
-        return next;
-      }
-      console.warn(`Курсы ${source}: найдены не все валюты`, Object.keys(rates));
+      const rates = mergeMarketRates(previous?.rates, await load());
+      if (Object.keys(rates).length === 0) continue;
+      const next: MarketRatesCache = { source, fetchedAt: new Date().toISOString(), rates };
+      saveCache(next);
+      best = next;
+      if (REQUIRED_CODES.every((code) => code in rates)) return next;
+      const missing = REQUIRED_CODES.filter((code) => !(code in rates));
+      console.warn(`Курсы ${source}: после слияния нет`, missing);
     } catch (error) {
       console.warn(`Не удалось получить курсы ${source}:`, (error as Error).message);
     }
   }
-  return loadCache();
+  return best;
 }
 
 /** При ошибке обоих источников остаётся последний сохранённый курс. */
@@ -161,7 +170,7 @@ export function startExchangeRatesUpdater(): void {
   setInterval(() => void refreshMarketRates(), REFRESH_INTERVAL_MS).unref();
 }
 
-function readOverride(userId: number, base: string): RateOverride | null {
+function readCustomRates(userId: number, base: string): CustomRatesStore | null {
   const row = queryOne<{ value: string }>(
     getUserDb(userId),
     'SELECT value FROM user_settings WHERE key = ?',
@@ -169,38 +178,61 @@ function readOverride(userId: number, base: string): RateOverride | null {
   );
   if (!row) return null;
   try {
-    const parsed = JSON.parse(row.value) as RateOverride;
-    return parsed.date === getTodayKey() && parsed.base === base ? parsed : null;
+    const parsed = JSON.parse(row.value) as CustomRatesStore;
+    return parsed.base === base && parsed.rates && typeof parsed.rates === 'object' ? parsed : null;
   } catch {
     return null;
   }
 }
 
+export function clearCustomRates(userId: number): void {
+  runStatement(getUserDb(userId), 'DELETE FROM user_settings WHERE key = ?', [OVERRIDE_KEY]);
+}
+
+function marketRateToBase(
+  code: string,
+  base: string,
+  market: MarketRatesCache | null,
+): number | undefined {
+  const bynPer = (currency: string) => (currency === 'BYN' ? 1 : market?.rates[currency]);
+  const from = bynPer(code);
+  const to = bynPer(base);
+  if (!from || !to) return undefined;
+  return Number((from / to).toPrecision(12));
+}
+
 export function getTodayRates(userId: number): TodayRates {
-  const { baseCurrency: base } = getUserSettings(userId);
+  const { baseCurrency: base, enabledCurrencies } = getUserSettings(userId);
   const market = getMarketRates();
-  const override = readOverride(userId, base);
-  const bynPer = (code: string) => (code === 'BYN' ? 1 : market?.rates[code]);
+  const custom = readCustomRates(userId, base);
+
+  const marketRates: Record<string, number> = {};
+  for (const code of FINANCE_CURRENCIES) {
+    if (code === base) continue;
+    const value = marketRateToBase(code, base, market);
+    if (value) marketRates[code] = value;
+  }
 
   const rates: Record<string, number> = {};
   const manual: string[] = [];
-  for (const code of FINANCE_CURRENCIES) {
+  for (const code of enabledCurrencies) {
     if (code === base) continue;
-    const manualRate = override?.rates[code];
-    if (manualRate) {
-      rates[code] = manualRate;
+    const customRate = custom?.rates[code];
+    if (customRate) {
+      rates[code] = customRate;
       manual.push(code);
       continue;
     }
-    const from = bynPer(code);
-    const to = bynPer(base);
-    if (from && to) rates[code] = Number((from / to).toPrecision(12));
+    const fromMarket = marketRates[code];
+    if (fromMarket) rates[code] = fromMarket;
   }
 
   return {
     base,
     rates,
     manual,
+    marketRates,
+    customRates: { ...(custom?.rates ?? {}) },
     market: market ? { source: market.source, fetchedAt: market.fetchedAt } : null,
   };
 }
@@ -225,13 +257,13 @@ export function setRateOverride(userId: number, input: unknown): TodayRates {
 
   const db = getUserDb(userId);
   if (Object.keys(rates).length === 0) {
-    runStatement(db, 'DELETE FROM user_settings WHERE key = ?', [OVERRIDE_KEY]);
+    clearCustomRates(userId);
   } else {
-    const override: RateOverride = { date: getTodayKey(), base, rates };
+    const store: CustomRatesStore = { base, rates };
     runStatement(
       db,
       'INSERT INTO user_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
-      [OVERRIDE_KEY, JSON.stringify(override)],
+      [OVERRIDE_KEY, JSON.stringify(store)],
     );
   }
 

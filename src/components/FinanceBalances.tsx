@@ -36,7 +36,9 @@ export function accountBalances(
   balances: FinanceBalance[],
   baseCurrency: string,
   todayRates: TodayRates | null,
+  enabledCurrencies: string[],
 ): AccountBalance[] {
+  const enabled = new Set(enabledCurrencies);
   const rows = new Map<string, AccountBalance>();
   for (const account of accounts) {
     rows.set(String(account.id), {
@@ -68,6 +70,9 @@ export function accountBalances(
     row.native.push({ currency: balance.currency, cents: balance.cents });
     if (balance.currency === baseCurrency) {
       row.baseCents += balance.cents;
+      continue;
+    }
+    if (!enabled.has(balance.currency)) {
       continue;
     }
     row.foreign.push({ currency: balance.currency, cents: balance.cents });

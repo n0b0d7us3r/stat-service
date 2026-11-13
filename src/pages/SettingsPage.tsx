@@ -33,24 +33,62 @@ function errorText(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
 }
 
-function TodayRatesSettings({ todayRates, enabledCurrencies, onChange }: {
-  todayRates: TodayRates;
-  enabledCurrencies: string[];
-  onChange: (next: TodayRates) => void;
-}) {
-  const base = todayRates.base;
-  const currencies = enabledCurrencies.filter((code) => code !== base);
-  const [values, setValues] = useState<Record<string, string>>(() => manualValues(todayRates));
-  const [pending, setPending] = useState<'save' | 'reset' | 'refresh' | null>(null);
+function MarketRatesPanel({ todayRates, onChange }: { todayRates: TodayRates; onChange: (next: TodayRates) => void }) {
+  const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<FormStatus>(null);
 
-  const run = async (kind: 'save' | 'reset' | 'refresh', action: () => Promise<TodayRates>, success: string) => {
+  const handleRefresh = async () => {
+    setPending(true);
+    setStatus(null);
+    try {
+      onChange(await refreshTodayRates());
+      setStatus({ kind: 'success', text: t('settingsRatesRefreshed') });
+    } catch (err) {
+      setStatus({ kind: 'error', text: errorText(err, t('settingsSaveFailed')) });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <section className="settings-panel">
+      <h2 className="settings-panel-title">{t('settingsMarketRates')}</h2>
+      <div className="settings-row-text">
+        <span className="settings-row-hint">{t('settingsMarketRatesHint')}</span>
+        {todayRates.market ? (
+          <span className="settings-row-hint">{todayRatesSourceLabel({ ...todayRates, manual: [] }, '')}</span>
+        ) : (
+          <span className="settings-row-hint">{t('settingsRatesUnavailable')}</span>
+        )}
+      </div>
+      {status && <p className={`settings-form-status is-${status.kind}`}>{status.text}</p>}
+      <div className="settings-rates-actions settings-market-rates-actions">
+        <button type="button" className="modal-action-submit" disabled={pending} onClick={() => void handleRefresh()}>
+          {pending ? t('settingsRatesRefreshing') : t('settingsRefreshRates')}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function CustomRatesPanel({ todayRates, onChange }: { todayRates: TodayRates; onChange: (next: TodayRates) => void }) {
+  const base = todayRates.base;
+  const currencies = FINANCE_CURRENCIES.filter((code) => code !== base);
+  const [values, setValues] = useState<Record<string, string>>(() => customFormValues(todayRates));
+  const [pending, setPending] = useState<'save' | 'reset' | null>(null);
+  const [status, setStatus] = useState<FormStatus>(null);
+
+  useEffect(() => {
+    setValues(customFormValues(todayRates));
+  }, [todayRates]);
+
+  const run = async (kind: 'save' | 'reset', action: () => Promise<TodayRates>, success: string) => {
     setPending(kind);
     setStatus(null);
     try {
       const next = await action();
       onChange(next);
-      setValues(manualValues(next));
+      setValues(customFormValues(next));
       setStatus({ kind: 'success', text: success });
     } catch (err) {
       setStatus({ kind: 'error', text: errorText(err, t('settingsSaveFailed')) });
@@ -72,76 +110,66 @@ function TodayRatesSettings({ todayRates, enabledCurrencies, onChange }: {
       }
       rates[code] = displayRateToStored(value, rateQuote(code, base).inverted);
     }
-    void run('save', () => setRateOverride(rates), t('settingsRatesSaved'));
+    void run('save', () => setRateOverride(rates), t('settingsCustomRatesSaved'));
   };
 
   return (
-    <form className="settings-rates" onSubmit={handleSave}>
-      <div className="settings-row-text">
-        <span className="settings-row-label">{t('settingsTodayRates')}</span>
-        <span className="settings-row-hint">{t('settingsTodayRatesHint')}</span>
-        {todayRates.market ? (
-          <span className="settings-row-hint">{todayRatesSourceLabel({ ...todayRates, manual: [] }, '')}</span>
-        ) : (
-          <span className="settings-row-hint">{t('settingsRatesUnavailable')}</span>
-        )}
-      </div>
+    <section className="settings-panel">
+      <h2 className="settings-panel-title">{t('settingsCustomRates')}</h2>
+      <form className="settings-rates settings-rates-embedded" onSubmit={handleSave}>
+        <div className="settings-row-text">
+          <span className="settings-row-hint">{t('settingsCustomRatesHint')}</span>
+        </div>
 
-      <div className="settings-rates-list">
-        {currencies.map((code) => {
-          const quote = rateQuote(code, base);
-          const current = todayRates.rates[code];
-          const isManual = todayRates.manual.includes(code);
-          return (
-            <div key={code} className="settings-rate-row">
-              <div className="finance-rate-input">
-                <span>1 {quote.unit} =</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  className="task-editor-input"
-                  value={values[code] ?? ''}
-                  onChange={(event) => setValues((prev) => ({
-                    ...prev,
-                    [code]: event.target.value.replace(/[^\d.,]/g, ''),
-                  }))}
-                  placeholder={current ? displayRateText(current, quote.inverted) : '—'}
-                  aria-label={`${t('financeRate')} ${code}`}
-                />
-                <span>{quote.quote}</span>
+        <div className="settings-rates-list">
+          {currencies.map((code) => {
+            const quote = rateQuote(code, base);
+            const market = todayRates.marketRates?.[code];
+            const isCustom = todayRates.manual.includes(code);
+            return (
+              <div key={code} className="settings-rate-row">
+                <span className="settings-rate-code">{code}</span>
+                <div className="finance-rate-input">
+                  <span>1 {quote.unit} =</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    className="task-editor-input"
+                    value={values[code] ?? ''}
+                    onChange={(event) => setValues((prev) => ({
+                      ...prev,
+                      [code]: event.target.value.replace(/[^\d.,]/g, ''),
+                    }))}
+                    placeholder={market ? displayRateText(market, quote.inverted) : '—'}
+                    aria-label={`${t('financeRate')} ${code}`}
+                  />
+                  <span>{quote.quote}</span>
+                </div>
+                {isCustom && <span className="settings-rate-badge">{t('financeRateSourceManual')}</span>}
               </div>
-              {isManual && <span className="settings-rate-badge">{t('financeRateSourceManual')}</span>}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {status && <p className={`settings-form-status is-${status.kind}`}>{status.text}</p>}
+        {status && <p className={`settings-form-status is-${status.kind}`}>{status.text}</p>}
 
-      <div className="settings-rates-actions">
-        <button type="submit" className="modal-action-submit" disabled={pending !== null}>
-          {pending === 'save' ? t('settingsSaving') : t('settingsSaveTodayRates')}
-        </button>
-        {todayRates.manual.length > 0 && (
-          <button
-            type="button"
-            className="modal-action-cancel"
-            disabled={pending !== null}
-            onClick={() => void run('reset', clearRateOverride, t('settingsRatesReset'))}
-          >
-            {t('settingsResetTodayRates')}
+        <div className="settings-rates-actions">
+          <button type="submit" className="modal-action-submit" disabled={pending !== null}>
+            {pending === 'save' ? t('settingsSaving') : t('settingsSaveCustomRates')}
           </button>
-        )}
-        <button
-          type="button"
-          className="modal-action-cancel"
-          disabled={pending !== null}
-          onClick={() => void run('refresh', refreshTodayRates, t('settingsRatesRefreshed'))}
-        >
-          {pending === 'refresh' ? t('settingsRatesRefreshing') : t('settingsRefreshRates')}
-        </button>
-      </div>
-    </form>
+          {Object.keys(todayRates.customRates ?? {}).length > 0 && (
+            <button
+              type="button"
+              className="modal-action-cancel"
+              disabled={pending !== null}
+              onClick={() => void run('reset', clearRateOverride, t('settingsCustomRatesReset'))}
+            >
+              {t('settingsResetCustomRates')}
+            </button>
+          )}
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -149,10 +177,11 @@ function displayRateText(rate: number, inverted: boolean): string {
   return String(Number(storedRateToDisplay(rate, inverted).toFixed(4)));
 }
 
-function manualValues(todayRates: TodayRates): Record<string, string> {
+function customFormValues(todayRates: TodayRates): Record<string, string> {
   const values: Record<string, string> = {};
-  for (const code of todayRates.manual) {
-    const rate = todayRates.rates[code];
+  for (const code of FINANCE_CURRENCIES) {
+    if (code === todayRates.base) continue;
+    const rate = todayRates.customRates?.[code];
     if (rate) values[code] = displayRateText(rate, rateQuote(code, todayRates.base).inverted);
   }
   return values;
@@ -221,56 +250,56 @@ function FinanceSettings() {
   };
 
   return (
-    <section className="settings-panel">
-      <h2 className="settings-panel-title">{t('settingsFinance')}</h2>
-      {error && <p className="tasks-error">{error}</p>}
-      {!settings ? (
-        !error && <p className="settings-status">{t('settingsLoading')}</p>
-      ) : (
+    <>
+      <section className="settings-panel">
+        <h2 className="settings-panel-title">{t('settingsFinance')}</h2>
+        {error && <p className="tasks-error">{error}</p>}
+        {!settings ? (
+          !error && <p className="settings-status">{t('settingsLoading')}</p>
+        ) : (
+          <>
+            <div className="settings-row">
+              <div className="settings-row-text">
+                <span className="settings-row-label">{t('settingsBaseCurrency')}</span>
+                <span className="settings-row-hint">{t('settingsBaseCurrencyHint')}</span>
+              </div>
+              <SortSelect
+                label={t('financeCurrency')}
+                value={settings.baseCurrency}
+                options={settings.enabledCurrencies.map((code) => ({ value: code, label: code }))}
+                onChange={(value) => void handleCurrencyChange(value)}
+              />
+            </div>
+            <div className="settings-row settings-row-stack">
+              <div className="settings-row-text">
+                <span className="settings-row-label">{t('settingsEnabledCurrencies')}</span>
+                <span className="settings-row-hint">{t('settingsEnabledCurrenciesHint')}</span>
+              </div>
+              <div className="settings-currencies-list" role="group" aria-label={t('settingsEnabledCurrencies')}>
+                {FINANCE_CURRENCIES.map((code) => (
+                  <Checkbox
+                    key={code}
+                    label={code}
+                    checked={settings.enabledCurrencies.includes(code)}
+                    disabled={saving || code === settings.baseCurrency}
+                    onChange={(checked) => void handleEnabledCurrencyChange(code, checked)}
+                  />
+                ))}
+              </div>
+            </div>
+            {(saving || saved) && (
+              <p className="settings-status">{saving ? t('settingsSaving') : t('settingsSaved')}</p>
+            )}
+          </>
+        )}
+      </section>
+      {settings && todayRates && todayRates.base === settings.baseCurrency && (
         <>
-          <div className="settings-row">
-            <div className="settings-row-text">
-              <span className="settings-row-label">{t('settingsBaseCurrency')}</span>
-              <span className="settings-row-hint">{t('settingsBaseCurrencyHint')}</span>
-            </div>
-            <SortSelect
-              label={t('financeCurrency')}
-              value={settings.baseCurrency}
-              options={settings.enabledCurrencies.map((code) => ({ value: code, label: code }))}
-              onChange={(value) => void handleCurrencyChange(value)}
-            />
-          </div>
-          <div className="settings-row settings-row-stack">
-            <div className="settings-row-text">
-              <span className="settings-row-label">{t('settingsEnabledCurrencies')}</span>
-              <span className="settings-row-hint">{t('settingsEnabledCurrenciesHint')}</span>
-            </div>
-            <div className="settings-currencies-list" role="group" aria-label={t('settingsEnabledCurrencies')}>
-              {FINANCE_CURRENCIES.map((code) => (
-                <Checkbox
-                  key={code}
-                  label={code}
-                  checked={settings.enabledCurrencies.includes(code)}
-                  disabled={saving || code === settings.baseCurrency}
-                  onChange={(checked) => void handleEnabledCurrencyChange(code, checked)}
-                />
-              ))}
-            </div>
-          </div>
-          {(saving || saved) && (
-            <p className="settings-status">{saving ? t('settingsSaving') : t('settingsSaved')}</p>
-          )}
-          {todayRates && todayRates.base === settings.baseCurrency && (
-            <TodayRatesSettings
-              key={todayRates.base}
-              todayRates={todayRates}
-              enabledCurrencies={settings.enabledCurrencies}
-              onChange={setTodayRates}
-            />
-          )}
+          <MarketRatesPanel todayRates={todayRates} onChange={setTodayRates} />
+          <CustomRatesPanel key={todayRates.base} todayRates={todayRates} onChange={setTodayRates} />
         </>
       )}
-    </section>
+    </>
   );
 }
 
