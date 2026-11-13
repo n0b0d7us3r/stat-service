@@ -125,6 +125,19 @@ export function crossRate(todayRates: TodayRates | null, from: string, to: strin
   return fromRate && toRate ? fromRate / toRate : undefined;
 }
 
+/** Курс для отображения: учитывает marketRates, даже если валюта отключена в настройках. */
+export function crossRateForDisplay(todayRates: TodayRates | null, from: string, to: string): number | undefined {
+  if (!todayRates) return undefined;
+  const inBase = (code: string) => {
+    if (code === todayRates.base) return 1;
+    const rate = todayRates.rates[code] ?? todayRates.marketRates?.[code] ?? todayRates.customRates?.[code];
+    return rate;
+  };
+  const fromRate = inBase(from);
+  const toRate = inBase(to);
+  return fromRate && toRate ? fromRate / toRate : undefined;
+}
+
 /** Сумма операции в основной валюте или null, если курса к ней нет. */
 export function toBaseCents(
   entry: Pick<FinanceEntry, 'amount_cents' | 'currency' | 'rate' | 'rate_currency' | 'rate_mode'>,

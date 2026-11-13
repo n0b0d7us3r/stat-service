@@ -499,6 +499,7 @@ export function FinancePage() {
                   <FinanceBalanceAccounts
                     rows={balanceRows}
                     baseCurrency={currency}
+                    todayRates={todayRates}
                     hiddenAccounts={hiddenBalanceAccounts}
                     onHiddenAccountsChange={saveHiddenBalanceAccounts}
                   />

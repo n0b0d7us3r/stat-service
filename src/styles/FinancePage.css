@@ -223,22 +223,24 @@
 }
 
 .finance-balance-amount {
+  display: inline-flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-.finance-balance-amount-native {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
+.finance-balance-amount-extra {
+  margin-left: 0.35rem;
+  color: var(--muted);
+  font-weight: 600;
 }
 
-.finance-balance-currency-excluded {
+.finance-balance-account-excluded > :first-child {
   color: var(--muted);
-  font-weight: 700;
 }
 
 .finance-summary-card {
@@ -1174,10 +1176,6 @@
   .finance-balance-amount {
     flex-shrink: 1;
     overflow-wrap: anywhere;
-  }
-
-  .finance-balance-amount-base {
-    display: none;
   }
 
   .finance-summary-with-balance > * {

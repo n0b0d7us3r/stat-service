@@ -4,7 +4,7 @@ import { FinanceBalanceAccountsModal } from './FinanceBalanceAccountsModal';
 import { FinanceIconBadge } from './FinanceIconBadge';
 import { t } from '../i18n';
 import type { FinanceAccount, FinanceBalance, TodayRates } from '../types';
-import { crossRate, formatMoney } from '../utils/finance';
+import { crossRate, crossRateForDisplay, formatMoney } from '../utils/finance';
 
 export interface AccountBalance {
   key: string;
@@ -30,6 +30,26 @@ function formatList(items: Array<{ currency: string; cents: number }>): string {
 
 function signed(cents: number, currency: string): string {
   return `${cents < 0 ? '−' : ''}${formatMoney(Math.abs(cents), currency)}`;
+}
+
+function addCurrencyAmount(
+  list: Array<{ currency: string; cents: number }>,
+  currency: string,
+  cents: number,
+): void {
+  const item = list.find((entry) => entry.currency === currency);
+  if (item) item.cents += cents;
+  else list.push({ currency, cents });
+}
+
+function mergeCurrencyAmounts(
+  items: Array<{ currency: string; cents: number }>,
+): Array<{ currency: string; cents: number }> {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    totals.set(item.currency, (totals.get(item.currency) ?? 0) + item.cents);
+  }
+  return [...totals.entries()].map(([currency, cents]) => ({ currency, cents }));
 }
 
 /** Остатки по каждому счёту, пересчитанные в основную валюту по курсам на сегодня. */
@@ -71,21 +91,21 @@ export function accountBalances(
       });
     }
     const row = rows.get(key)!;
-    row.native.push({ currency: balance.currency, cents: balance.cents });
+    addCurrencyAmount(row.native, balance.currency, balance.cents);
     if (balance.currency === baseCurrency) {
       row.baseCents += balance.cents;
       continue;
     }
     if (!enabled.has(balance.currency)) {
-      row.excluded.push({ currency: balance.currency, cents: balance.cents });
+      addCurrencyAmount(row.excluded, balance.currency, balance.cents);
       continue;
     }
-    row.foreign.push({ currency: balance.currency, cents: balance.cents });
+    addCurrencyAmount(row.foreign, balance.currency, balance.cents);
     const rate = crossRate(todayRates, balance.currency, baseCurrency);
     if (rate) {
       row.baseCents += Math.round(balance.cents * rate);
     } else {
-      row.unconverted.push({ currency: balance.currency, cents: balance.cents });
+      addCurrencyAmount(row.unconverted, balance.currency, balance.cents);
     }
   }
 
@@ -115,57 +135,92 @@ export function FinanceBalanceTotal({ rows, baseCurrency }: { rows: AccountBalan
 interface FinanceBalanceAccountsProps {
   rows: AccountBalance[];
   baseCurrency: string;
+  todayRates: TodayRates | null;
   hiddenAccounts: string[];
   onHiddenAccountsChange: (hidden: string[]) => Promise<void>;
 }
 
-function accountAmounts(row: AccountBalance, baseCurrency: string) {
-  const onlyExcluded =
-    row.baseCents === 0 && row.foreign.length === 0 && row.unconverted.length === 0 && row.excluded.length > 0;
+/** Пересчёт всего счёта в основную валюту для отображения (включая отключённые валюты). */
+function displayBaseCentsForRow(
+  row: AccountBalance,
+  baseCurrency: string,
+  todayRates: TodayRates | null,
+): number {
+  let total = 0;
+  for (const item of mergeCurrencyAmounts(row.native)) {
+    if (item.currency === baseCurrency) {
+      total += item.cents;
+      continue;
+    }
+    const rate = crossRateForDisplay(todayRates, item.currency, baseCurrency);
+    if (rate) total += Math.round(item.cents * rate);
+  }
+  return total;
+}
+
+function splitAccountAmounts(
+  row: AccountBalance,
+  baseCurrency: string,
+  todayRates: TodayRates | null,
+): { main: { currency: string; cents: number }; rest: Array<{ currency: string; cents: number }> } | null {
+  const items = mergeCurrencyAmounts(row.native);
+  if (items.length === 0) return null;
+
+  const byCode = (a: { currency: string }, b: { currency: string }) => a.currency.localeCompare(b.currency);
+  const foreignItems = items.filter((item) => item.currency !== baseCurrency).sort(byCode);
+  const baseNative = items.find((item) => item.currency === baseCurrency);
+  const displayCents = displayBaseCentsForRow(row, baseCurrency, todayRates);
+
+  const main = (row.excluded.length > 0 || !baseNative) && (foreignItems.length > 0 || baseNative)
+    ? { currency: baseCurrency, cents: displayCents }
+    : baseNative
+      ? { currency: baseCurrency, cents: baseNative.cents }
+      : foreignItems.length > 0
+        ? { currency: baseCurrency, cents: displayCents }
+        : null;
+
+  if (!main) return null;
+
+  return { main, rest: foreignItems };
+}
+
+function accountAmounts(row: AccountBalance, baseCurrency: string, todayRates: TodayRates | null) {
+  const split = splitAccountAmounts(row, baseCurrency, todayRates);
+  const mutedMain = row.excluded.length > 0;
+
+  if (!split) {
+    return <span className="finance-balance-amount">{signed(0, baseCurrency)}</span>;
+  }
+
+  const { main, rest } = split;
+
   return (
-    <>
-      {!onlyExcluded && (
-        <span
-          className={`finance-balance-amount finance-balance-amount-base ${
-            row.baseCents < 0 ? 'finance-amount-expense' : ''
-          }`}
-        >
-          {signed(row.baseCents, baseCurrency)}
-          {row.foreign.length > 0 && (
-            <span className="finance-entry-converted">
-              ({row.foreign.map((item) => signed(item.cents, item.currency)).join(', ')})
+    <span className={`finance-balance-amount${mutedMain ? ' finance-balance-account-excluded' : ''}`}>
+      <span className={main.cents < 0 ? 'finance-amount-expense' : undefined}>
+        {signed(main.cents, main.currency)}
+      </span>
+      {rest.length > 0 && (
+        <span className="finance-balance-amount-extra">
+          (
+          {rest.map((item, index) => (
+            <span key={item.currency}>
+              {index > 0 ? ', ' : ''}
+              <span className={item.cents < 0 ? 'finance-amount-expense' : undefined}>
+                {signed(item.cents, item.currency)}
+              </span>
             </span>
-          )}
+          ))}
+          )
         </span>
       )}
-      <span className="finance-balance-amount finance-balance-amount-native">
-        {row.native.length === 0 ? (
-          signed(0, baseCurrency)
-        ) : (
-          row.native.map((item) => (
-            <span
-              key={item.currency}
-              className={[
-                item.cents < 0 ? 'finance-amount-expense' : '',
-                row.excluded.some((excluded) => excluded.currency === item.currency)
-                  ? 'finance-balance-currency-excluded'
-                  : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {signed(item.cents, item.currency)}
-            </span>
-          ))
-        )}
-      </span>
-    </>
+    </span>
   );
 }
 
 export function FinanceBalanceAccounts({
   rows,
   baseCurrency,
+  todayRates,
   hiddenAccounts,
   onHiddenAccountsChange,
 }: FinanceBalanceAccountsProps) {
@@ -197,7 +252,7 @@ export function FinanceBalanceAccounts({
               <li key={row.key} className="finance-balance-row">
                 <FinanceIconBadge icon={row.icon} color={row.color} size="sm" />
                 <span className="finance-balance-name">{row.name}</span>
-                {accountAmounts(row, baseCurrency)}
+                {accountAmounts(row, baseCurrency, todayRates)}
               </li>
             ))}
           </ul>
