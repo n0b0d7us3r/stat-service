@@ -247,7 +247,7 @@ export interface TodayRates {
   marketRates: Record<string, number>;
   /** Сохранённые кастомные курсы (до обновления с биржи). */
   customRates: Record<string, number>;
-  market: { source: 'myfin' | 'nbrb'; fetchedAt: string } | null;
+  market: { source: 'myfin' | 'nbrb' | 'nbg'; fetchedAt: string } | null;
 }
 
 export interface UserSettings {

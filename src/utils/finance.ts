@@ -108,7 +108,11 @@ export function todayRatesSourceLabel(todayRates: TodayRates, currency: string):
     hour: '2-digit',
     minute: '2-digit',
   });
-  const source = todayRates.market.source === 'myfin' ? t('financeRateSourceMyfin') : t('financeRateSourceNbrb');
+  const source = todayRates.market.source === 'nbg'
+    ? t('financeRateSourceNbg')
+    : todayRates.market.source === 'myfin'
+      ? t('financeRateSourceMyfin')
+      : t('financeRateSourceNbrb');
   return t('financeRateSourceMarket', { source, time });
 }
 

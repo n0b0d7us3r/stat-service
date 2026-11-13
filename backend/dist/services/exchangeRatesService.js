@@ -8,6 +8,7 @@ import { FINANCE_CURRENCIES, getUserSettings } from './settingsService.js';
 const CACHE_PATH = path.join(DATA_DIR, 'exchange-rates.json');
 const MYFIN_URL = 'https://myfin.by/bank/kursy_valjut_nbrb';
 const NBRB_URL = 'https://api.nbrb.by/exrates/rates?periodicity=0';
+const NBG_URL = 'https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json/';
 const REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_RATE = 1_000_000;
@@ -41,6 +42,17 @@ function pickSupported(rates) {
     for (const code of FINANCE_CURRENCIES) {
         const value = rates[code];
         if (code !== 'BYN' && Number.isFinite(value) && value > 0)
+            result[code] = value;
+    }
+    return result;
+}
+function pickSupportedGel(rates) {
+    const result = {};
+    for (const code of FINANCE_CURRENCIES) {
+        if (code === 'GEL')
+            continue;
+        const value = rates[code];
+        if (Number.isFinite(value) && value > 0)
             result[code] = value;
     }
     return result;
@@ -82,9 +94,37 @@ async function fetchFromNbrb() {
     }
     return pickSupported(rates);
 }
+/** Официальные курсы NBG: GEL за `quantity` единиц валюты. */
+export function parseNbgRates(payload) {
+    if (!Array.isArray(payload) || payload.length === 0)
+        return {};
+    const block = payload[0];
+    if (!Array.isArray(block.currencies))
+        return {};
+    const rates = {};
+    for (const raw of block.currencies) {
+        if (!raw || typeof raw !== 'object')
+            continue;
+        const item = raw;
+        const code = String(item.code ?? '').toUpperCase();
+        const quantity = Number(item.quantity);
+        const rate = Number(item.rate);
+        if (/^[A-Z]{3}$/.test(code) && quantity > 0 && rate > 0) {
+            rates[code] = rate / quantity;
+        }
+    }
+    return rates;
+}
+async function fetchFromNbg() {
+    return pickSupportedGel(parseNbgRates(JSON.parse(await fetchText(NBG_URL))));
+}
 const REQUIRED_CODES = FINANCE_CURRENCIES.filter((code) => code !== 'BYN');
+const REQUIRED_GEL_CODES = FINANCE_CURRENCIES.filter((code) => code !== 'GEL');
 function mergeMarketRates(previous, fresh) {
     return pickSupported({ ...(previous ?? {}), ...fresh });
+}
+function mergeGelMarketRates(previous, fresh) {
+    return pickSupportedGel({ ...(previous ?? {}), ...fresh });
 }
 async function doRefresh() {
     const previous = loadCache();
@@ -92,25 +132,50 @@ async function doRefresh() {
         ['nbrb', fetchFromNbrb],
         ['myfin', fetchFromMyfin],
     ];
-    let best = previous;
-    for (const [source, load] of sources) {
+    let rates = { ...(previous?.rates ?? {}) };
+    let source = previous?.source ?? 'nbrb';
+    let nbg = previous?.nbg;
+    let touched = false;
+    for (const [src, load] of sources) {
         try {
-            const rates = mergeMarketRates(previous?.rates, await load());
-            if (Object.keys(rates).length === 0)
+            const merged = mergeMarketRates(rates, await load());
+            if (Object.keys(merged).length === 0)
                 continue;
-            const next = { source, fetchedAt: new Date().toISOString(), rates };
-            saveCache(next);
-            best = next;
+            rates = merged;
+            source = src;
+            touched = true;
             if (REQUIRED_CODES.every((code) => code in rates))
-                return next;
+                break;
             const missing = REQUIRED_CODES.filter((code) => !(code in rates));
-            console.warn(`Курсы ${source}: после слияния нет`, missing);
+            console.warn(`Курсы ${src}: после слияния нет`, missing);
         }
         catch (error) {
-            console.warn(`Не удалось получить курсы ${source}:`, error.message);
+            console.warn(`Не удалось получить курсы ${src}:`, error.message);
         }
     }
-    return best;
+    try {
+        const gelMerged = mergeGelMarketRates(nbg?.rates, await fetchFromNbg());
+        if (Object.keys(gelMerged).length > 0) {
+            nbg = { fetchedAt: new Date().toISOString(), rates: gelMerged };
+            touched = true;
+            const missingGel = REQUIRED_GEL_CODES.filter((code) => !(code in gelMerged));
+            if (missingGel.length > 0)
+                console.warn('Курсы nbg: после слияния нет', missingGel);
+        }
+    }
+    catch (error) {
+        console.warn('Не удалось получить курсы nbg:', error.message);
+    }
+    if (!touched)
+        return previous;
+    const next = {
+        source,
+        fetchedAt: new Date().toISOString(),
+        rates,
+        ...(nbg ? { nbg } : {}),
+    };
+    saveCache(next);
+    return next;
 }
 /** При ошибке обоих источников остаётся последний сохранённый курс. */
 export function refreshMarketRates() {
@@ -149,13 +214,36 @@ function readCustomRates(userId, base) {
 export function clearCustomRates(userId) {
     runStatement(getUserDb(userId), 'DELETE FROM user_settings WHERE key = ?', [OVERRIDE_KEY]);
 }
-function marketRateToBase(code, base, market) {
-    const bynPer = (currency) => (currency === 'BYN' ? 1 : market?.rates[currency]);
-    const from = bynPer(code);
-    const to = bynPer(base);
+function crossViaReference(code, base, reference, table) {
+    const inRef = (currency) => (currency === reference ? 1 : table[currency]);
+    const from = inRef(code);
+    const to = inRef(base);
     if (!from || !to)
         return undefined;
     return Number((from / to).toPrecision(12));
+}
+function canUseGelLadder(code, base, gelRates) {
+    const present = (currency) => currency === 'GEL' || (Number.isFinite(gelRates[currency]) && gelRates[currency] > 0);
+    return present(code) && present(base);
+}
+function marketRateToBase(code, base, market) {
+    if (!market)
+        return undefined;
+    const gel = market.nbg?.rates;
+    if (gel && canUseGelLadder(code, base, gel)) {
+        return crossViaReference(code, base, 'GEL', gel);
+    }
+    if (!market.rates)
+        return undefined;
+    return crossViaReference(code, base, 'BYN', market.rates);
+}
+function marketMetaForBase(base, market) {
+    if (!market)
+        return null;
+    if (base === 'GEL' && market.nbg) {
+        return { source: 'nbg', fetchedAt: market.nbg.fetchedAt };
+    }
+    return { source: market.source, fetchedAt: market.fetchedAt };
 }
 export function getTodayRates(userId) {
     const { baseCurrency: base, enabledCurrencies } = getUserSettings(userId);
@@ -190,7 +278,7 @@ export function getTodayRates(userId) {
         manual,
         marketRates,
         customRates: { ...(custom?.rates ?? {}) },
-        market: market ? { source: market.source, fetchedAt: market.fetchedAt } : null,
+        market: marketMetaForBase(base, market),
     };
 }
 export function setRateOverride(userId, input) {

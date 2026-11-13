@@ -6,13 +6,14 @@ import { queryOne, runStatement } from '../query.js';
 import { DbError } from './projectsService.js';
 import { FINANCE_CURRENCIES, getUserSettings } from './settingsService.js';
 
-export type MarketRateSource = 'myfin' | 'nbrb';
+export type MarketRateSource = 'myfin' | 'nbrb' | 'nbg';
 
-/** Курсы НБРБ: сколько BYN за 1 единицу валюты. */
+/** Курсы НБРБ: сколько BYN за 1 единицу валюты; NBG — сколько GEL за 1 единицу. */
 interface MarketRatesCache {
   source: MarketRateSource;
   fetchedAt: string;
   rates: Record<string, number>;
+  nbg?: { fetchedAt: string; rates: Record<string, number> };
 }
 
 export interface TodayRates {
@@ -35,6 +36,7 @@ interface CustomRatesStore {
 const CACHE_PATH = path.join(DATA_DIR, 'exchange-rates.json');
 const MYFIN_URL = 'https://myfin.by/bank/kursy_valjut_nbrb';
 const NBRB_URL = 'https://api.nbrb.by/exrates/rates?periodicity=0';
+const NBG_URL = 'https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json/';
 const REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_RATE = 1_000_000;
@@ -68,6 +70,16 @@ function pickSupported(rates: Record<string, number>): Record<string, number> {
   for (const code of FINANCE_CURRENCIES) {
     const value = rates[code];
     if (code !== 'BYN' && Number.isFinite(value) && value > 0) result[code] = value;
+  }
+  return result;
+}
+
+function pickSupportedGel(rates: Record<string, number>): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const code of FINANCE_CURRENCIES) {
+    if (code === 'GEL') continue;
+    const value = rates[code];
+    if (Number.isFinite(value) && value > 0) result[code] = value;
   }
   return result;
 }
@@ -116,10 +128,38 @@ async function fetchFromNbrb(): Promise<Record<string, number>> {
   return pickSupported(rates);
 }
 
+/** Официальные курсы NBG: GEL за `quantity` единиц валюты. */
+export function parseNbgRates(payload: unknown): Record<string, number> {
+  if (!Array.isArray(payload) || payload.length === 0) return {};
+  const block = payload[0] as { currencies?: unknown };
+  if (!Array.isArray(block.currencies)) return {};
+  const rates: Record<string, number> = {};
+  for (const raw of block.currencies) {
+    if (!raw || typeof raw !== 'object') continue;
+    const item = raw as { code?: string; quantity?: number; rate?: number };
+    const code = String(item.code ?? '').toUpperCase();
+    const quantity = Number(item.quantity);
+    const rate = Number(item.rate);
+    if (/^[A-Z]{3}$/.test(code) && quantity > 0 && rate > 0) {
+      rates[code] = rate / quantity;
+    }
+  }
+  return rates;
+}
+
+async function fetchFromNbg(): Promise<Record<string, number>> {
+  return pickSupportedGel(parseNbgRates(JSON.parse(await fetchText(NBG_URL))));
+}
+
 const REQUIRED_CODES = FINANCE_CURRENCIES.filter((code) => code !== 'BYN');
+const REQUIRED_GEL_CODES = FINANCE_CURRENCIES.filter((code) => code !== 'GEL');
 
 function mergeMarketRates(previous: Record<string, number> | undefined, fresh: Record<string, number>): Record<string, number> {
   return pickSupported({ ...(previous ?? {}), ...fresh });
+}
+
+function mergeGelMarketRates(previous: Record<string, number> | undefined, fresh: Record<string, number>): Record<string, number> {
+  return pickSupportedGel({ ...(previous ?? {}), ...fresh });
 }
 
 async function doRefresh(): Promise<MarketRatesCache | null> {
@@ -128,22 +168,48 @@ async function doRefresh(): Promise<MarketRatesCache | null> {
     ['nbrb', fetchFromNbrb],
     ['myfin', fetchFromMyfin],
   ];
-  let best: MarketRatesCache | null = previous;
-  for (const [source, load] of sources) {
+  let rates = { ...(previous?.rates ?? {}) };
+  let source: MarketRateSource = previous?.source ?? 'nbrb';
+  let nbg = previous?.nbg;
+  let touched = false;
+
+  for (const [src, load] of sources) {
     try {
-      const rates = mergeMarketRates(previous?.rates, await load());
-      if (Object.keys(rates).length === 0) continue;
-      const next: MarketRatesCache = { source, fetchedAt: new Date().toISOString(), rates };
-      saveCache(next);
-      best = next;
-      if (REQUIRED_CODES.every((code) => code in rates)) return next;
+      const merged = mergeMarketRates(rates, await load());
+      if (Object.keys(merged).length === 0) continue;
+      rates = merged;
+      source = src;
+      touched = true;
+      if (REQUIRED_CODES.every((code) => code in rates)) break;
       const missing = REQUIRED_CODES.filter((code) => !(code in rates));
-      console.warn(`Курсы ${source}: после слияния нет`, missing);
+      console.warn(`Курсы ${src}: после слияния нет`, missing);
     } catch (error) {
-      console.warn(`Не удалось получить курсы ${source}:`, (error as Error).message);
+      console.warn(`Не удалось получить курсы ${src}:`, (error as Error).message);
     }
   }
-  return best;
+
+  try {
+    const gelMerged = mergeGelMarketRates(nbg?.rates, await fetchFromNbg());
+    if (Object.keys(gelMerged).length > 0) {
+      nbg = { fetchedAt: new Date().toISOString(), rates: gelMerged };
+      touched = true;
+      const missingGel = REQUIRED_GEL_CODES.filter((code) => !(code in gelMerged));
+      if (missingGel.length > 0) console.warn('Курсы nbg: после слияния нет', missingGel);
+    }
+  } catch (error) {
+    console.warn('Не удалось получить курсы nbg:', (error as Error).message);
+  }
+
+  if (!touched) return previous;
+
+  const next: MarketRatesCache = {
+    source,
+    fetchedAt: new Date().toISOString(),
+    rates,
+    ...(nbg ? { nbg } : {}),
+  };
+  saveCache(next);
+  return next;
 }
 
 /** При ошибке обоих источников остаётся последний сохранённый курс. */
@@ -189,16 +255,45 @@ export function clearCustomRates(userId: number): void {
   runStatement(getUserDb(userId), 'DELETE FROM user_settings WHERE key = ?', [OVERRIDE_KEY]);
 }
 
+function crossViaReference(
+  code: string,
+  base: string,
+  reference: string,
+  table: Record<string, number>,
+): number | undefined {
+  const inRef = (currency: string) => (currency === reference ? 1 : table[currency]);
+  const from = inRef(code);
+  const to = inRef(base);
+  if (!from || !to) return undefined;
+  return Number((from / to).toPrecision(12));
+}
+
+function canUseGelLadder(code: string, base: string, gelRates: Record<string, number>): boolean {
+  const present = (currency: string) =>
+    currency === 'GEL' || (Number.isFinite(gelRates[currency]) && gelRates[currency] > 0);
+  return present(code) && present(base);
+}
+
 function marketRateToBase(
   code: string,
   base: string,
   market: MarketRatesCache | null,
 ): number | undefined {
-  const bynPer = (currency: string) => (currency === 'BYN' ? 1 : market?.rates[currency]);
-  const from = bynPer(code);
-  const to = bynPer(base);
-  if (!from || !to) return undefined;
-  return Number((from / to).toPrecision(12));
+  if (!market) return undefined;
+  const gel = market.nbg?.rates;
+  if (gel && canUseGelLadder(code, base, gel)) {
+    return crossViaReference(code, base, 'GEL', gel);
+  }
+  if (!market.rates) return undefined;
+  return crossViaReference(code, base, 'BYN', market.rates);
+}
+
+function marketMetaForBase(base: string, market: MarketRatesCache | null): TodayRates['market'] {
+  if (!market) return null;
+  if (base === 'GEL' && market.nbg) {
+    return { source: 'nbg', fetchedAt: market.nbg.fetchedAt };
+  }
+  return { source: market.source, fetchedAt: market.fetchedAt };
 }
 
 export function getTodayRates(userId: number): TodayRates {
@@ -233,7 +328,7 @@ export function getTodayRates(userId: number): TodayRates {
     manual,
     marketRates,
     customRates: { ...(custom?.rates ?? {}) },
-    market: market ? { source: market.source, fetchedAt: market.fetchedAt } : null,
+    market: marketMetaForBase(base, market),
   };
 }
 
