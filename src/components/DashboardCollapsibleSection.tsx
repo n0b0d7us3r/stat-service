@@ -17,6 +17,8 @@ interface DashboardCollapsibleSectionProps {
   children: ReactNode;
   className?: string;
   defaultExpandedOnMobile?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export function DashboardCollapsibleSection({
@@ -24,8 +26,19 @@ export function DashboardCollapsibleSection({
   children,
   className = '',
   defaultExpandedOnMobile = false,
+  expanded: expandedProp,
+  onExpandedChange,
 }: DashboardCollapsibleSectionProps) {
-  const [expanded, setExpanded] = useState(() => getInitialExpanded(defaultExpandedOnMobile));
+  const [expandedInternal, setExpandedInternal] = useState(() => getInitialExpanded(defaultExpandedOnMobile));
+  const expanded = expandedProp ?? expandedInternal;
+
+  const setExpanded = (value: boolean | ((current: boolean) => boolean)) => {
+    const next = typeof value === 'function' ? value(expanded) : value;
+    onExpandedChange?.(next);
+    if (expandedProp === undefined) {
+      setExpandedInternal(next);
+    }
+  };
 
   return (
     <section

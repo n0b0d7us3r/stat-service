@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeftRight, CalendarRange, CreditCard, Layers, Minus, Plus } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { PageTitle } from '../components/PageTitle';
@@ -18,7 +18,7 @@ import {
   TRANSFER_COLOR,
   transferListAmount,
 } from '../components/FinanceTransferDetailsModal';
-import { FilterSection } from '../components/FilterSection';
+import { FilterSection, type FilterSectionHandle } from '../components/FilterSection';
 import { SortSelect } from '../components/SortSelect';
 import { ApiError } from '../api/client';
 import {
@@ -80,6 +80,7 @@ function sortByName<T extends { name: string }>(items: T[]): T[] {
 }
 
 export function FinancePage() {
+  const financeFilterRef = useRef<FilterSectionHandle>(null);
   const [tab, setTab] = useState<FinanceTab>('all');
   const [period, setPeriod] = useState<FinancePeriod>(() => monthPeriod(new Date()));
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
@@ -392,6 +393,10 @@ export function FinancePage() {
     )));
   };
 
+  const tabOptionLabel = (value: FinanceTab) => (
+    value === 'all' ? t('financeTabAll') : value === 'expense' ? t('financeTabExpenses') : t('financeTabIncome')
+  );
+
   const tabLabel = (value: FinanceTab) => (
     value === 'all' ? t('financeAll') : value === 'expense' ? t('financeExpenses') : t('financeIncome')
   );
@@ -413,11 +418,11 @@ export function FinancePage() {
               className="finance-toolbar-tab"
               label={t('financeShow')}
               value={tab}
-              options={TABS.map((value) => ({ value, label: tabLabel(value) }))}
+              options={TABS.map((value) => ({ value, label: tabOptionLabel(value) }))}
               onChange={setTab}
             />
 
-            <FilterSection className="finance-filter-section">
+            <FilterSection ref={financeFilterRef} className="finance-filter-section">
               <div className="finance-toolbar-filters">
                 <button
                   type="button"
@@ -785,6 +790,7 @@ export function FinancePage() {
           onApply={(next) => {
             setPeriodOpen(false);
             setPeriod(next);
+            financeFilterRef.current?.collapse();
           }}
         />
       )}

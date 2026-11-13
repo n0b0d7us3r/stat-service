@@ -4,6 +4,7 @@ import { Layout } from '../components/Layout';
 import { Modal } from '../components/Modal';
 import { ModalActions } from '../components/ModalActions';
 import { Checkbox } from '../components/Checkbox';
+import { FilterSection } from '../components/FilterSection';
 import { SortSelect } from '../components/SortSelect';
 import { TaskEditorModal } from '../components/TaskEditorModal';
 import { Vaporize, type VaporizeHandle } from '../components/Vaporize';
@@ -396,43 +397,47 @@ export function TasksPage() {
               <span>{t('tags')}</span>
             </button>
 
-            <button type="button" className="tasks-archive-btn" onClick={() => setArchiveOpen(true)}>
-              <Archive size={18} strokeWidth={2.25} />
-              <span>{t('archive')}{archivedCount > 0 ? ` (${archivedCount})` : ''}</span>
-            </button>
+            <div className="tasks-controls-secondary">
+              <button type="button" className="tasks-archive-btn" onClick={() => setArchiveOpen(true)}>
+                <Archive size={18} strokeWidth={2.25} />
+                <span>{t('archive')}</span>
+              </button>
 
-            <button type="button" className="tasks-folders-open-btn" onClick={() => setFoldersModalOpen(true)}>
-              <FolderClosed size={18} strokeWidth={2.25} />
-              <span>{t('folders')}</span>
-            </button>
-
-            <div className="tasks-sorts">
-              <SortSelect<TaskSortMode>
-                value={sort}
-                options={[
-                  { value: 'created', label: t('byDay') },
-                  { value: 'priority', label: t('byPriority') },
-                ]}
-                onChange={setSort}
-              />
-
-              <SortSelect
-                label={t('byTag')}
-                value={tagFilter}
-                options={[
-                  { value: 'all', label: t('allTags') },
-                  ...tags.map((tag) => ({ value: String(tag.id), label: formatTagName(tag.name) })),
-                ]}
-                onChange={setTagFilter}
-              />
+              <button type="button" className="tasks-folders-open-btn" onClick={() => setFoldersModalOpen(true)}>
+                <FolderClosed size={18} strokeWidth={2.25} />
+                <span>{t('folders')}</span>
+              </button>
             </div>
 
-            <Checkbox
-              className="tasks-completed-toggle"
-              checked={showCompleted}
-              onChange={setShowCompleted}
-              label={t('completedToggle')}
-            />
+            <FilterSection className="tasks-filter-section">
+              <div className="tasks-sorts">
+                <SortSelect<TaskSortMode>
+                  value={sort}
+                  options={[
+                    { value: 'created', label: t('byDay') },
+                    { value: 'priority', label: t('byPriority') },
+                  ]}
+                  onChange={setSort}
+                />
+
+                <SortSelect
+                  label={t('byTag')}
+                  value={tagFilter}
+                  options={[
+                    { value: 'all', label: t('allTags') },
+                    ...tags.map((tag) => ({ value: String(tag.id), label: formatTagName(tag.name) })),
+                  ]}
+                  onChange={setTagFilter}
+                />
+              </div>
+
+              <Checkbox
+                className="tasks-completed-toggle"
+                checked={showCompleted}
+                onChange={setShowCompleted}
+                label={t('completedToggle')}
+              />
+            </FilterSection>
           </div>
         </div>
 

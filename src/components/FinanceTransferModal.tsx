@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
+import { FieldHelpButton } from './FieldHelpButton';
 import { Modal } from './Modal';
 import { ModalActions } from './ModalActions';
 import { ApiError } from '../api/client';
@@ -249,8 +250,8 @@ export function FinanceTransferModal({
                 aria-label={t('financeTransferFee')}
               />
               <span>{currency}</span>
+              <FieldHelpButton text={t('financeTransferFeeHint')} />
             </div>
-            <p className="finance-rate-preview">{t('financeTransferFeeHint')}</p>
           </label>
 
           {ratePreview && (

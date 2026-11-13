@@ -940,11 +940,44 @@
   }
 
   .tasks-create-btn,
-  .tasks-tag-create-btn,
-  .tasks-archive-btn,
-  .tasks-folders-open-btn,
-  .tasks-completed-toggle {
+  .tasks-tag-create-btn {
     width: 100%;
+  }
+
+  .tasks-filter-section {
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+    padding-top: 1.25rem;
+  }
+
+  .tasks-filter-section .app-filter-section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .tasks-filter-section .tasks-completed-toggle {
+    width: 100%;
+  }
+
+  .tasks-controls-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .tasks-controls-secondary .tasks-archive-btn,
+  .tasks-controls-secondary .tasks-folders-open-btn {
+    box-sizing: border-box;
+    flex: 0 0 calc(50% - 0.25rem);
+    width: calc(50% - 0.25rem);
+    min-width: 0;
   }
 
   .tasks-sorts {
@@ -968,6 +1001,40 @@
     width: 100%;
     flex: 1 1 auto;
     min-width: 0;
+  }
+}
+
+@media (min-width: 769px) {
+  .tasks-controls-secondary {
+    display: contents;
+  }
+
+  .tasks-filter-section .dashboard-collapsible-toggle,
+  .tasks-filter-section .dashboard-collapsible-title {
+    display: none;
+  }
+
+  .tasks-filter-section .dashboard-collapsible-panel {
+    display: contents;
+    margin: 0;
+    opacity: 1;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .tasks-filter-section.app-filter-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: auto;
+    flex: 0 1 auto;
+  }
+
+  .tasks-filter-section .app-filter-section-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
   }
 }
 
