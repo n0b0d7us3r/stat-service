@@ -13,7 +13,7 @@
 }
 
 .dashboard-stat-card {
-  background-color: var(--card);
+  background-color: transparent;
   color: var(--foreground);
   border: 1px solid var(--border);
   padding: 0.875rem 1.125rem;
@@ -88,7 +88,7 @@
 }
 
 .dashboard-projects-table-wrapper {
-  background: var(--card);
+  background: transparent;
   border: 1px solid var(--border);
   overflow-x: auto;
 }
@@ -118,7 +118,7 @@
 
 @media (hover: hover) and (min-width: 769px) {
   .dashboard-project-row:hover {
-    background: var(--card-hover);
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
   }
 }
 
@@ -135,7 +135,7 @@
 }
 
 .dashboard-placeholder {
-  background-color: var(--card);
+  background-color: transparent;
   border: 1px solid var(--border);
   padding: 2rem;
   display: flex;
@@ -249,7 +249,7 @@
 }
 
 .dashboard-achievements-empty {
-  background: var(--card);
+  background: transparent;
   border: 1px solid var(--border);
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -287,10 +287,10 @@
   align-items: flex-start;
   gap: 0.875rem;
   padding: 0.875rem 1rem;
-  background-color: color-mix(in srgb, var(--card) 42%, transparent);
+  background-color: transparent;
   border: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .dashboard-achievement-icon {
@@ -369,7 +369,7 @@
 
   .dashboard-project-row {
     display: block;
-    background: var(--card);
+    background: transparent;
     border: 1px solid var(--border);
   }
 
@@ -416,13 +416,15 @@
 .dashboard-page .dashboard-projects-table-wrapper,
 .dashboard-page .dashboard-placeholder,
 .dashboard-page .dashboard-achievements-empty,
+.dashboard-page .dashboard-achievement-card,
 .dashboard-page .dashboard-month-loading,
 .dashboard-page .dashboard-month-table-wrapper,
 .dashboard-page .dashboard-week-matrix-wrapper,
 .dashboard-page .dashboard-week-matrix-mobile-card {
-  background: color-mix(in srgb, var(--card) 42%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  background: transparent;
+  background-color: transparent;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 @layer components {
@@ -430,22 +432,16 @@
   .dashboard-page .dashboard-task-list-item.app-border-card,
   .dashboard-page .dashboard-today-goals-empty.app-border-card,
   .dashboard-page .dashboard-today-goals-item.app-border-card {
-    background-color: color-mix(in srgb, var(--card) 42%, transparent) !important;
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    background-color: transparent !important;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 }
 
 @media (max-width: 768px) {
-  .dashboard-page .dashboard-projects-table-wrapper {
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
   .dashboard-page .dashboard-project-row {
-    background: color-mix(in srgb, var(--card) 42%, transparent);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    background: transparent;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 }

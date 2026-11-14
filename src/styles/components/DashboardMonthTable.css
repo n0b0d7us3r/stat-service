@@ -60,14 +60,14 @@
 .dashboard-month-loading {
   margin: 0;
   padding: 1rem;
-  background: var(--card);
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.9375rem;
 }
 
 .dashboard-month-table-wrapper {
-  background: var(--card);
+  background: transparent;
   border: 1px solid var(--border);
   overflow-x: auto;
 }
@@ -180,7 +180,7 @@
 
 @media (hover: hover) and (min-width: 769px) {
   .dashboard-month-row:hover {
-    background: var(--card-hover);
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
   }
 }
 

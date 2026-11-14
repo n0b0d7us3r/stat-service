@@ -66,14 +66,6 @@
   display: contents;
 }
 
-.tasks-filter-section .tasks-completed-toggle {
-  box-sizing: border-box;
-  width: 100%;
-  margin-top: 0.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
 .tasks-page .sort-select-control {
   background-color: color-mix(in srgb, var(--card) 42%, transparent);
   -webkit-backdrop-filter: blur(14px);
@@ -971,6 +963,14 @@
     flex-direction: column;
     gap: 0.75rem;
     width: 100%;
+  }
+
+  .tasks-filter-section .tasks-completed-toggle {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 0.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
   }
 
   .tasks-controls-secondary {

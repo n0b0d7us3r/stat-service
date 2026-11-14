@@ -130,13 +130,15 @@
   width: 100%;
   padding: 0.875rem 1rem;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: transparent;
   color: var(--foreground);
   font: inherit;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .project-settings-toggle-icon {
@@ -278,13 +280,15 @@
     width: 100%;
     padding: 0.875rem 1rem;
     border: 1px solid var(--border);
-    background: var(--card);
+    background: transparent;
     color: var(--foreground);
     font: inherit;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 
   .project-stats-toggle-icon {
@@ -333,5 +337,24 @@
     font-size: 0.8125rem;
     font-weight: 800;
     letter-spacing: 0.05em;
+  }
+}
+
+.project-page .project-calendar,
+.project-page .project-stat-card,
+.project-page .project-settings-toggle,
+.project-page .project-stats-toggle {
+  background: transparent;
+  background-color: transparent;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+@layer components {
+  .project-page .project-day-notes.app-border-card,
+  .project-page .project-settings-panel.app-border-card {
+    background-color: transparent !important;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 }

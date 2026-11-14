@@ -297,7 +297,7 @@ function marketMetaForBase(base: string, market: MarketRatesCache | null): Today
 }
 
 export function getTodayRates(userId: number): TodayRates {
-  const { baseCurrency: base, enabledCurrencies } = getUserSettings(userId);
+  const { baseCurrency: base } = getUserSettings(userId);
   const market = getMarketRates();
   const custom = readCustomRates(userId, base);
 
@@ -310,7 +310,7 @@ export function getTodayRates(userId: number): TodayRates {
 
   const rates: Record<string, number> = {};
   const manual: string[] = [];
-  for (const code of enabledCurrencies) {
+  for (const code of FINANCE_CURRENCIES) {
     if (code === base) continue;
     const customRate = custom?.rates[code];
     if (customRate) {

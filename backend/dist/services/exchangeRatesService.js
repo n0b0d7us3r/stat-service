@@ -246,7 +246,7 @@ function marketMetaForBase(base, market) {
     return { source: market.source, fetchedAt: market.fetchedAt };
 }
 export function getTodayRates(userId) {
-    const { baseCurrency: base, enabledCurrencies } = getUserSettings(userId);
+    const { baseCurrency: base } = getUserSettings(userId);
     const market = getMarketRates();
     const custom = readCustomRates(userId, base);
     const marketRates = {};
@@ -259,7 +259,7 @@ export function getTodayRates(userId) {
     }
     const rates = {};
     const manual = [];
-    for (const code of enabledCurrencies) {
+    for (const code of FINANCE_CURRENCIES) {
         if (code === base)
             continue;
         const customRate = custom?.rates[code];

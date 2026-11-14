@@ -85,7 +85,9 @@
   min-height: 180px;
   padding: 1rem;
   border: 1px solid var(--border);
-  background: var(--background);
+  background: transparent;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   color: var(--muted);
@@ -98,13 +100,15 @@
   box-sizing: border-box;
   min-height: 180px;
   border: 1px solid var(--border);
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
   padding: 1rem;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.55;
   resize: vertical;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .project-day-notes-editor-actions {

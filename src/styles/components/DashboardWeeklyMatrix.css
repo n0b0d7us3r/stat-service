@@ -1,5 +1,5 @@
 .dashboard-week-matrix-wrapper {
-  background: var(--card);
+  background: transparent;
   border: 1px solid var(--border);
   overflow-x: auto;
 }
@@ -74,7 +74,7 @@
   }
 
   .dashboard-week-matrix-row:hover {
-    background: var(--card-hover);
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
   }
 }
 
@@ -172,7 +172,7 @@
 }
 
 .dashboard-week-matrix-mobile-card {
-  background: var(--card);
+  background: transparent;
   border: 1px solid var(--border);
   overflow: hidden;
 }
